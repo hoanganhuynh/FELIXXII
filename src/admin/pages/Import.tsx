@@ -1,0 +1,206 @@
+import { useState } from "react";
+import { Card, Btn, Badge } from "../components/ui";
+import { parseSku } from "../data/sku";
+import { useAdmin } from "../store/adminData";
+
+/* ---- import template ---- */
+const COLUMNS = [
+  { key: "sku", req: true, desc: "FX-{CC}-{SSSS}-{KK}-{ZZ}. Leave blank to auto-generate.", ex: "FX-EV-0142-NV-M" },
+  { key: "style_code", req: true, desc: "Groups variants into one design.", ex: "FX-EV-0142" },
+  { key: "name", req: true, desc: "Style name (shared by all variants).", ex: "Nguyệt Couture" },
+  { key: "category", req: true, desc: "dam-da-hoi | dam-bridal | ao | set | phu-kien", ex: "dam-da-hoi" },
+  { key: "collection", req: true, desc: "thu-dong-2025 | xuan-he-2026", ex: "thu-dong-2025" },
+  { key: "color", req: true, desc: "Must match the palette name.", ex: "Navy" },
+  { key: "size", req: true, desc: "XS S M L XL 2XL Custom", ex: "M" },
+  { key: "price", req: true, desc: "VND, integer, no separators.", ex: "3950000" },
+  { key: "stock", req: true, desc: "Integer ≥ 0.", ex: "24" },
+  { key: "silhouette", req: false, desc: "a-line | mermaid | wrap | slip | ball-gown | shift", ex: "mermaid" },
+  { key: "material", req: false, desc: "Free text.", ex: "Satin lụa ánh kim" },
+  { key: "body_type", req: false, desc: "hourglass | pear | apple | rectangle | inverted-triangle", ex: "hourglass" },
+  { key: "status", req: false, desc: "active | draft | archived (default draft)", ex: "active" },
+  { key: "barcode", req: false, desc: "EAN-13. Auto-generated if blank.", ex: "8930142010" },
+];
+
+const SAMPLE_ROWS = [
+  "FX-EV-0142-NV-M,FX-EV-0142,Nguyệt Couture,dam-da-hoi,thu-dong-2025,Navy,M,3950000,24,mermaid,Satin lụa ánh kim,hourglass,active,",
+  "FX-EV-0142-NV-L,FX-EV-0142,Nguyệt Couture,dam-da-hoi,thu-dong-2025,Navy,L,3950000,18,mermaid,Satin lụa ánh kim,hourglass,active,",
+  "FX-BR-0007-IV-CU,FX-BR-0007,Sương Mai,dam-bridal,xuan-he-2026,Ivory,Custom,12800000,3,ball-gown,Voan tơ nhiều lớp,pear,active,",
+];
+
+type RowResult = { line: number; sku: string; status: "ok" | "warn" | "error"; message: string };
+
+export default function ImportPage() {
+  const styles = useAdmin((s) => s.styles);
+  const [raw, setRaw] = useState("");
+  const [results, setResults] = useState<RowResult[] | null>(null);
+  const [mode, setMode] = useState<"create" | "upsert" | "overwrite">("upsert");
+
+  const templateCsv = [COLUMNS.map((c) => c.key).join(","), ...SAMPLE_ROWS].join("\n");
+
+  const download = () => {
+    const blob = new Blob([templateCsv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "felixxii-product-import-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const onFile = (f: File) => {
+    const reader = new FileReader();
+    reader.onload = () => setRaw(String(reader.result));
+    reader.readAsText(f);
+  };
+
+  const validate = () => {
+    const lines = raw.trim().split(/\r?\n/).filter(Boolean);
+    if (!lines.length) { setResults([]); return; }
+    const header = lines[0].split(",").map((h) => h.trim());
+    const out: RowResult[] = [];
+    const known = new Set(styles.flatMap((s) => s.variants.map((v) => v.sku)));
+
+    lines.slice(1).forEach((line, i) => {
+      const cells = line.split(",");
+      const get = (k: string) => cells[header.indexOf(k)]?.trim() ?? "";
+      const sku = get("sku");
+      const missing = COLUMNS.filter((c) => c.req && c.key !== "sku" && !get(c.key)).map((c) => c.key);
+
+      if (missing.length) {
+        out.push({ line: i + 2, sku: sku || "—", status: "error", message: `Missing required: ${missing.join(", ")}` });
+        return;
+      }
+      if (sku && !parseSku(sku)) {
+        out.push({ line: i + 2, sku, status: "error", message: "SKU does not match FX-{CC}-{SSSS}-{KK}-{ZZ}" });
+        return;
+      }
+      if (Number.isNaN(Number(get("price"))) || Number(get("price")) <= 0) {
+        out.push({ line: i + 2, sku, status: "error", message: "price must be a positive integer" });
+        return;
+      }
+      if (sku && known.has(sku)) {
+        out.push({
+          line: i + 2, sku,
+          status: mode === "create" ? "error" : "warn",
+          message: mode === "create" ? "SKU already exists (mode = create only)" : `Existing SKU — will be ${mode === "overwrite" ? "overwritten" : "updated"}`,
+        });
+        return;
+      }
+      out.push({ line: i + 2, sku: sku || "(auto)", status: "ok", message: sku ? "New SKU" : "SKU will be auto-generated from style + color + size" });
+    });
+    setResults(out);
+  };
+
+  const counts = results
+    ? { ok: results.filter((r) => r.status === "ok").length, warn: results.filter((r) => r.status === "warn").length, error: results.filter((r) => r.status === "error").length }
+    : null;
+
+  return (
+    <div>
+      <div className="mb-5">
+        <h1 className="font-serif text-3xl">Import</h1>
+        <p className="mt-1 text-xs text-ink-soft">Bulk-load products by CSV, or enter them by hand in the product editor.</p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+        {/* template */}
+        <Card title="1 · Template" action={<Btn variant="ghost" onClick={download} className="!h-7">Download CSV</Btn>}>
+          <div className="max-h-[420px] overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-[var(--color-bg)]">
+                <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+                  <th className="px-4 py-2">COLUMN</th><th className="px-2 py-2">RULE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COLUMNS.map((c) => (
+                  <tr key={c.key} className="border-b edge last:border-0">
+                    <td className="px-4 py-2 align-top">
+                      <p className="font-mono text-[11px]">{c.key}</p>
+                      {c.req ? <span className="text-[9px] text-[var(--color-accent)]">required</span> : <span className="text-[9px] text-ink-soft">optional</span>}
+                    </td>
+                    <td className="px-2 py-2">
+                      <p className="text-[11px] text-ink-soft">{c.desc}</p>
+                      <p className="mt-0.5 font-mono text-[10px]">{c.ex}</p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* upload */}
+        <div className="space-y-4">
+          <Card title="2 · Upload & validate">
+            <div className="p-5">
+              <div className="mb-4 flex gap-1.5">
+                {(["create", "upsert", "overwrite"] as const).map((m) => (
+                  <button key={m} onClick={() => setMode(m)} className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${mode === m ? "border-ink bg-ink text-white" : "edge"}`}>
+                    {m === "create" ? "Create only" : m === "upsert" ? "Upsert" : "Overwrite"}
+                  </button>
+                ))}
+              </div>
+              <p className="mb-3 text-[11px] text-ink-soft">
+                {mode === "create" && "Fails on any SKU that already exists — safest for a brand-new drop."}
+                {mode === "upsert" && "Updates supplied fields on existing SKUs, creates the rest. Blank cells are left untouched."}
+                {mode === "overwrite" && "Replaces every field on matching SKUs — blank cells clear existing values."}
+              </p>
+
+              <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed edge py-8 text-center transition-colors hover:bg-[var(--color-tile)]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" className="text-ink-soft"><path d="M12 15V3m0 12l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" /></svg>
+                <span className="mt-2 text-xs">Drop a .csv here or click to browse</span>
+                <input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+              </label>
+
+              <textarea
+                value={raw}
+                onChange={(e) => setRaw(e.target.value)}
+                placeholder="…or paste CSV rows here"
+                rows={5}
+                className="mt-3 w-full rounded-md border edge bg-white/50 p-3 font-mono text-[11px] focus:border-ink focus:outline-none"
+              />
+              <div className="mt-3 flex gap-2">
+                <Btn onClick={validate} disabled={!raw.trim()}>Validate</Btn>
+                <Btn variant="ghost" onClick={() => setRaw(templateCsv)}>Load sample</Btn>
+              </div>
+            </div>
+          </Card>
+
+          {results && (
+            <Card title="3 · Validation report" action={
+              counts && <span className="flex gap-1.5">
+                <Badge>{`${counts.ok} ok`}</Badge>{counts.warn > 0 && <Badge>{`${counts.warn} warn`}</Badge>}{counts.error > 0 && <Badge>{`${counts.error} error`}</Badge>}
+              </span>
+            }>
+              <div className="max-h-64 overflow-y-auto">
+                {results.length ? (
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {results.map((r) => (
+                        <tr key={r.line} className="border-b edge last:border-0">
+                          <td className="w-10 px-4 py-2 text-[10px] text-ink-soft">L{r.line}</td>
+                          <td className="px-2 py-2 font-mono text-[11px]">{r.sku}</td>
+                          <td className="px-2 py-2">
+                            <span className={`text-[11px] ${r.status === "error" ? "text-[var(--color-accent)]" : r.status === "warn" ? "text-amber-600" : "text-emerald-600"}`}>{r.message}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : <p className="p-5 text-center text-xs text-ink-soft">Nothing to validate.</p>}
+              </div>
+              {counts && counts.error === 0 && results.length > 0 && (
+                <div className="border-t edge p-4">
+                  <Btn onClick={() => alert(`Demo: ${counts.ok + counts.warn} rows would be committed in "${mode}" mode.`)}>
+                    Commit {counts.ok + counts.warn} rows
+                  </Btn>
+                </div>
+              )}
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

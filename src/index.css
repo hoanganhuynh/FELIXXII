@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* ============================================================
+   GENTLE MONSTER — Veggie Collection (clone, static)
+   Minimal white catalog. Thin tracked sans, light-grey tiles.
+   ============================================================ */
+@theme {
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+
+  /* atelier palette — warm ivory canvas, deep bordeaux accent */
+  --color-bg: #f6f2ea; /* warm ivory */
+  --color-tile: #efe9dd; /* product thumbnail field */
+  --color-tile-deep: #e6dece;
+  --color-ink: #1c1917; /* warm near-black */
+  --color-ink-soft: #948b7d;
+  --color-line: #e2dccf;
+  --color-accent: #7c1f2b; /* bordeaux */
+  --color-accent-soft: #a8536018;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --tracking-wide: 0.02em;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-synthesis-weight: none;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: #fff;
+  }
+}
+
+@layer components {
+  .label {
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-link {
+    font-size: 13px; /* real site: 13px, no tracking */
+    font-weight: 400;
+    letter-spacing: normal;
+    color: var(--color-ink);
+    transition: opacity 0.25s ease;
+  }
+  .nav-link:hover {
+    opacity: 0.55;
+  }
+
+  /* GENTLE MONSTER wordmark — serif, lightly spaced caps */
+  .wordmark {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+  }
+
+  .edge {
+    border-color: var(--color-line);
+  }
+
+  /* admin form control */
+  .input {
+    height: 2.25rem;
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-line);
+    background: rgb(255 255 255 / 0.5);
+    padding: 0 0.625rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--color-ink);
+  }
+
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.45s var(--ease-out-expo);
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/* ---- animations ---- */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade {
+  animation: fade 1s ease both;
+}
+.animate-rise {
+  animation: rise 0.9s var(--ease-out-expo) both;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(1.2rem);
+  transition:
+    opacity 0.8s var(--ease-out-expo),
+    transform 0.8s var(--ease-out-expo);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* hide scrollbar on filter rail */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
