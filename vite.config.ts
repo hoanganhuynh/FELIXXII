@@ -19,6 +19,19 @@ export default defineConfig({
         changeOrigin: true,
         ws: true, // realtime
         rewrite: (p) => p.replace(/^\/supabase/, ""),
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            // Cookies are scoped to the HOST, not the port, so every other dev
+            // project on localhost puts its cookies on this request too. Past
+            // ~8KB that overflows Kong's header buffer and Kong answers
+            // {"message":"Bad request"} (400) before Supabase ever sees the
+            // call — which surfaced as a login that failed with correct
+            // credentials on localhost but worked over a tunnel (no cookies).
+            // Supabase authenticates via apikey/Authorization; it has no use
+            // for browser cookies.
+            proxyReq.removeHeader("cookie");
+          });
+        },
       },
     },
     // trycloudflare hostnames are random per run
