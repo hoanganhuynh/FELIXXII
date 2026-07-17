@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../store/auth";
+import { useAuth, purgeAuthStorage } from "../store/auth";
 
 type Step = "email" | "password" | "signup";
 
@@ -88,7 +88,19 @@ export default function LoginDrawer() {
         <div className="px-8 py-12">
           <h2 className="font-serif text-lg">LOGIN / CREATE ACCOUNT</h2>
 
-          {err && <p className="mt-4 rounded-md bg-[var(--color-accent-soft)] px-3 py-2 text-xs text-[var(--color-accent)]">{err}</p>}
+          {err && (
+            <div className="mt-4 rounded-md bg-[var(--color-accent-soft)] px-3 py-2.5">
+              <p className="text-xs text-[var(--color-accent)]">{err}</p>
+              {/* Escape hatch: a session written by an older DB generation can
+                  wedge the client. One click drops it and reloads clean. */}
+              <button
+                onClick={() => { purgeAuthStorage(); window.location.reload(); }}
+                className="mt-1.5 text-[10px] text-[var(--color-accent)] underline underline-offset-2"
+              >
+                Still stuck? Reset session and reload
+              </button>
+            </div>
+          )}
           {note && <p className="mt-4 rounded-md bg-[var(--color-tile)] px-3 py-2 text-xs text-ink-soft">{note}</p>}
 
           {step === "email" && (

@@ -1,6 +1,24 @@
 import { create } from "zustand";
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+
+/** Wipe every Supabase session key plus the legacy demo-store key.
+ *  A session written by an earlier database generation (each `supabase db
+ *  reset` recreates auth.users with new ids) carries a refresh token GoTrue
+ *  rejects, which wedges the client. */
+export function purgeAuthStorage() {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("sb-") || k === "felixxii-auth")
+      .forEach((k) => localStorage.removeItem(k));
+  } catch { /* private mode / storage disabled */ }
+}
+
+/** "Bad request" alone is undiagnosable — keep the status and code. */
+function describe(e: AuthError): string {
+  const bits = [e.status && `HTTP ${e.status}`, e.code].filter(Boolean).join(", ");
+  return bits ? `${e.message} (${bits})` : e.message;
+}
 
 export interface Profile {
   name: string;
@@ -95,8 +113,17 @@ export const useAuth = create<AuthState>((set, get) => ({
     // signInWithPassword report the refresh 400 ("Bad request") rather than
     // actually attempting the sign-in. Local scope: never touches the server.
     await supabase.auth.signOut({ scope: "local" }).catch(() => {});
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+
+    let { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // A client wedged by a bad token can still answer with the stale error
+    // instead of this attempt's result. Purge hard and give it exactly one
+    // more go before believing the failure.
+    if (error) {
+      purgeAuthStorage();
+      ({ error } = await supabase.auth.signInWithPassword({ email, password }));
+    }
+    if (error) throw new Error(describe(error));
     set({ loginOpen: false });
   },
 
