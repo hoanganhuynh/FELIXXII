@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { useAdmin } from "./store/adminData";
+import { useAuth } from "../store/auth";
+import LoginDrawer from "../components/LoginDrawer";
 
 const NAV: { to: string; label: string; icon: ReactNode; end?: boolean }[] = [
   { to: "/admin", end: true, label: "Dashboard", icon: <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /> },
@@ -15,8 +16,7 @@ const NAV: { to: string; label: string; icon: ReactNode; end?: boolean }[] = [
 
 export default function AdminLayout() {
   const [open, setOpen] = useState(false);
-  const skuCount = useAdmin((s) => s.skuCount);
-  const styleCount = useAdmin((s) => s.styles.length);
+  const { user, isAdmin, ready, setLoginOpen, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-ink">
@@ -32,10 +32,31 @@ export default function AdminLayout() {
           </Link>
         </div>
         <div className="flex items-center gap-4 text-[11px] text-ink-soft">
-          <span className="hidden tabular-nums sm:inline">{styleCount} styles · {skuCount.toLocaleString()} SKUs</span>
+          {ready && (isAdmin ? (
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="hidden sm:inline">{user?.email}</span>
+              <button onClick={() => logout()} className="link-underline">Sign out</button>
+            </span>
+          ) : (
+            <button onClick={() => setLoginOpen(true)} className="rounded bg-ink px-2.5 py-1 text-white">
+              Sign in as admin
+            </button>
+          ))}
           <Link to="/" className="link-underline">← Storefront</Link>
         </div>
       </header>
+
+      {/* read-only warning: RLS lets anyone READ the active catalogue, but every
+          write is denied until the session carries the admin role. Say so up
+          front instead of letting saves fail one by one. */}
+      {ready && !isAdmin && (
+        <div className="fixed inset-x-0 top-14 z-30 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] text-amber-800 lg:pl-56">
+          {user
+            ? `Signed in as ${user.email} — this account is not an admin. Data is read-only.`
+            : "Not signed in — read-only. Drafts are hidden and every write is blocked by RLS."}
+        </div>
+      )}
 
       {/* sidebar */}
       <aside className={`fixed left-0 top-14 z-30 h-[calc(100vh-3.5rem)] w-56 border-r edge bg-[var(--color-bg)] px-3 py-4 transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
@@ -58,18 +79,21 @@ export default function AdminLayout() {
           ))}
         </nav>
         <p className="mt-6 px-3 text-[10px] leading-relaxed text-ink-soft">
-          Demo admin · data is generated in-memory and resets on reload.
+          Demo admin · backed by Postgres. Sign in as{" "}
+          <span className="font-mono">admin@felixxii.local</span> to write.
         </p>
       </aside>
 
       {open && <div className="fixed inset-0 top-14 z-20 bg-black/20 lg:hidden" onClick={() => setOpen(false)} />}
 
       {/* content */}
-      <main className="pt-14 lg:pl-56">
+      <main className={`lg:pl-56 ${ready && !isAdmin ? "pt-24" : "pt-14"}`}>
         <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-8">
           <Outlet />
         </div>
       </main>
+
+      <LoginDrawer />
     </div>
   );
 }

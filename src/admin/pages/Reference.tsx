@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Card, Badge } from "../components/ui";
-import { useAdmin } from "../store/adminData";
-import { searchSkus } from "../lib/search";
+import { searchSkus } from "../api/products";
+import { useAsync, useDebounced } from "../lib/useAsync";
+import { supabase } from "../../lib/supabase";
 import { CATEGORY_CODE, COLOR_CODE, SIZE_CODE } from "../data/sku";
 import { categoryLabel, type CategoryId } from "../../data/catalog";
 
@@ -90,10 +91,15 @@ const ES_QUERY = `GET /felixxii-skus/_search
 }`;
 
 export default function Reference() {
-  const styles = useAdmin((s) => s.styles);
-  const [demo, setDemo] = useState("FX-EV");
-  const hits = useMemo(() => searchSkus(styles, demo, 8), [styles, demo]);
-  const skuTotal = styles.reduce((n, s) => n + s.variants.length, 0);
+  const [demo, setDemo] = useState("FX-BR-0001");
+  const dDemo = useDebounced(demo, 250);
+  const hits = useAsync(() => searchSkus(dDemo, 8), [dDemo], []);
+  const total = useAsync(
+    async () => (await supabase.from("variants").select("*", { count: "exact", head: true })).count ?? 0,
+    [],
+    0
+  );
+  const skuTotal = total.data;
 
   return (
     <div className="max-w-[1000px]">
@@ -213,26 +219,28 @@ export default function Reference() {
       </Card>
 
       {/* ---- live demo ---- */}
-      <Card title="Live search demo (client-side approximation)">
+      <Card title="Live search — running on Postgres">
         <div className="p-5">
-          <p className="mb-3 text-xs text-ink-soft">
-            This admin runs the same ranking rules in-memory (see <span className="font-mono">admin/lib/search.ts</span>) so the behaviour is
-            demonstrable without a cluster. Try <button onClick={() => setDemo("FX-EV")} className="link-underline font-mono">FX-EV</button>,{" "}
-            <button onClick={() => setDemo("nguyet")} className="link-underline font-mono">nguyet</button>, or{" "}
-            <button onClick={() => setDemo("0142 NV")} className="link-underline font-mono">0142 NV</button>.
+          <p className="mb-3 text-xs leading-relaxed text-ink-soft">
+            These results come from the real <span className="font-mono">search_skus()</span> function
+            (see <span className="font-mono">supabase/migrations/*_search.sql</span>) scoring all{" "}
+            {skuTotal.toLocaleString()} SKUs — no Elasticsearch cluster involved. Try{" "}
+            <button onClick={() => setDemo("FX-BR-0001")} className="link-underline font-mono">FX-BR-0001</button> (exact),{" "}
+            <button onClick={() => setDemo("nguyet")} className="link-underline font-mono">nguyet</button> (no diacritics), or{" "}
+            <button onClick={() => setDemo("0039")} className="link-underline font-mono">0039</button> (bare segment).
           </p>
           <input value={demo} onChange={(e) => setDemo(e.target.value)} className="input" placeholder="Type a SKU, segment, or name…" />
           <ul className="mt-3 divide-y divide-[var(--color-line)] border-y edge">
-            {hits.map(({ style, variant, score }) => (
-              <li key={variant.sku} className="flex items-center justify-between gap-3 py-2">
+            {hits.data.map((h) => (
+              <li key={h.sku} className="flex items-center justify-between gap-3 py-2">
                 <div className="min-w-0">
-                  <p className="font-mono text-[11px]">{variant.sku}</p>
-                  <p className="truncate text-[11px] text-ink-soft">{style.name} · {variant.colorName} / {variant.size}</p>
+                  <p className="font-mono text-[11px]">{h.sku}</p>
+                  <p className="truncate text-[11px] text-ink-soft">{h.style_name} · {h.color_name} / {h.size}</p>
                 </div>
-                <Badge>{`score ${score.toFixed(0)}`}</Badge>
+                <Badge>{`score ${h.score.toFixed(0)}`}</Badge>
               </li>
             ))}
-            {!hits.length && <li className="py-4 text-center text-xs text-ink-soft">No hits.</li>}
+            {!hits.loading && !hits.data.length && <li className="py-4 text-center text-xs text-ink-soft">No hits.</li>}
           </ul>
         </div>
       </Card>

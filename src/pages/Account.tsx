@@ -157,34 +157,44 @@ function WishlistCard({ productId }: { productId: string }) {
 }
 
 export default function Account() {
-  const { user, logout, updateProfile, setLoginOpen } = useAuth();
+  const { user, profile, ready, logout, updateProfile, setLoginOpen } = useAuth();
   const { measurements, setModal: openBodyProfile } = useBodyProfile();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("account");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    // `ready` guards the redirect: on a hard refresh the session resolves
+    // asynchronously, so bouncing on !user immediately would kick out a
+    // logged-in user before their session loads.
+    if (ready && !user) {
       setLoginOpen(true);
       navigate("/");
     }
-  }, [user, navigate, setLoginOpen]);
+  }, [ready, user, navigate, setLoginOpen]);
 
   useEffect(() => {
-    if (user) setForm({ name: user.name, email: user.email, phone: user.phone });
-  }, [user, editing]);
+    if (profile) setForm({ name: profile.name, email: profile.email, phone: profile.phone });
+  }, [profile, editing]);
 
-  if (!user) return null;
+  if (!ready) return <div className="pt-[62px]" />;
+  if (!user || !profile) return null;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(form);
-    setEditing(false);
+    setErr(null);
+    try {
+      await updateProfile({ name: form.name, phone: form.phone });
+      setEditing(false);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 
@@ -225,7 +235,7 @@ export default function Account() {
         {/* ── ACCOUNT ── */}
         {tab === "account" && (
           <div>
-            <p className="font-serif text-2xl tracking-tight">HELLO, {user.name.toUpperCase()}</p>
+            <p className="font-serif text-2xl tracking-tight">HELLO, {profile.name.toUpperCase()}</p>
 
             <section className="mt-10 border-b edge pb-8">
               <div className="flex items-center justify-between">
@@ -259,9 +269,9 @@ export default function Account() {
                 </button>
               </div>
               <div className="mt-4 space-y-1 text-sm">
-                <p>{user.name}</p>
-                <p className="text-ink-soft">{user.email}</p>
-                {user.phone && <p className="text-ink-soft">{user.phone}</p>}
+                <p>{profile.name}</p>
+                <p className="text-ink-soft">{profile.email}</p>
+                {profile.phone && <p className="text-ink-soft">{profile.phone}</p>}
               </div>
               <button
                 onClick={() => { setTab("profile"); setEditing(true); }}
@@ -303,9 +313,9 @@ export default function Account() {
             {!editing ? (
               <div className="mt-8">
                 <div className="space-y-2 text-sm">
-                  <p>{user.name}</p>
-                  <p className="text-ink-soft">{user.email}</p>
-                  <p className="text-ink-soft">{user.phone || "—"}</p>
+                  <p>{profile.name}</p>
+                  <p className="text-ink-soft">{profile.email}</p>
+                  <p className="text-ink-soft">{profile.phone || "—"}</p>
                 </div>
                 <button
                   onClick={() => setEditing(true)}
@@ -316,6 +326,9 @@ export default function Account() {
               </div>
             ) : (
               <form onSubmit={handleSave} className="mt-8 max-w-sm space-y-5">
+                {err && (
+                  <p className="rounded-md bg-[var(--color-accent-soft)] px-3 py-2 text-xs text-[var(--color-accent)]">{err}</p>
+                )}
                 <label className="block border-b edge pb-2">
                   <span className="text-[10px] text-ink-soft">Full Name</span>
                   <input
@@ -328,12 +341,13 @@ export default function Account() {
                 </label>
                 <label className="block border-b edge pb-2">
                   <span className="text-[10px] text-ink-soft">Email</span>
+                  {/* email is the auth identity — changing it needs a verification
+                      flow, so it is read-only here rather than silently ignored */}
                   <input
                     type="email"
-                    required
                     value={form.email}
-                    onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
-                    className="mt-1 w-full bg-transparent text-sm focus:outline-none"
+                    readOnly
+                    className="mt-1 w-full cursor-not-allowed bg-transparent text-sm text-ink-soft focus:outline-none"
                   />
                 </label>
                 <label className="block border-b edge pb-2">

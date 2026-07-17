@@ -66,10 +66,19 @@ export function skuCode(
   return `${styleCode(category, serial)}-${kk}-${zz}`;
 }
 
-/** EAN-13-style barcode (demo, deterministic from parts) */
-export function barcode(serial: number, colorIdx: number, sizeIdx: number): string {
-  const base = `893${pad4(serial)}${colorIdx}${sizeIdx}`.padEnd(12, "0").slice(0, 12);
-  // simple check digit
+/** EAN-13-style barcode (demo, deterministic from parts).
+ *  893 = Vietnam GS1 prefix, then category + serial + colour + size.
+ *  The category digit is REQUIRED: serial restarts at 1 per category, so
+ *  without it FX-EV-0001-* and FX-BR-0001-* collide on the same barcode. */
+export function barcode(
+  category: CategoryId,
+  serial: number,
+  colorIdx: number,
+  sizeIdx: number
+): string {
+  const catNum = Object.keys(CATEGORY_CODE).indexOf(category); // 0–4, stable order
+  const base = `893${catNum}${pad4(serial)}${colorIdx}${sizeIdx}`.padEnd(12, "0").slice(0, 12);
+  // GS1 check digit
   let sum = 0;
   for (let i = 0; i < 12; i++) sum += Number(base[i]) * (i % 2 === 0 ? 1 : 3);
   const check = (10 - (sum % 10)) % 10;

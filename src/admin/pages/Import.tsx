@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Btn, Badge } from "../components/ui";
 import { parseSku } from "../data/sku";
-import { useAdmin } from "../store/adminData";
+import { supabase } from "../../lib/supabase";
 
 /* ---- import template ---- */
 const COLUMNS = [
@@ -30,10 +30,10 @@ const SAMPLE_ROWS = [
 type RowResult = { line: number; sku: string; status: "ok" | "warn" | "error"; message: string };
 
 export default function ImportPage() {
-  const styles = useAdmin((s) => s.styles);
   const [raw, setRaw] = useState("");
   const [results, setResults] = useState<RowResult[] | null>(null);
   const [mode, setMode] = useState<"create" | "upsert" | "overwrite">("upsert");
+  const [checking, setChecking] = useState(false);
 
   const templateCsv = [COLUMNS.map((c) => c.key).join(","), ...SAMPLE_ROWS].join("\n");
 
@@ -53,12 +53,23 @@ export default function ImportPage() {
     reader.readAsText(f);
   };
 
-  const validate = () => {
+  const validate = async () => {
     const lines = raw.trim().split(/\r?\n/).filter(Boolean);
     if (!lines.length) { setResults([]); return; }
     const header = lines[0].split(",").map((h) => h.trim());
     const out: RowResult[] = [];
-    const known = new Set(styles.flatMap((s) => s.variants.map((v) => v.sku)));
+
+    // Ask the DB which SKUs already exist — one query for the whole file,
+    // scoped to the SKUs in it (not a 7k-row download).
+    setChecking(true);
+    const fileSkus = lines.slice(1)
+      .map((l) => l.split(",")[header.indexOf("sku")]?.trim())
+      .filter(Boolean) as string[];
+    const { data: hits } = fileSkus.length
+      ? await supabase.from("variants").select("sku").in("sku", fileSkus)
+      : { data: [] };
+    const known = new Set((hits ?? []).map((h) => h.sku));
+    setChecking(false);
 
     lines.slice(1).forEach((line, i) => {
       const cells = line.split(",");
@@ -161,7 +172,9 @@ export default function ImportPage() {
                 className="mt-3 w-full rounded-md border edge bg-white/50 p-3 font-mono text-[11px] focus:border-ink focus:outline-none"
               />
               <div className="mt-3 flex gap-2">
-                <Btn onClick={validate} disabled={!raw.trim()}>Validate</Btn>
+                <Btn onClick={() => void validate()} disabled={!raw.trim() || checking}>
+                  {checking ? "Checking…" : "Validate"}
+                </Btn>
                 <Btn variant="ghost" onClick={() => setRaw(templateCsv)}>Load sample</Btn>
               </div>
             </div>

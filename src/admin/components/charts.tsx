@@ -6,15 +6,30 @@ const ACCENT = "#7c1f2b";
 const GRID = "#e2dccf";
 
 /* ---- area/line trend ---- */
-export function AreaChart({ data, height = 200, labels }: { data: number[]; height?: number; labels?: string[] }) {
-  const w = 760, h = height, pad = 8;
+export function AreaChart({
+  data, height = 220, labels, valueFmt = (n) => String(n),
+}: { data: number[]; height?: number; labels?: string[]; valueFmt?: (n: number) => string }) {
+  const w = 760, h = height;
+  // reserve gutters so axis labels render INSIDE the viewBox
+  const padL = 52, padR = 14, padT = 12, padB = 26;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
   const max = Math.max(...data, 1);
-  const min = Math.min(...data, 0);
+  const min = 0; // revenue baselines at zero — a floating baseline exaggerates the swing
   const span = max - min || 1;
-  const step = (w - pad * 2) / (data.length - 1 || 1);
-  const pts = data.map((d, i) => [pad + i * step, h - pad - ((d - min) / span) * (h - pad * 2)]);
+  const step = data.length > 1 ? plotW / (data.length - 1) : 0;
+
+  const xOf = (i: number) => padL + i * step;
+  const yOf = (v: number) => padT + plotH - ((v - min) / span) * plotH;
+
+  const pts = data.map((d, i) => [xOf(i), yOf(d)] as const);
   const line = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
-  const area = `${line} L${pts[pts.length - 1][0].toFixed(1)},${h - pad} L${pts[0][0].toFixed(1)},${h - pad} Z`;
+  const base = padT + plotH;
+  const area = `${line} L${pts[pts.length - 1][0].toFixed(1)},${base} L${pts[0][0].toFixed(1)},${base} Z`;
+
+  const ticks = [0, 0.5, 1]; // fraction of max
+
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="Revenue trend">
       <defs>
@@ -23,16 +38,35 @@ export function AreaChart({ data, height = 200, labels }: { data: number[]; heig
           <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
         </linearGradient>
       </defs>
-      {[0.25, 0.5, 0.75].map((f) => (
-        <line key={f} x1={pad} x2={w - pad} y1={pad + f * (h - pad * 2)} y2={pad + f * (h - pad * 2)} stroke={GRID} strokeWidth="1" />
-      ))}
+
+      {/* y grid + value labels */}
+      {ticks.map((f) => {
+        const v = min + f * span;
+        const y = yOf(v);
+        return (
+          <g key={f}>
+            <line x1={padL} x2={w - padR} y1={y} y2={y} stroke={GRID} strokeWidth="1" />
+            <text x={padL - 8} y={y + 3} fontSize="9" fill="#948b7d" textAnchor="end">{valueFmt(v)}</text>
+          </g>
+        );
+      })}
+
       <path d={area} fill="url(#areaFill)" />
       <path d={line} fill="none" stroke={ACCENT} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={i === pts.length - 1 ? 3.5 : 0} fill={ACCENT} />
-      ))}
+      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="3.5" fill={ACCENT} />
+
+      {/* x labels — anchor the end ones inward so they don't clip */}
       {labels && labels.map((l, i) => (
-        <text key={i} x={pad + i * step} y={h - pad + 14} fontSize="9" fill="#948b7d" textAnchor="middle">{l}</text>
+        <text
+          key={i}
+          x={xOf(i)}
+          y={h - 8}
+          fontSize="9"
+          fill="#948b7d"
+          textAnchor={i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"}
+        >
+          {l}
+        </text>
       ))}
     </svg>
   );

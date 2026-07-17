@@ -185,7 +185,7 @@ export function generateDataset(seed = 20260716) {
           size: sz,
           stock,
           reserved: Math.floor(rand() * Math.min(stock, 5)),
-          barcode: barcode(serial, ci, si),
+          barcode: barcode(category, serial, ci, si),
           priceOverride: rand() > 0.94 ? round(basePrice * (0.8 + rand() * 0.4), 50_000) : undefined,
         });
       });

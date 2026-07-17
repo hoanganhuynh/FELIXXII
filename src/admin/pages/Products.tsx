@@ -1,54 +1,61 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAdmin, totalStock, type BulkPatch } from "../store/adminData";
-import { searchStyles, searchSkus } from "../lib/search";
+import {
+  listStyles, searchSkus, bulkUpdateStyles, deleteStyle, duplicateStyle,
+  listCategories, listCollections, colorsOf,
+  type BulkPatch, type StyleRow,
+} from "../api/products";
+import { useAsync, useDebounced } from "../lib/useAsync";
 import { Badge, Dot, Btn } from "../components/ui";
 import { vnd, compact } from "../lib/format";
-import {
-  CATEGORIES, COLLECTIONS, categoryLabel,
-  type CategoryId, type CollectionId,
-} from "../../data/catalog";
-import type { StyleStatus } from "../data/generate";
 
 const PAGE = 25;
-const STATUSES: StyleStatus[] = ["active", "draft", "archived"];
+const STATUSES = ["active", "draft", "archived"] as const;
+const SORTS = [
+  { id: "new", label: "Newest" },
+  { id: "best", label: "Bestseller" },
+  { id: "asc", label: "Price ↑" },
+  { id: "desc", label: "Price ↓" },
+] as const;
 
 export default function AdminProducts() {
-  const { styles, bulkUpdate, deleteStyle, duplicateStyle } = useAdmin();
-
   const [view, setView] = useState<"styles" | "skus">("styles");
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState<CategoryId | "">("");
-  const [col, setCol] = useState<CollectionId | "">("");
-  const [status, setStatus] = useState<StyleStatus | "">("");
-  const [stockFilter, setStockFilter] = useState<"" | "low" | "out">("");
+  const dq = useDebounced(q, 250); // don't hit the DB on every keystroke
+  const [cat, setCat] = useState("");
+  const [col, setCol] = useState("");
+  const [status, setStatus] = useState("");
+  const [stock, setStock] = useState<"" | "low" | "out">("");
+  const [sort, setSort] = useState<"new" | "best" | "asc" | "desc">("new");
   const [page, setPage] = useState(0);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  /* ---- filtered styles ---- */
-  const filtered = useMemo(() => {
-    let list = q.trim() ? searchStyles(styles, q) : styles;
-    if (cat) list = list.filter((s) => s.category === cat);
-    if (col) list = list.filter((s) => s.collection === col);
-    if (status) list = list.filter((s) => s.status === status);
-    if (stockFilter === "low") list = list.filter((s) => totalStock(s) < 12);
-    if (stockFilter === "out") list = list.filter((s) => totalStock(s) === 0);
-    return list;
-  }, [styles, q, cat, col, status, stockFilter]);
+  const cats = useAsync(() => listCategories(), [], []);
+  const cols = useAsync(() => listCollections(), [], []);
 
-  const pageCount = Math.ceil(filtered.length / PAGE);
-  const pageItems = filtered.slice(page * PAGE, page * PAGE + PAGE);
+  const list = useAsync(
+    () => listStyles({ q: dq, category: cat, collection: col, status, stock, sort, page, pageSize: PAGE }),
+    [dq, cat, col, status, stock, sort, page],
+    { rows: [] as StyleRow[], total: 0 }
+  );
 
-  /* ---- SKU search hits ---- */
-  const skuHits = useMemo(() => (view === "skus" ? searchSkus(styles, q || "FX", 300) : []), [view, styles, q]);
+  const skus = useAsync(
+    () => (view === "skus" ? searchSkus(dq, 300) : Promise.resolve([])),
+    [view, dq],
+    []
+  );
 
-  const resetPage = () => setPage(0);
-  const allSelected = pageItems.length > 0 && pageItems.every((s) => sel.has(s.id));
+  const pageCount = Math.ceil(list.data.total / PAGE);
+  const rows = list.data.rows;
+  const allSelected = rows.length > 0 && rows.every((s) => sel.has(s.id!));
+
+  const reset = () => setPage(0);
   const toggleAll = () => {
     const next = new Set(sel);
-    if (allSelected) pageItems.forEach((s) => next.delete(s.id));
-    else pageItems.forEach((s) => next.add(s.id));
+    if (allSelected) rows.forEach((s) => next.delete(s.id!));
+    else rows.forEach((s) => next.add(s.id!));
     setSel(next);
   };
   const toggle = (id: string) => {
@@ -57,12 +64,27 @@ export default function AdminProducts() {
     setSel(next);
   };
 
+  const run = async (fn: () => Promise<unknown>, ok?: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      list.reload();
+      if (ok) alert(ok);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl">Products</h1>
-          <p className="mt-1 text-xs text-ink-soft">{filtered.length.toLocaleString()} styles · {styles.reduce((n, s) => n + s.variants.length, 0).toLocaleString()} SKUs</p>
+          <p className="mt-1 text-xs text-ink-soft">
+            {list.loading ? "Loading…" : `${list.data.total.toLocaleString()} styles match`}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border edge p-0.5 text-[11px]">
@@ -76,28 +98,36 @@ export default function AdminProducts() {
         </div>
       </div>
 
+      {(list.error || skus.error) && (
+        <p className="mb-3 rounded-md bg-[var(--color-accent-soft)] px-4 py-2.5 text-xs text-[var(--color-accent)]">
+          {list.error ?? skus.error}
+        </p>
+      )}
+
       {/* search + filters */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative min-w-[240px] flex-1">
           <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
           <input
             value={q}
-            onChange={(e) => { setQ(e.target.value); resetPage(); }}
-            placeholder={view === "skus" ? "Search SKU, barcode, name…  e.g. FX-EV-0142-NV-M" : "Search style, code, name…"}
+            onChange={(e) => { setQ(e.target.value); reset(); }}
+            placeholder={view === "skus" ? "Search SKU, barcode, name…  e.g. FX-BR-0001-OL-M" : "Search style, code, material…"}
             className="h-9 w-full rounded-md border edge bg-white/50 pl-9 pr-3 text-sm focus:border-ink focus:outline-none"
           />
         </div>
         {view === "styles" && (
           <>
-            <Select value={cat} onChange={(v) => { setCat(v as CategoryId | ""); resetPage(); }} placeholder="Category" options={CATEGORIES.map((c) => [c.id, c.label])} />
-            <Select value={col} onChange={(v) => { setCol(v as CollectionId | ""); resetPage(); }} placeholder="Collection" options={COLLECTIONS.map((c) => [c.id, c.season])} />
-            <Select value={status} onChange={(v) => { setStatus(v as StyleStatus | ""); resetPage(); }} placeholder="Status" options={STATUSES.map((s) => [s, s])} />
-            <Select value={stockFilter} onChange={(v) => { setStockFilter(v as "" | "low" | "out"); resetPage(); }} placeholder="Stock" options={[["low", "Low (<12)"], ["out", "Out of stock"]]} />
+            <Sel value={cat} onChange={(v) => { setCat(v); reset(); }} ph="Category" opts={cats.data.map((c) => [c.id, c.label])} />
+            <Sel value={col} onChange={(v) => { setCol(v); reset(); }} ph="Collection" opts={cols.data.map((c) => [c.id, c.season])} />
+            <Sel value={status} onChange={(v) => { setStatus(v); reset(); }} ph="Status" opts={STATUSES.map((s) => [s, s])} />
+            <Sel value={stock} onChange={(v) => { setStock(v as "" | "low" | "out"); reset(); }} ph="Stock" opts={[["low", "Low (<12)"], ["out", "Out of stock"]]} />
+            <select value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); reset(); }} className="h-9 rounded-md border edge bg-white/50 px-2 text-xs focus:outline-none">
+              {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
           </>
         )}
       </div>
 
-      {/* bulk bar */}
       {view === "styles" && sel.size > 0 && (
         <div className="mb-3 flex items-center justify-between rounded-md bg-ink px-4 py-2.5 text-white">
           <span className="text-xs">{sel.size} selected</span>
@@ -108,95 +138,84 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* ---- STYLES TABLE ---- */}
+      {/* ---- STYLES ---- */}
       {view === "styles" && (
         <div className="overflow-x-auto rounded-lg border edge bg-white/40">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
                 <th className="w-10 px-3 py-2.5"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-[var(--color-accent)]" /></th>
-                <th className="px-2 py-2.5">STYLE</th>
-                <th className="px-2 py-2.5">CODE</th>
-                <th className="px-2 py-2.5">CATEGORY</th>
+                <th className="px-2 py-2.5">STYLE</th><th className="px-2 py-2.5">CODE</th>
                 <th className="px-2 py-2.5">COLORS</th>
-                <th className="px-2 py-2.5 text-right">PRICE</th>
-                <th className="px-2 py-2.5 text-right">STOCK</th>
-                <th className="px-2 py-2.5 text-right">SOLD</th>
-                <th className="px-2 py-2.5">STATUS</th>
-                <th className="px-2 py-2.5" />
+                <th className="px-2 py-2.5 text-right">PRICE</th><th className="px-2 py-2.5 text-right">STOCK</th>
+                <th className="px-2 py-2.5 text-right">SOLD</th><th className="px-2 py-2.5">STATUS</th><th className="px-2 py-2.5" />
               </tr>
             </thead>
-            <tbody>
-              {pageItems.map((s) => {
-                const stock = totalStock(s);
-                return (
-                  <tr key={s.id} className="border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
-                    <td className="px-3 py-2.5"><input type="checkbox" checked={sel.has(s.id)} onChange={() => toggle(s.id)} className="accent-[var(--color-accent)]" /></td>
-                    <td className="px-2 py-2.5">
-                      <Link to={`/admin/products/${s.id}`} className="font-serif text-[15px] link-underline">{s.name}</Link>
-                      <p className="text-[10px] text-ink-soft">{s.variants.length} SKUs · {s.silhouette}</p>
-                    </td>
-                    <td className="px-2 py-2.5 font-mono text-[11px] text-ink-soft">{s.styleCode}</td>
-                    <td className="px-2 py-2.5 text-xs">{categoryLabel(s.category)}</td>
-                    <td className="px-2 py-2.5"><div className="flex gap-1">{s.colors.slice(0, 4).map((c) => <Dot key={c.name} hex={c.hex} title={c.name} />)}</div></td>
-                    <td className="px-2 py-2.5 text-right tabular-nums text-xs">{vnd(s.price)}</td>
-                    <td className={`px-2 py-2.5 text-right tabular-nums text-xs ${stock < 12 ? "text-[var(--color-accent)]" : ""}`}>{stock}</td>
-                    <td className="px-2 py-2.5 text-right tabular-nums text-xs text-ink-soft">{compact(s.unitsSold)}</td>
-                    <td className="px-2 py-2.5"><Badge>{s.status}</Badge></td>
-                    <td className="px-2 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-1.5 text-ink-soft">
-                        <button title="Duplicate" onClick={() => duplicateStyle(s.id)} className="hover:text-ink">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 012-2h10" /></svg>
-                        </button>
-                        <button title="Delete" onClick={() => { if (confirm(`Delete "${s.name}"?`)) deleteStyle(s.id); }} className="hover:text-[var(--color-accent)]">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {!pageItems.length && <tr><td colSpan={10} className="py-10 text-center text-xs text-ink-soft">No styles match your filters.</td></tr>}
+            <tbody className={list.loading ? "opacity-40 transition-opacity" : ""}>
+              {rows.map((s) => (
+                <tr key={s.id} className="border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
+                  <td className="px-3 py-2.5"><input type="checkbox" checked={sel.has(s.id!)} onChange={() => toggle(s.id!)} className="accent-[var(--color-accent)]" /></td>
+                  <td className="px-2 py-2.5">
+                    <Link to={`/admin/products/${s.id}`} className="font-serif text-[15px] link-underline">{s.name}</Link>
+                    <p className="text-[10px] text-ink-soft">{s.sku_count} SKUs · {s.silhouette}</p>
+                  </td>
+                  <td className="px-2 py-2.5 font-mono text-[11px] text-ink-soft">{s.style_code}</td>
+                  <td className="px-2 py-2.5"><div className="flex gap-1">{colorsOf(s).slice(0, 4).map((c) => <Dot key={c.name} hex={c.hex} title={c.name} />)}</div></td>
+                  <td className="px-2 py-2.5 text-right text-xs tabular-nums">{vnd(s.price!)}</td>
+                  <td className={`px-2 py-2.5 text-right text-xs tabular-nums ${(s.total_stock ?? 0) < 12 ? "text-[var(--color-accent)]" : ""}`}>{s.total_stock}</td>
+                  <td className="px-2 py-2.5 text-right text-xs tabular-nums text-ink-soft">{compact(s.units_sold ?? 0)}</td>
+                  <td className="px-2 py-2.5"><Badge>{s.status!}</Badge></td>
+                  <td className="px-2 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-1.5 text-ink-soft">
+                      <button title="Duplicate" disabled={busy} onClick={() => run(() => duplicateStyle(s.id!), "Duplicated as draft.")} className="hover:text-ink disabled:opacity-30">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 012-2h10" /></svg>
+                      </button>
+                      <button title="Delete" disabled={busy} onClick={() => { if (confirm(`Delete "${s.name}"?`)) run(() => deleteStyle(s.id!)); }} className="hover:text-[var(--color-accent)] disabled:opacity-30">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!list.loading && !rows.length && <tr><td colSpan={9} className="py-10 text-center text-xs text-ink-soft">No styles match your filters.</td></tr>}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* ---- SKU TABLE ---- */}
+      {/* ---- SKUS ---- */}
       {view === "skus" && (
         <div className="overflow-x-auto rounded-lg border edge bg-white/40">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
-                <th className="px-3 py-2.5">SKU</th>
-                <th className="px-2 py-2.5">STYLE</th>
-                <th className="px-2 py-2.5">COLOR</th>
-                <th className="px-2 py-2.5">SIZE</th>
-                <th className="px-2 py-2.5">BARCODE</th>
-                <th className="px-2 py-2.5 text-right">PRICE</th>
-                <th className="px-2 py-2.5 text-right">STOCK</th>
+                <th className="px-3 py-2.5">SKU</th><th className="px-2 py-2.5">STYLE</th><th className="px-2 py-2.5">COLOR</th>
+                <th className="px-2 py-2.5">SIZE</th><th className="px-2 py-2.5">BARCODE</th>
+                <th className="px-2 py-2.5 text-right">PRICE</th><th className="px-2 py-2.5 text-right">STOCK</th>
+                <th className="px-2 py-2.5 text-right">SCORE</th>
               </tr>
             </thead>
-            <tbody>
-              {skuHits.map(({ style, variant }) => (
-                <tr key={variant.sku} className="border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
-                  <td className="px-3 py-2 font-mono text-[12px]">{variant.sku}</td>
-                  <td className="px-2 py-2"><Link to={`/admin/products/${style.id}`} className="link-underline">{style.name}</Link></td>
-                  <td className="px-2 py-2"><span className="flex items-center gap-1.5 text-xs"><Dot hex={variant.colorHex} />{variant.colorName}</span></td>
-                  <td className="px-2 py-2 text-xs">{variant.size}</td>
-                  <td className="px-2 py-2 font-mono text-[11px] text-ink-soft">{variant.barcode}</td>
-                  <td className="px-2 py-2 text-right tabular-nums text-xs">{vnd(variant.priceOverride ?? style.price)}</td>
-                  <td className={`px-2 py-2 text-right tabular-nums text-xs ${variant.stock === 0 ? "text-[var(--color-accent)]" : ""}`}>{variant.stock}</td>
+            <tbody className={skus.loading ? "opacity-40" : ""}>
+              {skus.data.map((h) => (
+                <tr key={h.sku} className="border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
+                  <td className="px-3 py-2 font-mono text-[12px]">{h.sku}</td>
+                  <td className="px-2 py-2"><Link to={`/admin/products/${h.style_id}`} className="link-underline">{h.style_name}</Link></td>
+                  <td className="px-2 py-2"><span className="flex items-center gap-1.5 text-xs"><Dot hex={h.color_hex} />{h.color_name}</span></td>
+                  <td className="px-2 py-2 text-xs">{h.size}</td>
+                  <td className="px-2 py-2 font-mono text-[11px] text-ink-soft">{h.barcode}</td>
+                  <td className="px-2 py-2 text-right text-xs tabular-nums">{vnd(h.price)}</td>
+                  <td className={`px-2 py-2 text-right text-xs tabular-nums ${h.stock === 0 ? "text-[var(--color-accent)]" : ""}`}>{h.stock}</td>
+                  <td className="px-2 py-2 text-right text-[10px] tabular-nums text-ink-soft">{h.score.toFixed(0)}</td>
                 </tr>
               ))}
-              {!skuHits.length && <tr><td colSpan={7} className="py-10 text-center text-xs text-ink-soft">Type a SKU, barcode or name to search {styles.reduce((n, s) => n + s.variants.length, 0).toLocaleString()} SKUs.</td></tr>}
+              {!skus.loading && !skus.data.length && (
+                <tr><td colSpan={8} className="py-10 text-center text-xs text-ink-soft">Type a SKU, barcode or name — ranked by Postgres over all 7,007 SKUs.</td></tr>
+              )}
             </tbody>
           </table>
-          {skuHits.length >= 300 && <p className="px-4 py-2 text-[10px] text-ink-soft">Showing top 300 ranked hits — refine your query.</p>}
         </div>
       )}
 
-      {/* pagination */}
       {view === "styles" && pageCount > 1 && (
         <div className="mt-4 flex items-center justify-between text-xs text-ink-soft">
           <span>Page {page + 1} / {pageCount}</span>
@@ -210,12 +229,17 @@ export default function AdminProducts() {
       {bulkOpen && (
         <BulkModal
           count={sel.size}
+          cats={cats.data.map((c) => [c.id, c.label])}
+          cols={cols.data.map((c) => [c.id, c.label])}
           onClose={() => setBulkOpen(false)}
-          onApply={(patch) => {
-            const n = bulkUpdate([...sel], patch);
+          onApply={async (patch) => {
             setBulkOpen(false);
-            setSel(new Set());
-            alert(`${n} styles updated.`);
+            await run(async () => {
+              const n = await bulkUpdateStyles([...sel], patch);
+              setSel(new Set());
+              if (n === 0) throw new Error("0 rows changed — admin role required.");
+              alert(`${n} styles updated.`);
+            });
           }}
         />
       )}
@@ -223,26 +247,25 @@ export default function AdminProducts() {
   );
 }
 
-function Select({ value, onChange, placeholder, options }: { value: string; onChange: (v: string) => void; placeholder: string; options: [string, string][] }) {
+function Sel({ value, onChange, ph, opts }: { value: string; onChange: (v: string) => void; ph: string; opts: [string, string][] }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} className="h-9 rounded-md border edge bg-white/50 px-2 text-xs focus:border-ink focus:outline-none">
-      <option value="">{placeholder}</option>
-      {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      <option value="">{ph}</option>
+      {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   );
 }
 
-/* ---- bulk edit modal: change ONE attribute, override across selection ---- */
-function BulkModal({ count, onClose, onApply }: { count: number; onClose: () => void; onApply: (patch: BulkPatch) => void }) {
+function BulkModal({ count, cats, cols, onClose, onApply }: {
+  count: number; cats: [string, string][]; cols: [string, string][];
+  onClose: () => void; onApply: (p: BulkPatch) => void;
+}) {
   const [attr, setAttr] = useState<BulkPatch["attribute"]>("status");
-  const [value, setValue] = useState<string>("active");
+  const [value, setValue] = useState("active");
 
   const onAttr = (a: BulkPatch["attribute"]) => {
     setAttr(a);
-    if (a === "status") setValue("active");
-    else if (a === "collection") setValue(COLLECTIONS[0].id);
-    else if (a === "category") setValue(CATEGORIES[0].id);
-    else setValue("");
+    setValue(a === "status" ? "active" : a === "collection" ? cols[0]?.[0] ?? "" : a === "category" ? cats[0]?.[0] ?? "" : "");
   };
 
   return (
@@ -254,7 +277,7 @@ function BulkModal({ count, onClose, onApply }: { count: number; onClose: () => 
 
         <label className="mt-5 block">
           <span className="text-[10px] tracking-[0.1em] text-ink-soft">ATTRIBUTE</span>
-          <select value={attr} onChange={(e) => onAttr(e.target.value as BulkPatch["attribute"])} className="mt-1 h-9 w-full rounded-md border edge bg-white/60 px-2 text-sm focus:outline-none">
+          <select value={attr} onChange={(e) => onAttr(e.target.value as BulkPatch["attribute"])} className="input mt-1">
             <option value="status">Status</option>
             <option value="collection">Collection</option>
             <option value="category">Category</option>
@@ -266,22 +289,22 @@ function BulkModal({ count, onClose, onApply }: { count: number; onClose: () => 
         <label className="mt-4 block">
           <span className="text-[10px] tracking-[0.1em] text-ink-soft">NEW VALUE</span>
           {attr === "status" && (
-            <select value={value} onChange={(e) => setValue(e.target.value)} className="mt-1 h-9 w-full rounded-md border edge bg-white/60 px-2 text-sm focus:outline-none">
+            <select value={value} onChange={(e) => setValue(e.target.value)} className="input mt-1">
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           )}
           {attr === "collection" && (
-            <select value={value} onChange={(e) => setValue(e.target.value)} className="mt-1 h-9 w-full rounded-md border edge bg-white/60 px-2 text-sm focus:outline-none">
-              {COLLECTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            <select value={value} onChange={(e) => setValue(e.target.value)} className="input mt-1">
+              {cols.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           )}
           {attr === "category" && (
-            <select value={value} onChange={(e) => setValue(e.target.value)} className="mt-1 h-9 w-full rounded-md border edge bg-white/60 px-2 text-sm focus:outline-none">
-              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            <select value={value} onChange={(e) => setValue(e.target.value)} className="input mt-1">
+              {cats.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           )}
           {(attr === "pricePct" || attr === "priceSet") && (
-            <input type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder={attr === "pricePct" ? "e.g. -10 for −10%" : "e.g. 3500000"} className="mt-1 h-9 w-full rounded-md border edge bg-white/60 px-3 text-sm tabular-nums focus:outline-none" />
+            <input type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder={attr === "pricePct" ? "e.g. -10 for −10%" : "e.g. 3500000"} className="input mt-1 tabular-nums" />
           )}
         </label>
 

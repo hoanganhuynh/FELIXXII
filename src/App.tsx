@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import { useAuth } from "./store/auth";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
@@ -54,6 +55,10 @@ function Storefront() {
 }
 
 export default function App() {
+  // one auth listener for the whole app; re-runs on token refresh / OAuth return
+  const init = useAuth((s) => s.init);
+  useEffect(() => init(), [init]);
+
   return (
     <>
       <ScrollToTop />
