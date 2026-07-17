@@ -8,6 +8,7 @@ import {
 import { useAsync, useDebounced } from "../lib/useAsync";
 import { Badge, Dot, Btn } from "../components/ui";
 import { vnd, compact } from "../lib/format";
+import ImportPanel from "./Import";
 
 const PAGE = 25;
 const STATUSES = ["active", "draft", "archived"] as const;
@@ -30,6 +31,7 @@ export default function AdminProducts() {
   const [page, setPage] = useState(0);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const cats = useAsync(() => listCategories(), [], []);
@@ -94,6 +96,7 @@ export default function AdminProducts() {
               </button>
             ))}
           </div>
+          <Btn variant="ghost" onClick={() => setImportOpen(true)}>IMPORT</Btn>
           <Link to="/admin/products/new" className="h-9 rounded-md bg-ink px-4 text-[11px] leading-9 tracking-[0.08em] text-white transition-opacity hover:opacity-85">+ NEW</Link>
         </div>
       </div>
@@ -242,6 +245,10 @@ export default function AdminProducts() {
             });
           }}
         />
+      )}
+
+      {importOpen && (
+        <ImportPanel onClose={() => { setImportOpen(false); list.reload(); }} />
       )}
     </div>
   );

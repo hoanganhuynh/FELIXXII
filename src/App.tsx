@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./store/auth";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -21,7 +21,6 @@ import AdminCollections from "./admin/pages/Collections";
 import AdminOrders from "./admin/pages/Orders";
 import AdminCustomers from "./admin/pages/Customers";
 import SizeRules from "./admin/pages/SizeRules";
-import ImportPage from "./admin/pages/Import";
 import Reference from "./admin/pages/Reference";
 
 function ScrollToTop() {
@@ -73,7 +72,8 @@ export default function App() {
           <Route path="orders" element={<AdminOrders />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="size-rules" element={<SizeRules />} />
-          <Route path="import" element={<ImportPage />} />
+          {/* Import folded into Products as a panel — keep the old path working */}
+          <Route path="import" element={<Navigate to="/admin/products" replace />} />
           <Route path="reference" element={<Reference />} />
         </Route>
 

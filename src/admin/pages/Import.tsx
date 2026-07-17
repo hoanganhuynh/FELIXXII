@@ -29,7 +29,9 @@ const SAMPLE_ROWS = [
 
 type RowResult = { line: number; sku: string; status: "ok" | "warn" | "error"; message: string };
 
-export default function ImportPage() {
+/** Product import lives inside Products — it only ever creates products, so a
+ *  top-level nav entry alongside Orders/Customers implied a scope it never had. */
+export default function ImportPanel({ onClose }: { onClose: () => void }) {
   const [raw, setRaw] = useState("");
   const [results, setResults] = useState<RowResult[] | null>(null);
   const [mode, setMode] = useState<"create" | "upsert" | "overwrite">("upsert");
@@ -107,13 +109,19 @@ export default function ImportPage() {
     : null;
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="font-serif text-3xl">Import</h1>
-        <p className="mt-1 text-xs text-ink-soft">Bulk-load products by CSV, or enter them by hand in the product editor.</p>
-      </div>
+    <div className="fixed inset-0 z-[80] overflow-y-auto">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative z-10 mx-auto my-6 w-[min(1100px,calc(100%-2rem))] rounded-lg bg-[var(--color-bg)] p-6 shadow-2xl md:p-8">
+        <button onClick={onClose} aria-label="Close" className="absolute right-5 top-5 text-ink transition-opacity hover:opacity-50">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+        <div className="mb-5">
+          <h2 className="font-serif text-2xl">Import products</h2>
+          <p className="mt-1 text-xs text-ink-soft">Bulk-load by CSV, or close this and add one by hand in the editor.</p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         {/* template */}
         <Card title="1 · Template" action={<Btn variant="ghost" onClick={download} className="!h-7">Download CSV</Btn>}>
           <div className="max-h-[420px] overflow-y-auto">
@@ -212,6 +220,7 @@ export default function ImportPage() {
               )}
             </Card>
           )}
+        </div>
         </div>
       </div>
     </div>

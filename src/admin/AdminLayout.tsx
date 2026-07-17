@@ -10,7 +10,6 @@ const NAV: { to: string; label: string; icon: ReactNode; end?: boolean }[] = [
   { to: "/admin/orders", label: "Orders", icon: <path d="M6 2l1.5 3h9L18 2M4 8h16l-1 12H5L4 8zM9 12h6" /> },
   { to: "/admin/customers", label: "Customers", icon: <path d="M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8z" /> },
   { to: "/admin/size-rules", label: "Size Rules", icon: <path d="M3 8l4-4 14 14-4 4L3 8zM7 12l2-2M11 16l2-2" /> },
-  { to: "/admin/import", label: "Import", icon: <path d="M12 15V3m0 12l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" /> },
   { to: "/admin/reference", label: "SKU & Search", icon: <path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.3-4.3" /> },
 ];
 
