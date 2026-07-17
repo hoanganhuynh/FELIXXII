@@ -1,23 +1,34 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 
 type Step = "email" | "password" | "signup";
 
-/** OAuth needs real provider credentials + registered redirect URLs, which a
- *  local/tunnelled demo doesn't have. Flag it honestly instead of failing
- *  silently when someone clicks. */
-const OAUTH_CONFIGURED = false;
+/** Supabase Auth keys on email, so a bare username like "admin" gets the demo
+ *  domain appended. Lets the demo creds stay "admin / 123456". */
+const DEMO_DOMAIN = "felixxii.local";
+const toEmail = (v: string) => {
+  const t = v.trim();
+  return t.includes("@") ? t : `${t}@${DEMO_DOMAIN}`;
+};
 
 export default function LoginDrawer() {
-  const { loginOpen, setLoginOpen, signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
+  const { loginOpen, setLoginOpen, signInWithEmail, signUpWithEmail } = useAuth();
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [ident, setIdent] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  /** Signing in from inside the admin should keep you there — bouncing to the
+   *  storefront account page loses the admin's place. */
+  const afterLogin = () => {
+    if (!pathname.startsWith("/admin")) navigate("/account");
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLoginOpen(false); };
@@ -28,7 +39,7 @@ export default function LoginDrawer() {
   useEffect(() => {
     if (!loginOpen) {
       const t = setTimeout(() => {
-        setStep("email"); setEmail(""); setPassword(""); setName(""); setErr(null);
+        setStep("email"); setIdent(""); setPassword(""); setName(""); setErr(null); setNote(null);
       }, 400);
       return () => clearTimeout(t);
     }
@@ -46,19 +57,21 @@ export default function LoginDrawer() {
     }
   };
 
-  const onEmailNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    setStep("password");
-  };
-
+  const onNext = (e: React.FormEvent) => { e.preventDefault(); setNote(null); setStep("password"); };
   const onSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    run(() => signInWithEmail(email, password), () => navigate("/account"));
+    run(() => signInWithEmail(toEmail(ident), password), afterLogin);
   };
-
   const onSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-    run(() => signUpWithEmail(email, password, name), () => navigate("/account"));
+    run(() => signUpWithEmail(toEmail(ident), password, name), afterLogin);
+  };
+
+  const fillDemo = (who: "user" | "admin") => {
+    setIdent(who === "admin" ? "admin" : "user@gmail.com");
+    setPassword("123456");
+    setStep("password");
+    setNote(null);
   };
 
   return (
@@ -75,9 +88,8 @@ export default function LoginDrawer() {
         <div className="px-8 py-12">
           <h2 className="font-serif text-lg">LOGIN / CREATE ACCOUNT</h2>
 
-          {err && (
-            <p className="mt-4 rounded-md bg-[var(--color-accent-soft)] px-3 py-2 text-xs text-[var(--color-accent)]">{err}</p>
-          )}
+          {err && <p className="mt-4 rounded-md bg-[var(--color-accent-soft)] px-3 py-2 text-xs text-[var(--color-accent)]">{err}</p>}
+          {note && <p className="mt-4 rounded-md bg-[var(--color-tile)] px-3 py-2 text-xs text-ink-soft">{note}</p>}
 
           {step === "email" && (
             <>
@@ -85,10 +97,17 @@ export default function LoginDrawer() {
                 Please enter your email address, and we'll check if you already have an account.
               </p>
               <p className="mt-4 text-right text-[10px] text-ink-soft">*Required Fields</p>
-              <form onSubmit={onEmailNext} className="mt-2">
+              <form onSubmit={onNext} className="mt-2">
                 <label className="block border-b edge pb-2">
                   <span className="text-[10px] text-ink-soft">Email Address*</span>
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="mt-1 w-full bg-transparent text-sm focus:outline-none" />
+                  <input
+                    type="text"
+                    required
+                    value={ident}
+                    onChange={(e) => setIdent(e.target.value)}
+                    autoComplete="username"
+                    className="mt-1 w-full bg-transparent text-sm focus:outline-none"
+                  />
                 </label>
                 <button type="submit" className="mt-5 h-11 w-full bg-[#6b6b6b] text-[11px] tracking-[0.12em] text-white transition-opacity hover:opacity-90">
                   CONTINUE
@@ -100,22 +119,18 @@ export default function LoginDrawer() {
               </div>
 
               <div className="space-y-3">
-                <OAuthBtn provider="google" onClick={() => run(() => signInWithOAuth("google"))} />
-                <OAuthBtn provider="facebook" onClick={() => run(() => signInWithOAuth("facebook"))} />
+                <OAuthBtn provider="google" onClick={() => setNote("Social sign-in is decorative in this demo — it needs real provider credentials. Use email / password below.")} />
+                <OAuthBtn provider="facebook" onClick={() => setNote("Social sign-in is decorative in this demo — it needs real provider credentials. Use email / password below.")} />
               </div>
-              {!OAUTH_CONFIGURED && (
-                <p className="mt-3 text-[10px] leading-relaxed text-ink-soft">
-                  Social sign-in needs real provider credentials and a registered redirect URL —
-                  not available in this demo. Use email instead.
-                </p>
-              )}
+
+              <DemoCreds onPick={fillDemo} />
             </>
           )}
 
           {step === "password" && (
             <>
-              <button onClick={() => setStep("email")} className="mt-6 mb-6 flex items-center gap-2 text-xs text-ink-soft hover:opacity-70">← Back</button>
-              <p className="text-xs text-ink-soft">Signing in as <strong className="text-ink">{email}</strong></p>
+              <button onClick={() => setStep("email")} className="mb-6 mt-6 flex items-center gap-2 text-xs text-ink-soft hover:opacity-70">← Back</button>
+              <p className="text-xs text-ink-soft">Signing in as <strong className="text-ink">{toEmail(ident)}</strong></p>
               <form onSubmit={onSignIn} className="mt-5">
                 <label className="block border-b edge pb-2">
                   <span className="text-[10px] text-ink-soft">Password*</span>
@@ -133,7 +148,7 @@ export default function LoginDrawer() {
 
           {step === "signup" && (
             <>
-              <button onClick={() => setStep("password")} className="mt-6 mb-6 flex items-center gap-2 text-xs text-ink-soft hover:opacity-70">← Back</button>
+              <button onClick={() => setStep("password")} className="mb-6 mt-6 flex items-center gap-2 text-xs text-ink-soft hover:opacity-70">← Back</button>
               <p className="font-serif text-base">Create your account</p>
               <form onSubmit={onSignUp} className="mt-5 space-y-4">
                 <label className="block border-b edge pb-2">
@@ -142,7 +157,7 @@ export default function LoginDrawer() {
                 </label>
                 <label className="block border-b edge pb-2">
                   <span className="text-[10px] text-ink-soft">Email*</span>
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full bg-transparent text-sm focus:outline-none" />
+                  <input type="email" required value={ident} onChange={(e) => setIdent(e.target.value)} className="mt-1 w-full bg-transparent text-sm focus:outline-none" />
                 </label>
                 <label className="block border-b edge pb-2">
                   <span className="text-[10px] text-ink-soft">Password* (min 6)</span>
@@ -160,14 +175,32 @@ export default function LoginDrawer() {
   );
 }
 
+/** Click-to-fill demo accounts — this is a shared test build, so make the
+ *  credentials obvious rather than making people hunt for them. */
+function DemoCreds({ onPick }: { onPick: (who: "user" | "admin") => void }) {
+  return (
+    <div className="mt-8 rounded-md border border-dashed edge p-4">
+      <p className="text-[10px] tracking-[0.1em] text-ink-soft">DEMO ACCOUNTS — CLICK TO FILL</p>
+      <div className="mt-3 space-y-2">
+        <button onClick={() => onPick("user")} className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition-colors hover:bg-[var(--color-tile)]">
+          <span className="text-xs">Customer</span>
+          <span className="font-mono text-[10px] text-ink-soft">user@gmail.com · 123456</span>
+        </button>
+        <button onClick={() => onPick("admin")} className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition-colors hover:bg-[var(--color-tile)]">
+          <span className="text-xs">Admin</span>
+          <span className="font-mono text-[10px] text-ink-soft">admin · 123456</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function OAuthBtn({ provider, onClick }: { provider: "google" | "facebook"; onClick: () => void }) {
   const label = provider === "google" ? "CONTINUE WITH GOOGLE" : "CONTINUE WITH FACEBOOK";
   return (
     <button
       onClick={onClick}
-      disabled={!OAUTH_CONFIGURED}
-      title={OAUTH_CONFIGURED ? undefined : "Requires provider credentials — unavailable in this demo"}
-      className="flex h-11 w-full items-center justify-center gap-3 border edge text-[11px] tracking-[0.08em] transition-colors hover:bg-[var(--color-tile)] disabled:cursor-not-allowed disabled:opacity-45"
+      className="flex h-11 w-full items-center justify-center gap-3 border edge text-[11px] tracking-[0.08em] transition-colors hover:bg-[var(--color-tile)]"
     >
       {provider === "google" ? (
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>

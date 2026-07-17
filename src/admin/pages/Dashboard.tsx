@@ -32,7 +32,7 @@ export default function Dashboard() {
           <button onClick={() => setLoginOpen(true)} className="mt-6 h-10 rounded-md bg-ink px-6 text-[11px] tracking-[0.1em] text-white transition-opacity hover:opacity-85">
             SIGN IN AS ADMIN
           </button>
-          <p className="mt-4 font-mono text-[10px] text-ink-soft">admin@felixxii.local · admin123456</p>
+          <p className="mt-4 font-mono text-[10px] text-ink-soft">admin · 123456</p>
         </div>
       </div>
     );

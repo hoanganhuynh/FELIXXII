@@ -80,7 +80,7 @@ export default function AdminLayout() {
         </nav>
         <p className="mt-6 px-3 text-[10px] leading-relaxed text-ink-soft">
           Demo admin · backed by Postgres. Sign in as{" "}
-          <span className="font-mono">admin@felixxii.local</span> to write.
+          <span className="font-mono">admin / 123456</span> to write.
         </p>
       </aside>
 
