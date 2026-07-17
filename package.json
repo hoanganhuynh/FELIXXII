@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Editorial luxury eyewear storefront — Veggie Collection (static frontend)",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host --port 5180",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "db:seed": "tsx scripts/gen-seed.ts",
@@ -14,12 +14,15 @@
     "db:stop": "supabase stop",
     "db:studio": "open http://127.0.0.1:54323",
     "share": "cloudflared tunnel --url http://localhost:5180",
-    "db:users": "tsx scripts/seed-users.ts"
+    "db:users": "tsx scripts/seed-users.ts",
+    "i18n:check": "tsx scripts/i18n-check.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
+    "i18next": "^26.3.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-i18next": "^17.0.10",
     "react-router-dom": "^7.6.0",
     "zustand": "^5.0.4"
   },

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {
   listStyles, searchSkus, bulkUpdateStyles, deleteStyle, duplicateStyle,
@@ -12,14 +13,10 @@ import ImportPanel from "./Import";
 
 const PAGE = 25;
 const STATUSES = ["active", "draft", "archived"] as const;
-const SORTS = [
-  { id: "new", label: "Newest" },
-  { id: "best", label: "Bestseller" },
-  { id: "asc", label: "Price ↑" },
-  { id: "desc", label: "Price ↓" },
-] as const;
+const SORTS = ["new", "best", "asc", "desc"] as const;
 
 export default function AdminProducts() {
+  const { t } = useTranslation();
   const [view, setView] = useState<"styles" | "skus">("styles");
   const [q, setQ] = useState("");
   const dq = useDebounced(q, 250); // don't hit the DB on every keystroke
@@ -83,21 +80,21 @@ export default function AdminProducts() {
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-3xl">Products</h1>
+          <h1 className="font-serif text-3xl">{t("products")}</h1>
           <p className="mt-1 text-xs text-ink-soft">
-            {list.loading ? "Loading…" : `${list.data.total.toLocaleString()} styles match`}
+            {list.loading ? t("common.loading") : t("prod.matched", { count: list.data.total.toLocaleString() })}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border edge p-0.5 text-[11px]">
             {(["styles", "skus"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} className={`rounded px-3 py-1.5 tracking-[0.06em] transition-colors ${view === v ? "bg-ink text-white" : "text-ink-soft"}`}>
-                {v.toUpperCase()}
+                {v === "styles" ? t("prod.styles") : t("prod.skus")}
               </button>
             ))}
           </div>
-          <Btn variant="ghost" onClick={() => setImportOpen(true)}>IMPORT</Btn>
-          <Link to="/admin/products/new" className="h-9 rounded-md bg-ink px-4 text-[11px] leading-9 tracking-[0.08em] text-white transition-opacity hover:opacity-85">+ NEW</Link>
+          <Btn variant="ghost" onClick={() => setImportOpen(true)}>{t("prod.import")}</Btn>
+          <Link to="/admin/products/new" className="h-9 rounded-md bg-ink px-4 text-[11px] leading-9 tracking-[0.08em] text-white transition-opacity hover:opacity-85">{t("prod.new")}</Link>
         </div>
       </div>
 
@@ -114,18 +111,18 @@ export default function AdminProducts() {
           <input
             value={q}
             onChange={(e) => { setQ(e.target.value); reset(); }}
-            placeholder={view === "skus" ? "Search SKU, barcode, name…  e.g. FX-BR-0001-OL-M" : "Search style, code, material…"}
+            placeholder={view === "skus" ? t("prod.search_sku") : t("prod.search_style")}
             className="h-9 w-full rounded-md border edge bg-white/50 pl-9 pr-3 text-sm focus:border-ink focus:outline-none"
           />
         </div>
         {view === "styles" && (
           <>
-            <Sel value={cat} onChange={(v) => { setCat(v); reset(); }} ph="Category" opts={cats.data.map((c) => [c.id, c.label])} />
-            <Sel value={col} onChange={(v) => { setCol(v); reset(); }} ph="Collection" opts={cols.data.map((c) => [c.id, c.season])} />
-            <Sel value={status} onChange={(v) => { setStatus(v); reset(); }} ph="Status" opts={STATUSES.map((s) => [s, s])} />
-            <Sel value={stock} onChange={(v) => { setStock(v as "" | "low" | "out"); reset(); }} ph="Stock" opts={[["low", "Low (<12)"], ["out", "Out of stock"]]} />
+            <Sel value={cat} onChange={(v) => { setCat(v); reset(); }} ph={t("prod.category")} opts={cats.data.map((c) => [c.id, c.label])} />
+            <Sel value={col} onChange={(v) => { setCol(v); reset(); }} ph={t("prod.collection")} opts={cols.data.map((c) => [c.id, c.season])} />
+            <Sel value={status} onChange={(v) => { setStatus(v); reset(); }} ph={t("prod.status")} opts={STATUSES.map((s) => [s, t(`status.${s}`)])} />
+            <Sel value={stock} onChange={(v) => { setStock(v as "" | "low" | "out"); reset(); }} ph={t("prod.stock")} opts={[["low", t("prod.stock_low")], ["out", t("prod.stock_out")]]} />
             <select value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); reset(); }} className="h-9 rounded-md border edge bg-white/50 px-2 text-xs focus:outline-none">
-              {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+              {SORTS.map((s) => <option key={s} value={s}>{t(`prod.sort_${s}`)}</option>)}
             </select>
           </>
         )}
@@ -133,10 +130,10 @@ export default function AdminProducts() {
 
       {view === "styles" && sel.size > 0 && (
         <div className="mb-3 flex items-center justify-between rounded-md bg-ink px-4 py-2.5 text-white">
-          <span className="text-xs">{sel.size} selected</span>
+          <span className="text-xs">{t("prod.selected", { count: sel.size })}</span>
           <div className="flex items-center gap-2">
-            <button onClick={() => setBulkOpen(true)} className="rounded bg-white/15 px-3 py-1.5 text-[11px] tracking-[0.06em] hover:bg-white/25">BULK EDIT</button>
-            <button onClick={() => setSel(new Set())} className="text-[11px] text-white/60 hover:text-white">Clear</button>
+            <button onClick={() => setBulkOpen(true)} className="rounded bg-white/15 px-3 py-1.5 text-[11px] tracking-[0.06em] hover:bg-white/25">{t("prod.bulk_edit")}</button>
+            <button onClick={() => setSel(new Set())} className="text-[11px] text-white/60 hover:text-white">{t("prod.clear")}</button>
           </div>
         </div>
       )}
@@ -148,10 +145,10 @@ export default function AdminProducts() {
             <thead>
               <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
                 <th className="w-10 px-3 py-2.5"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-[var(--color-accent)]" /></th>
-                <th className="px-2 py-2.5">STYLE</th><th className="px-2 py-2.5">CODE</th>
-                <th className="px-2 py-2.5">COLORS</th>
-                <th className="px-2 py-2.5 text-right">PRICE</th><th className="px-2 py-2.5 text-right">STOCK</th>
-                <th className="px-2 py-2.5 text-right">SOLD</th><th className="px-2 py-2.5">STATUS</th><th className="px-2 py-2.5" />
+                <th className="px-2 py-2.5">{t("prod.col_style")}</th><th className="px-2 py-2.5">{t("prod.col_code")}</th>
+                <th className="px-2 py-2.5">{t("prod.col_colors")}</th>
+                <th className="px-2 py-2.5 text-right">{t("prod.col_price")}</th><th className="px-2 py-2.5 text-right">{t("prod.col_stock")}</th>
+                <th className="px-2 py-2.5 text-right">{t("prod.col_sold")}</th><th className="px-2 py-2.5">{t("prod.col_status")}</th><th className="px-2 py-2.5" />
               </tr>
             </thead>
             <tbody className={list.loading ? "opacity-40 transition-opacity" : ""}>
@@ -167,20 +164,20 @@ export default function AdminProducts() {
                   <td className="px-2 py-2.5 text-right text-xs tabular-nums">{vnd(s.price!)}</td>
                   <td className={`px-2 py-2.5 text-right text-xs tabular-nums ${(s.total_stock ?? 0) < 12 ? "text-[var(--color-accent)]" : ""}`}>{s.total_stock}</td>
                   <td className="px-2 py-2.5 text-right text-xs tabular-nums text-ink-soft">{compact(s.units_sold ?? 0)}</td>
-                  <td className="px-2 py-2.5"><Badge>{s.status!}</Badge></td>
+                  <td className="px-2 py-2.5"><Badge label={t(`status.${s.status}`)}>{s.status!}</Badge></td>
                   <td className="px-2 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1.5 text-ink-soft">
-                      <button title="Duplicate" disabled={busy} onClick={() => run(() => duplicateStyle(s.id!), "Duplicated as draft.")} className="hover:text-ink disabled:opacity-30">
+                      <button title={t("common.duplicate")} disabled={busy} onClick={() => run(() => duplicateStyle(s.id!), t("prod.duplicated"))} className="hover:text-ink disabled:opacity-30">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 012-2h10" /></svg>
                       </button>
-                      <button title="Delete" disabled={busy} onClick={() => { if (confirm(`Delete "${s.name}"?`)) run(() => deleteStyle(s.id!)); }} className="hover:text-[var(--color-accent)] disabled:opacity-30">
+                      <button title={t("common.delete")} disabled={busy} onClick={() => { if (confirm(t("prod.confirm_delete", { name: s.name }))) run(() => deleteStyle(s.id!)); }} className="hover:text-[var(--color-accent)] disabled:opacity-30">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {!list.loading && !rows.length && <tr><td colSpan={9} className="py-10 text-center text-xs text-ink-soft">No styles match your filters.</td></tr>}
+              {!list.loading && !rows.length && <tr><td colSpan={9} className="py-10 text-center text-xs text-ink-soft">{t("prod.no_match")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -192,10 +189,10 @@ export default function AdminProducts() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
-                <th className="px-3 py-2.5">SKU</th><th className="px-2 py-2.5">STYLE</th><th className="px-2 py-2.5">COLOR</th>
-                <th className="px-2 py-2.5">SIZE</th><th className="px-2 py-2.5">BARCODE</th>
-                <th className="px-2 py-2.5 text-right">PRICE</th><th className="px-2 py-2.5 text-right">STOCK</th>
-                <th className="px-2 py-2.5 text-right">SCORE</th>
+                <th className="px-3 py-2.5">{t("prod.col_sku")}</th><th className="px-2 py-2.5">{t("prod.col_style")}</th><th className="px-2 py-2.5">{t("prod.col_color")}</th>
+                <th className="px-2 py-2.5">{t("prod.col_size")}</th><th className="px-2 py-2.5">{t("prod.col_barcode")}</th>
+                <th className="px-2 py-2.5 text-right">{t("prod.col_price")}</th><th className="px-2 py-2.5 text-right">{t("prod.col_stock")}</th>
+                <th className="px-2 py-2.5 text-right">{t("prod.col_score")}</th>
               </tr>
             </thead>
             <tbody className={skus.loading ? "opacity-40" : ""}>
@@ -212,7 +209,7 @@ export default function AdminProducts() {
                 </tr>
               ))}
               {!skus.loading && !skus.data.length && (
-                <tr><td colSpan={8} className="py-10 text-center text-xs text-ink-soft">Type a SKU, barcode or name — ranked by Postgres over all 7,007 SKUs.</td></tr>
+                <tr><td colSpan={8} className="py-10 text-center text-xs text-ink-soft">{t("prod.sku_hint")}</td></tr>
               )}
             </tbody>
           </table>
@@ -221,10 +218,10 @@ export default function AdminProducts() {
 
       {view === "styles" && pageCount > 1 && (
         <div className="mt-4 flex items-center justify-between text-xs text-ink-soft">
-          <span>Page {page + 1} / {pageCount}</span>
+          <span>{t("common.page", { page: page + 1, total: pageCount })}</span>
           <div className="flex gap-2">
-            <Btn variant="ghost" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>Prev</Btn>
-            <Btn variant="ghost" onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>Next</Btn>
+            <Btn variant="ghost" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>{t("common.prev")}</Btn>
+            <Btn variant="ghost" onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>{t("common.next")}</Btn>
           </div>
         </div>
       )}
@@ -240,8 +237,8 @@ export default function AdminProducts() {
             await run(async () => {
               const n = await bulkUpdateStyles([...sel], patch);
               setSel(new Set());
-              if (n === 0) throw new Error("0 rows changed — admin role required.");
-              alert(`${n} styles updated.`);
+              if (n === 0) throw new Error(t("prod.zero_changed"));
+              alert(t("prod.updated", { count: n }));
             });
           }}
         />
@@ -267,6 +264,7 @@ function BulkModal({ count, cats, cols, onClose, onApply }: {
   count: number; cats: [string, string][]; cols: [string, string][];
   onClose: () => void; onApply: (p: BulkPatch) => void;
 }) {
+  const { t } = useTranslation();
   const [attr, setAttr] = useState<BulkPatch["attribute"]>("status");
   const [value, setValue] = useState("active");
 
@@ -279,25 +277,25 @@ function BulkModal({ count, cats, cols, onClose, onApply }: {
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative z-10 w-full max-w-md rounded-lg bg-[var(--color-bg)] p-6 shadow-2xl">
-        <h2 className="font-serif text-xl">Bulk edit</h2>
-        <p className="mt-1 text-xs text-ink-soft">Overwrite one attribute across <b>{count}</b> selected styles.</p>
+        <h2 className="font-serif text-xl">{t("prod.bulk_title")}</h2>
+        <p className="mt-1 text-xs text-ink-soft">{t("prod.bulk_body", { count })}</p>
 
         <label className="mt-5 block">
-          <span className="text-[10px] tracking-[0.1em] text-ink-soft">ATTRIBUTE</span>
+          <span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("prod.attribute")}</span>
           <select value={attr} onChange={(e) => onAttr(e.target.value as BulkPatch["attribute"])} className="input mt-1">
-            <option value="status">Status</option>
-            <option value="collection">Collection</option>
-            <option value="category">Category</option>
-            <option value="pricePct">Price · adjust by %</option>
-            <option value="priceSet">Price · set to (₫)</option>
+            <option value="status">{t("prod.attr_status")}</option>
+            <option value="collection">{t("prod.attr_collection")}</option>
+            <option value="category">{t("prod.attr_category")}</option>
+            <option value="pricePct">{t("prod.attr_price_pct")}</option>
+            <option value="priceSet">{t("prod.attr_price_set")}</option>
           </select>
         </label>
 
         <label className="mt-4 block">
-          <span className="text-[10px] tracking-[0.1em] text-ink-soft">NEW VALUE</span>
+          <span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("prod.new_value")}</span>
           {attr === "status" && (
             <select value={value} onChange={(e) => setValue(e.target.value)} className="input mt-1">
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {STATUSES.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
             </select>
           )}
           {attr === "collection" && (
@@ -316,8 +314,8 @@ function BulkModal({ count, cats, cols, onClose, onApply }: {
         </label>
 
         <div className="mt-6 flex justify-end gap-2">
-          <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-          <Btn onClick={() => onApply({ attribute: attr, value })}>Apply to {count}</Btn>
+          <Btn variant="ghost" onClick={onClose}>{t("common.cancel")}</Btn>
+          <Btn onClick={() => onApply({ attribute: attr, value })}>{t("prod.apply_to", { count })}</Btn>
         </div>
       </div>
     </div>

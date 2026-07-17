@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Btn, Badge } from "../components/ui";
 import { parseSku } from "../data/sku";
 import { supabase } from "../../lib/supabase";
@@ -32,6 +33,7 @@ type RowResult = { line: number; sku: string; status: "ok" | "warn" | "error"; m
 /** Product import lives inside Products — it only ever creates products, so a
  *  top-level nav entry alongside Orders/Customers implied a scope it never had. */
 export default function ImportPanel({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [raw, setRaw] = useState("");
   const [results, setResults] = useState<RowResult[] | null>(null);
   const [mode, setMode] = useState<"create" | "upsert" | "overwrite">("upsert");
@@ -80,26 +82,26 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
       const missing = COLUMNS.filter((c) => c.req && c.key !== "sku" && !get(c.key)).map((c) => c.key);
 
       if (missing.length) {
-        out.push({ line: i + 2, sku: sku || "—", status: "error", message: `Missing required: ${missing.join(", ")}` });
+        out.push({ line: i + 2, sku: sku || "—", status: "error", message: t("imp.err_missing", { fields: missing.join(", ") }) });
         return;
       }
       if (sku && !parseSku(sku)) {
-        out.push({ line: i + 2, sku, status: "error", message: "SKU does not match FX-{CC}-{SSSS}-{KK}-{ZZ}" });
+        out.push({ line: i + 2, sku, status: "error", message: t("imp.err_sku") });
         return;
       }
       if (Number.isNaN(Number(get("price"))) || Number(get("price")) <= 0) {
-        out.push({ line: i + 2, sku, status: "error", message: "price must be a positive integer" });
+        out.push({ line: i + 2, sku, status: "error", message: t("imp.err_price") });
         return;
       }
       if (sku && known.has(sku)) {
         out.push({
           line: i + 2, sku,
           status: mode === "create" ? "error" : "warn",
-          message: mode === "create" ? "SKU already exists (mode = create only)" : `Existing SKU — will be ${mode === "overwrite" ? "overwritten" : "updated"}`,
+          message: mode === "create" ? t("imp.err_exists") : t("imp.warn_exists", { action: mode === "overwrite" ? t("imp.overwrite") : t("imp.upsert") }),
         });
         return;
       }
-      out.push({ line: i + 2, sku: sku || "(auto)", status: "ok", message: sku ? "New SKU" : "SKU will be auto-generated from style + color + size" });
+      out.push({ line: i + 2, sku: sku || "(auto)", status: "ok", message: sku ? t("imp.new_sku") : t("imp.auto_sku") });
     });
     setResults(out);
   };
@@ -112,23 +114,23 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-[80] overflow-y-auto">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative z-10 mx-auto my-6 w-[min(1100px,calc(100%-2rem))] rounded-lg bg-[var(--color-bg)] p-6 shadow-2xl md:p-8">
-        <button onClick={onClose} aria-label="Close" className="absolute right-5 top-5 text-ink transition-opacity hover:opacity-50">
+        <button onClick={onClose} aria-label={t("common.close")} className="absolute right-5 top-5 text-ink transition-opacity hover:opacity-50">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 
         <div className="mb-5">
-          <h2 className="font-serif text-2xl">Import products</h2>
-          <p className="mt-1 text-xs text-ink-soft">Bulk-load by CSV, or close this and add one by hand in the editor.</p>
+          <h2 className="font-serif text-2xl">{t("imp.title")}</h2>
+          <p className="mt-1 text-xs text-ink-soft">{t("imp.subtitle")}</p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         {/* template */}
-        <Card title="1 · Template" action={<Btn variant="ghost" onClick={download} className="!h-7">Download CSV</Btn>}>
+        <Card title={t("imp.step1")} action={<Btn variant="ghost" onClick={download} className="!h-7">{t("imp.download")}</Btn>}>
           <div className="max-h-[420px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-[var(--color-bg)]">
                 <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
-                  <th className="px-4 py-2">COLUMN</th><th className="px-2 py-2">RULE</th>
+                  <th className="px-4 py-2">{t("imp.col_column")}</th><th className="px-2 py-2">{t("imp.col_rule")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,7 +138,7 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
                   <tr key={c.key} className="border-b edge last:border-0">
                     <td className="px-4 py-2 align-top">
                       <p className="font-mono text-[11px]">{c.key}</p>
-                      {c.req ? <span className="text-[9px] text-[var(--color-accent)]">required</span> : <span className="text-[9px] text-ink-soft">optional</span>}
+                      {c.req ? <span className="text-[9px] text-[var(--color-accent)]">{t("imp.required")}</span> : <span className="text-[9px] text-ink-soft">{t("imp.optional")}</span>}
                     </td>
                     <td className="px-2 py-2">
                       <p className="text-[11px] text-ink-soft">{c.desc}</p>
@@ -151,47 +153,47 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
 
         {/* upload */}
         <div className="space-y-4">
-          <Card title="2 · Upload & validate">
+          <Card title={t("imp.step2")}>
             <div className="p-5">
               <div className="mb-4 flex gap-1.5">
                 {(["create", "upsert", "overwrite"] as const).map((m) => (
                   <button key={m} onClick={() => setMode(m)} className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${mode === m ? "border-ink bg-ink text-white" : "edge"}`}>
-                    {m === "create" ? "Create only" : m === "upsert" ? "Upsert" : "Overwrite"}
+                    {m === "create" ? t("imp.create_only") : m === "upsert" ? t("imp.upsert") : t("imp.overwrite")}
                   </button>
                 ))}
               </div>
               <p className="mb-3 text-[11px] text-ink-soft">
-                {mode === "create" && "Fails on any SKU that already exists — safest for a brand-new drop."}
-                {mode === "upsert" && "Updates supplied fields on existing SKUs, creates the rest. Blank cells are left untouched."}
-                {mode === "overwrite" && "Replaces every field on matching SKUs — blank cells clear existing values."}
+                {mode === "create" && t("imp.mode_create")}
+                {mode === "upsert" && t("imp.mode_upsert")}
+                {mode === "overwrite" && t("imp.mode_overwrite")}
               </p>
 
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed edge py-8 text-center transition-colors hover:bg-[var(--color-tile)]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" className="text-ink-soft"><path d="M12 15V3m0 12l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" /></svg>
-                <span className="mt-2 text-xs">Drop a .csv here or click to browse</span>
+                <span className="mt-2 text-xs">{t("imp.drop")}</span>
                 <input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
               </label>
 
               <textarea
                 value={raw}
                 onChange={(e) => setRaw(e.target.value)}
-                placeholder="…or paste CSV rows here"
+                placeholder={t("imp.paste")}
                 rows={5}
                 className="mt-3 w-full rounded-md border edge bg-white/50 p-3 font-mono text-[11px] focus:border-ink focus:outline-none"
               />
               <div className="mt-3 flex gap-2">
                 <Btn onClick={() => void validate()} disabled={!raw.trim() || checking}>
-                  {checking ? "Checking…" : "Validate"}
+                  {checking ? t("imp.checking") : t("imp.validate")}
                 </Btn>
-                <Btn variant="ghost" onClick={() => setRaw(templateCsv)}>Load sample</Btn>
+                <Btn variant="ghost" onClick={() => setRaw(templateCsv)}>{t("imp.load_sample")}</Btn>
               </div>
             </div>
           </Card>
 
           {results && (
-            <Card title="3 · Validation report" action={
+            <Card title={t("imp.step3")} action={
               counts && <span className="flex gap-1.5">
-                <Badge>{`${counts.ok} ok`}</Badge>{counts.warn > 0 && <Badge>{`${counts.warn} warn`}</Badge>}{counts.error > 0 && <Badge>{`${counts.error} error`}</Badge>}
+                <Badge>{`${counts.ok} ${t("imp.ok")}`}</Badge>{counts.warn > 0 && <Badge>{`${counts.warn} ${t("imp.warn")}`}</Badge>}{counts.error > 0 && <Badge>{`${counts.error} ${t("imp.error")}`}</Badge>}
               </span>
             }>
               <div className="max-h-64 overflow-y-auto">
@@ -209,12 +211,12 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
                       ))}
                     </tbody>
                   </table>
-                ) : <p className="p-5 text-center text-xs text-ink-soft">Nothing to validate.</p>}
+                ) : <p className="p-5 text-center text-xs text-ink-soft">{t("imp.nothing")}</p>}
               </div>
               {counts && counts.error === 0 && results.length > 0 && (
                 <div className="border-t edge p-4">
-                  <Btn onClick={() => alert(`Demo: ${counts.ok + counts.warn} rows would be committed in "${mode}" mode.`)}>
-                    Commit {counts.ok + counts.warn} rows
+                  <Btn onClick={() => alert(t("imp.committed", { count: counts.ok + counts.warn, mode }))}>
+                    {t("imp.commit", { count: counts.ok + counts.warn })}
                   </Btn>
                 </div>
               )}

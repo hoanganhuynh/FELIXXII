@@ -2,20 +2,23 @@ import { useState, type ReactNode } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import LoginDrawer from "../components/LoginDrawer";
+import { useTranslation } from "react-i18next";
+import "./lib/i18n";
 
-const NAV: { to: string; label: string; icon: ReactNode; end?: boolean }[] = [
-  { to: "/admin", end: true, label: "Dashboard", icon: <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /> },
-  { to: "/admin/products", label: "Products", icon: <path d="M20 7L12 3 4 7v10l8 4 8-4V7zM12 3v18M4 7l8 4 8-4" /> },
-  { to: "/admin/collections", label: "Collections", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
-  { to: "/admin/orders", label: "Orders", icon: <path d="M6 2l1.5 3h9L18 2M4 8h16l-1 12H5L4 8zM9 12h6" /> },
-  { to: "/admin/customers", label: "Customers", icon: <path d="M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8z" /> },
-  { to: "/admin/size-rules", label: "Size Rules", icon: <path d="M3 8l4-4 14 14-4 4L3 8zM7 12l2-2M11 16l2-2" /> },
-  { to: "/admin/reference", label: "SKU & Search", icon: <path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.3-4.3" /> },
+const NAV: { to: string; labelKey: string; icon: ReactNode; end?: boolean }[] = [
+  { to: "/admin", end: true, labelKey: "dashboard", icon: <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /> },
+  { to: "/admin/products", labelKey: "products", icon: <path d="M20 7L12 3 4 7v10l8 4 8-4V7zM12 3v18M4 7l8 4 8-4" /> },
+  { to: "/admin/collections", labelKey: "collections", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
+  { to: "/admin/orders", labelKey: "orders", icon: <path d="M6 2l1.5 3h9L18 2M4 8h16l-1 12H5L4 8zM9 12h6" /> },
+  { to: "/admin/customers", labelKey: "customers", icon: <path d="M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8z" /> },
+  { to: "/admin/size-rules", labelKey: "size_rules", icon: <path d="M3 8l4-4 14 14-4 4L3 8zM7 12l2-2M11 16l2-2" /> },
+  { to: "/admin/reference", labelKey: "reference", icon: <path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.3-4.3" /> },
 ];
 
 export default function AdminLayout() {
   const [open, setOpen] = useState(false);
   const { user, isAdmin, ready, setLoginOpen, logout } = useAuth();
+  const { t, i18n } = useTranslation();
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-ink">
@@ -31,18 +34,35 @@ export default function AdminLayout() {
           </Link>
         </div>
         <div className="flex items-center gap-4 text-[11px] text-ink-soft">
+          {/* Show both languages with the active one marked. A single "EN" label
+              is ambiguous — it reads equally as "you are in English" or "switch
+              to English". */}
+          <div className="flex overflow-hidden rounded border edge" role="group" aria-label="Language">
+            {(["en", "vi"] as const).map((lng) => (
+              <button
+                key={lng}
+                onClick={() => i18n.changeLanguage(lng)}
+                aria-pressed={i18n.language === lng}
+                className={`px-2 py-1 font-medium transition-colors ${
+                  i18n.language === lng ? "bg-ink text-white" : "text-ink-soft hover:bg-[var(--color-tile)]"
+                }`}
+              >
+                {lng.toUpperCase()}
+              </button>
+            ))}
+          </div>
           {ready && (isAdmin ? (
             <span className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               <span className="hidden sm:inline">{user?.email}</span>
-              <button onClick={() => logout()} className="link-underline">Sign out</button>
+              <button onClick={() => logout()} className="link-underline">{t('sign_out')}</button>
             </span>
           ) : (
             <button onClick={() => setLoginOpen(true)} className="rounded bg-ink px-2.5 py-1 text-white">
-              Sign in as admin
+              {t('sign_in')}
             </button>
           ))}
-          <Link to="/" className="link-underline">← Storefront</Link>
+          <Link to="/" className="link-underline">{t('storefront')}</Link>
         </div>
       </header>
 
@@ -52,8 +72,8 @@ export default function AdminLayout() {
       {ready && !isAdmin && (
         <div className="fixed inset-x-0 top-14 z-30 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] text-amber-800 lg:pl-56">
           {user
-            ? `Signed in as ${user.email} — this account is not an admin. Data is read-only.`
-            : "Not signed in — read-only. Drafts are hidden and every write is blocked by RLS."}
+            ? t('read_only_user', { email: user.email })
+            : t('read_only_guest')}
         </div>
       )}
 
@@ -73,14 +93,10 @@ export default function AdminLayout() {
               }
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">{n.icon}</svg>
-              {n.label}
+              {t(n.labelKey)}
             </NavLink>
           ))}
         </nav>
-        <p className="mt-6 px-3 text-[10px] leading-relaxed text-ink-soft">
-          Demo admin · backed by Postgres. Sign in as{" "}
-          <span className="font-mono">admin / 123456</span> to write.
-        </p>
       </aside>
 
       {open && <div className="fixed inset-0 top-14 z-20 bg-black/20 lg:hidden" onClick={() => setOpen(false)} />}

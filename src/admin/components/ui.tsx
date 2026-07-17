@@ -18,11 +18,13 @@ const TONE: Record<string, string> = {
   Regular: "bg-stone-100 text-stone-600 ring-stone-500/15",
 };
 
-export function Badge({ children }: { children: string }) {
+/** `children` stays the canonical DB value so the tone lookup keeps working;
+ *  pass `label` to display a translated string. */
+export function Badge({ children, label }: { children: string; label?: string }) {
   const tone = TONE[children] ?? "bg-stone-100 text-stone-600 ring-stone-500/15";
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] tracking-wide ring-1 ${tone}`}>
-      {children}
+      {label ?? children}
     </span>
   );
 }

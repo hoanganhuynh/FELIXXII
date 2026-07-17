@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: true, // bind 0.0.0.0 so a LAN device / tunnel can reach it
+    port: 5180,
+    // Fail loudly if 5180 is taken. Vite's default is to silently pick the next
+    // free port, which leaves `npm run share` pointed at nothing and the tunnel
+    // answering 502 with no obvious cause.
+    strictPort: true,
     // Same-origin proxy to the local Supabase stack.
     //
     // Why: this is a static SPA that talks to Supabase directly. If the client

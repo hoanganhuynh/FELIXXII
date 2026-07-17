@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { listRules, saveRule, styleCountByBodyType, type SizeRuleRow, type BodyType } from "../api/rules";
 import { useAsync } from "../lib/useAsync";
 import { useAuth } from "../../store/auth";
@@ -7,6 +8,7 @@ import { Card, Btn } from "../components/ui";
 type Field = "bust" | "waist" | "hip";
 
 export default function SizeRules() {
+  const { t } = useTranslation();
   const { isAdmin, ready } = useAuth();
   const rules = useAsync(() => listRules(), [], []);
   const [active, setActive] = useState<BodyType>("hourglass");
@@ -44,16 +46,15 @@ export default function SizeRules() {
   return (
     <div>
       <div className="mb-5">
-        <h1 className="font-serif text-3xl">Size Rules</h1>
+        <h1 className="font-serif text-3xl">{t("size_rules")}</h1>
         <p className="mt-1 text-xs text-ink-soft">
-          Measurement ranges per body type, stored in Postgres. The storefront Body Profile
-          scores a customer's bust/waist/hip against these to recommend a size.
+          {t("rules.subtitle")}
         </p>
       </div>
 
       {ready && !isAdmin && (
         <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-          Read-only — sign in as admin to edit the charts.
+          {t("rules.read_only")}
         </p>
       )}
       {err && <p className="mb-4 rounded-md bg-[var(--color-accent-soft)] px-4 py-2.5 text-xs text-[var(--color-accent)]">{err}</p>}
@@ -62,7 +63,7 @@ export default function SizeRules() {
         {rules.data.map((r) => (
           <button key={r.body_type} onClick={() => setActive(r.body_type)}
             className={`rounded-full border px-4 py-1.5 text-xs transition-colors ${active === r.body_type ? "border-ink bg-ink text-white" : "edge hover:bg-[var(--color-tile)]"}`}>
-            {r.label}
+            {t(`body.${r.body_type}`)}
           </button>
         ))}
       </div>
@@ -70,15 +71,15 @@ export default function SizeRules() {
       {rule && (
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <Card
-            title={`${rule.label} · size chart (cm)`}
-            action={dirty ? <Btn onClick={save} disabled={busy || !isAdmin} className="!h-7">{busy ? "Saving…" : "Save"}</Btn> : <span className="text-[10px] text-ink-soft">Saved</span>}
+            title={t("rules.chart", { label: t(`body.${rule.body_type}`) })}
+            action={dirty ? <Btn onClick={save} disabled={busy || !isAdmin} className="!h-7">{busy ? t("common.saving") : t("common.save")}</Btn> : <span className="text-[10px] text-ink-soft">{t("common.saved")}</span>}
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
-                    <th className="px-5 py-2.5">SIZE</th>
-                    <th className="px-2 py-2.5">BUST</th><th className="px-2 py-2.5">WAIST</th><th className="px-2 py-2.5">HIP</th>
+                    <th className="px-5 py-2.5">{t("rules.size")}</th>
+                    <th className="px-2 py-2.5">{t("rules.bust")}</th><th className="px-2 py-2.5">{t("rules.waist")}</th><th className="px-2 py-2.5">{t("rules.hip")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -96,32 +97,32 @@ export default function SizeRules() {
                       ))}
                     </tr>
                   ))}
-                  {!draft.length && <tr><td colSpan={4} className="py-8 text-center text-xs text-ink-soft">Loading…</td></tr>}
+                  {!draft.length && <tr><td colSpan={4} className="py-8 text-center text-xs text-ink-soft">{t("common.loading")}</td></tr>}
                 </tbody>
               </table>
             </div>
           </Card>
 
           <div className="space-y-4">
-            <Card title="Fit guidance">
+            <Card title={t("rules.guidance")}>
               <div className="p-5">
                 <p className="text-sm">{rule.guidance}</p>
                 <div className="mt-3 rounded-md bg-[var(--color-tile)] p-3">
-                  <p className="text-[10px] tracking-[0.1em] text-ink-soft">EASE RULE</p>
+                  <p className="text-[10px] tracking-[0.1em] text-ink-soft">{t("rules.ease_rule")}</p>
                   <p className="mt-1 text-xs leading-relaxed">{rule.ease_note}</p>
                 </div>
                 <p className="mt-4 text-[11px] text-ink-soft">
-                  <b className="text-ink">{usage.data}</b> styles are tagged to this body type.
+                  <b className="text-ink">{usage.data}</b> {t("rules.tagged")}
                 </p>
               </div>
             </Card>
 
-            <Card title="How the rule resolves">
+            <Card title={t("rules.resolves")}>
               <ol className="space-y-2.5 p-5 text-xs text-ink-soft">
-                <li><b className="text-ink">1.</b> Customer saves bust / waist / hip in Body Profile.</li>
-                <li><b className="text-ink">2.</b> Each size is scored by distance from the midpoint of its range on all three metrics.</li>
-                <li><b className="text-ink">3.</b> The body type applies its ease bias (e.g. Pear sizes to the hip).</li>
-                <li><b className="text-ink">4.</b> The lowest-distance size wins, with a confidence band; ties escalate to <i>Custom</i> for bridal.</li>
+                <li><b className="text-ink">1.</b> {t("rules.step1")}</li>
+                <li><b className="text-ink">2.</b> {t("rules.step2")}</li>
+                <li><b className="text-ink">3.</b> {t("rules.step3")}</li>
+                <li><b className="text-ink">4.</b> {t("rules.step4")}</li>
               </ol>
             </Card>
           </div>

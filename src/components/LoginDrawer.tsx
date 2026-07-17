@@ -67,13 +67,6 @@ export default function LoginDrawer() {
     run(() => signUpWithEmail(toEmail(ident), password, name), afterLogin);
   };
 
-  const fillDemo = (who: "user" | "admin") => {
-    setIdent(who === "admin" ? "admin" : "user@gmail.com");
-    setPassword("123456");
-    setStep("password");
-    setNote(null);
-  };
-
   return (
     <>
       <div
@@ -135,7 +128,6 @@ export default function LoginDrawer() {
                 <OAuthBtn provider="facebook" onClick={() => setNote("Social sign-in is decorative in this demo — it needs real provider credentials. Use email / password below.")} />
               </div>
 
-              <DemoCreds onPick={fillDemo} />
             </>
           )}
 
@@ -184,26 +176,6 @@ export default function LoginDrawer() {
         </div>
       </div>
     </>
-  );
-}
-
-/** Click-to-fill demo accounts — this is a shared test build, so make the
- *  credentials obvious rather than making people hunt for them. */
-function DemoCreds({ onPick }: { onPick: (who: "user" | "admin") => void }) {
-  return (
-    <div className="mt-8 rounded-md border border-dashed edge p-4">
-      <p className="text-[10px] tracking-[0.1em] text-ink-soft">DEMO ACCOUNTS — CLICK TO FILL</p>
-      <div className="mt-3 space-y-2">
-        <button onClick={() => onPick("user")} className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition-colors hover:bg-[var(--color-tile)]">
-          <span className="text-xs">Customer</span>
-          <span className="font-mono text-[10px] text-ink-soft">user@gmail.com · 123456</span>
-        </button>
-        <button onClick={() => onPick("admin")} className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition-colors hover:bg-[var(--color-tile)]">
-          <span className="text-xs">Admin</span>
-          <span className="font-mono text-[10px] text-ink-soft">admin · 123456</span>
-        </button>
-      </div>
-    </div>
   );
 }
 

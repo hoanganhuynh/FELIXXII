@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   getStyle, getVariants, updateStyle, createStyle, replaceVariants,
@@ -16,6 +17,7 @@ import type { StyleStatus, BodyType } from "../api/products";
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "Custom"];
 
 export default function ProductEditor() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -101,8 +103,8 @@ export default function ProductEditor() {
 
   const save = async () => {
     setErr(null);
-    if (!name.trim()) { setErr("Name is required."); return; }
-    if (!variantsPreview.length) { setErr("Pick at least one colour and one size."); return; }
+    if (!name.trim()) { setErr(t("editor.name_required")); return; }
+    if (!variantsPreview.length) { setErr(t("editor.pick_required")); return; }
     setBusy(true);
     try {
       let styleId = id;
@@ -128,67 +130,67 @@ export default function ProductEditor() {
     }
   };
 
-  if (existing.loading) return <p className="py-16 text-center text-xs text-ink-soft">Loading…</p>;
+  if (existing.loading) return <p className="py-16 text-center text-xs text-ink-soft">{t("common.loading")}</p>;
 
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <Link to="/admin/products" className="text-xs text-ink-soft link-underline">← Products</Link>
-          <h1 className="mt-1 font-serif text-3xl">{isEdit ? name || "Edit style" : "New style"}</h1>
+          <Link to="/admin/products" className="text-xs text-ink-soft link-underline">{t("editor.back")}</Link>
+          <h1 className="mt-1 font-serif text-3xl">{isEdit ? name || t("editor.edit_style") : t("editor.new_style")}</h1>
         </div>
         <div className="flex gap-2">
-          <Btn variant="ghost" onClick={() => navigate("/admin/products")}>Cancel</Btn>
+          <Btn variant="ghost" onClick={() => navigate("/admin/products")}>{t("common.cancel")}</Btn>
           <Btn onClick={save} disabled={busy || (ready && !isAdmin)}>
-            {busy ? "Saving…" : isEdit ? "Save changes" : "Create style"}
+            {busy ? t("common.saving") : isEdit ? t("editor.save") : t("editor.create")}
           </Btn>
         </div>
       </div>
 
       {ready && !isAdmin && (
         <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-          Read-only — sign in as admin to save changes.
+          {t("common.read_only_hint")}
         </p>
       )}
       {err && <p className="mb-4 rounded-md bg-[var(--color-accent-soft)] px-4 py-2.5 text-xs text-[var(--color-accent)]">{err}</p>}
 
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-4">
-          <Card title="Details">
+          <Card title={t("editor.details")}>
             <div className="grid gap-4 p-5 sm:grid-cols-2">
-              <Field label="Style name" className="sm:col-span-2">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Lụa Đêm Couture" className="input" />
+              <Field label={t("editor.name")} className="sm:col-span-2">
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("editor.name_ph")} className="input" />
               </Field>
-              <Field label="Category">
+              <Field label={t("prod.category")}>
                 <select value={category} onChange={(e) => setCategory(e.target.value as CategoryId)} className="input">
                   {cats.data.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
               </Field>
-              <Field label="Collection">
+              <Field label={t("prod.collection")}>
                 <select value={collection} onChange={(e) => setCollection(e.target.value)} className="input">
                   {cols.data.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
               </Field>
-              <Field label="Silhouette">
+              <Field label={t("editor.silhouette")}>
                 <select value={silhouette} onChange={(e) => setSilhouette(e.target.value as Silhouette)} className="input">
                   {SILHOUETTES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
                 </select>
               </Field>
-              <Field label="Base price (₫)">
+              <Field label={t("editor.price")}>
                 <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="input tabular-nums" />
               </Field>
-              <Field label="Material" className="sm:col-span-2">
-                <input value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="e.g. Silk satin blend" className="input" />
+              <Field label={t("editor.material")} className="sm:col-span-2">
+                <input value={material} onChange={(e) => setMaterial(e.target.value)} placeholder={t("editor.material_ph")} className="input" />
               </Field>
-              <Field label="Status">
+              <Field label={t("editor.status")}>
                 <select value={status} onChange={(e) => setStatus(e.target.value as StyleStatus)} className="input">
-                  {(["active", "draft", "archived"] as StyleStatus[]).map((s) => <option key={s} value={s}>{s}</option>)}
+                  {(["active", "draft", "archived"] as StyleStatus[]).map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                 </select>
               </Field>
             </div>
           </Card>
 
-          <Card title="Colors">
+          <Card title={t("editor.colors")}>
             <div className="flex flex-wrap gap-2.5 p-5">
               {Object.values(PALETTE).map((c) => {
                 const on = colorNames.includes(c.name);
@@ -202,7 +204,7 @@ export default function ProductEditor() {
             </div>
           </Card>
 
-          <Card title="Sizes">
+          <Card title={t("editor.sizes")}>
             <div className="flex flex-wrap gap-2 p-5">
               {SIZES.map((sz) => {
                 const on = sizes.includes(sz);
@@ -216,12 +218,12 @@ export default function ProductEditor() {
             </div>
           </Card>
 
-          <Card title={`Variants · ${variantsPreview.length} SKUs`}>
+          <Card title={t("editor.variants", { count: variantsPreview.length })}>
             <div className="max-h-80 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-[var(--color-bg)]">
                   <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
-                    <th className="px-4 py-2">SKU</th><th className="px-2 py-2">COLOR</th><th className="px-2 py-2">SIZE</th><th className="px-2 py-2 text-right">STOCK</th>
+                    <th className="px-4 py-2">{t("prod.col_sku")}</th><th className="px-2 py-2">{t("prod.col_color")}</th><th className="px-2 py-2">{t("prod.col_size")}</th><th className="px-2 py-2 text-right">{t("prod.col_stock")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -233,7 +235,7 @@ export default function ProductEditor() {
                       <td className="px-2 py-1.5 text-right text-xs tabular-nums">{v.stock}</td>
                     </tr>
                   ))}
-                  {!variantsPreview.length && <tr><td colSpan={4} className="py-6 text-center text-xs text-ink-soft">Pick colors and sizes to generate SKUs.</td></tr>}
+                  {!variantsPreview.length && <tr><td colSpan={4} className="py-6 text-center text-xs text-ink-soft">{t("editor.pick_hint")}</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -241,29 +243,29 @@ export default function ProductEditor() {
         </div>
 
         <div className="space-y-4">
-          <Card title="SKU coding">
+          <Card title={t("editor.sku_coding")}>
             <div className="p-5">
               <p className="font-mono text-lg">{code}</p>
-              <p className="mt-1 text-[11px] text-ink-soft">Style code · variant example below</p>
+              <p className="mt-1 text-[11px] text-ink-soft">{t("editor.style_code_hint")}</p>
               <p className="mt-3 font-mono text-sm">{skuCode(category, serial, colorNames[0] ?? "Black", sizes[0] ?? "M")}</p>
               <dl className="mt-4 space-y-1.5 text-[11px] text-ink-soft">
-                <Row k="FX" v="Brand" />
+                <Row k="FX" v={t("editor.brand")} />
                 <Row k={CATEGORY_CODE[category]} v={cats.data.find((c) => c.id === category)?.label ?? category} />
-                <Row k={String(serial).padStart(4, "0")} v="Style serial" />
-                <Row k="KK" v="Colour code" />
-                <Row k="ZZ" v="Size code" />
+                <Row k={String(serial).padStart(4, "0")} v={t("editor.serial")} />
+                <Row k="KK" v={t("editor.colour_code")} />
+                <Row k="ZZ" v={t("editor.size_code")} />
               </dl>
-              <Link to="/admin/reference" className="mt-4 inline-block text-[11px] text-ink-soft link-underline">Full SKU & search spec →</Link>
+              <Link to="/admin/reference" className="mt-4 inline-block text-[11px] text-ink-soft link-underline">{t("editor.full_spec")}</Link>
             </div>
           </Card>
 
-          <Card title="Body-fit rule">
+          <Card title={t("editor.fit_rule")}>
             <div className="p-5">
               <div className="flex flex-wrap gap-1.5">
                 {rules.data.map((b) => (
                   <button key={b.body_type} onClick={() => setBodyType(b.body_type)}
                     className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${bodyType === b.body_type ? "border-ink bg-ink text-white" : "edge"}`}>
-                    {b.label}
+                    {t(`body.${b.body_type}`)}
                   </button>
                 ))}
               </div>
@@ -271,21 +273,21 @@ export default function ProductEditor() {
                 <div className="mt-4 rounded-md bg-[var(--color-tile)] p-3">
                   <p className="text-xs">{rule.guidance}</p>
                   <p className="mt-1.5 text-[11px] text-ink-soft">{rule.ease_note}</p>
-                  <Link to="/admin/size-rules" className="mt-2 inline-block text-[10px] text-ink-soft link-underline">Edit size chart →</Link>
+                  <Link to="/admin/size-rules" className="mt-2 inline-block text-[10px] text-ink-soft link-underline">{t("editor.edit_chart")}</Link>
                 </div>
               )}
             </div>
           </Card>
 
           {isEdit && existing.data && (
-            <Card title="Performance">
+            <Card title={t("editor.performance")}>
               <div className="grid grid-cols-2 gap-px overflow-hidden bg-[var(--color-line)] text-center">
-                <Metric k="Units sold" v={(existing.data.units_sold ?? 0).toLocaleString()} />
-                <Metric k="Revenue" v={vnd(existing.data.revenue ?? 0)} />
-                <Metric k="Views" v={(existing.data.views ?? 0).toLocaleString()} />
-                <Metric k="Returns" v={String(existing.data.returns ?? 0)} />
+                <Metric k={t("editor.units_sold")} v={(existing.data.units_sold ?? 0).toLocaleString()} />
+                <Metric k={t("editor.revenue")} v={vnd(existing.data.revenue ?? 0)} />
+                <Metric k={t("editor.views")} v={(existing.data.views ?? 0).toLocaleString()} />
+                <Metric k={t("editor.returns")} v={String(existing.data.returns ?? 0)} />
               </div>
-              <div className="p-4"><Badge>{existing.data.status!}</Badge></div>
+              <div className="p-4"><Badge label={t(`status.${existing.data.status}`)}>{existing.data.status!}</Badge></div>
             </Card>
           )}
         </div>
