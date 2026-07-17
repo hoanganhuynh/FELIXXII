@@ -52,7 +52,21 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   /** Call once on mount. Returns an unsubscribe fn. */
   init: () => {
-    supabase.auth.getSession().then(async ({ data }) => {
+    // Legacy key from the pre-Supabase demo store. Harmless but confusing in
+    // devtools, and it holds a fake user — drop it on sight.
+    try { localStorage.removeItem("felixxii-auth"); } catch { /* ignore */ }
+
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      if (error) {
+        // A session left over from an earlier database generation (e.g. after
+        // `supabase db reset` wiped auth.users) has a refresh token GoTrue no
+        // longer knows. supabase-js retries it and every later call reports
+        // that 400 instead of its own result — which surfaces as "Bad request"
+        // on the login form. Drop the dead session instead of staying wedged.
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        set({ session: null, user: null, profile: null, isAdmin: false, ready: true });
+        return;
+      }
       const user = data.session?.user ?? null;
       set({
         session: data.session,
@@ -77,6 +91,10 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   signInWithEmail: async (email, password) => {
+    // Clear any dead session first. Without this, a stale refresh token makes
+    // signInWithPassword report the refresh 400 ("Bad request") rather than
+    // actually attempting the sign-in. Local scope: never touches the server.
+    await supabase.auth.signOut({ scope: "local" }).catch(() => {});
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     set({ loginOpen: false });
