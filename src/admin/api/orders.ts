@@ -5,6 +5,7 @@ export type OrderRow = Database["public"]["Tables"]["orders"]["Row"];
 export type OrderItemRow = Database["public"]["Tables"]["order_items"]["Row"];
 export type OrderStatus = Database["public"]["Enums"]["order_status"];
 export type OrderChannel = Database["public"]["Enums"]["order_channel"];
+export type ReturnReason = Database["public"]["Enums"]["return_reason"];
 
 export interface OrderListRow extends OrderRow {
   customers: { name: string; email: string } | null;
@@ -49,10 +50,19 @@ export async function getOrderItems(orderId: string): Promise<OrderItemRow[]> {
   return data ?? [];
 }
 
-/** RLS denies by matching zero rows, so check what came back. */
-export async function setOrderStatus(id: string, status: OrderStatus): Promise<void> {
+/** RLS denies by matching zero rows, so check what came back.
+ *  Changing status to Returned requires a reason; changing away from
+ *  Returned clears both fields (the DB check constraint would reject
+ *  a stale reason on a non-Returned order anyway). */
+export async function setOrderStatus(
+  id: string, status: OrderStatus, returnReason?: ReturnReason, returnNote?: string
+): Promise<void> {
+  const patch =
+    status === "Returned"
+      ? { status, return_reason: returnReason ?? null, return_note: returnNote?.trim() || null }
+      : { status, return_reason: null, return_note: null };
   const { data, error } = await supabase
-    .from("orders").update({ status }).eq("id", id).select("id");
+    .from("orders").update(patch).eq("id", id).select("id");
   if (error) throw error;
   if (!data?.length) throw new Error("Not permitted — admin role required.");
 }

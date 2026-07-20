@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   listOrders, getOrderItems, setOrderStatus, getOrderStats,
-  type OrderListRow, type OrderStatus, type OrderChannel,
+  type OrderListRow, type OrderStatus, type OrderChannel, type ReturnReason,
 } from "../api/orders";
 import { useAsync, useDebounced } from "../lib/useAsync";
 import { Badge, Btn, Card } from "../components/ui";
@@ -10,6 +10,7 @@ import { vnd, compactVnd, fmtDate } from "../lib/format";
 
 const STATUSES: OrderStatus[] = ["Pending", "Processing", "Shipped", "Delivered", "Returned", "Cancelled"];
 const CHANNELS: OrderChannel[] = ["Web", "Boutique", "Instagram", "Wholesale"];
+const RETURN_REASONS: ReturnReason[] = ["defect", "wrong_size", "changed_mind", "wrong_shipment", "other"];
 const PAGE = 20;
 
 export default function AdminOrders() {
@@ -100,10 +101,14 @@ export default function AdminOrders() {
         <OrderDrawer
           order={open}
           onClose={() => setOpen(null)}
-          onStatus={async (s) => {
+          onStatus={async (s, reason, note) => {
             try {
-              await setOrderStatus(open.id, s);
-              setOpen({ ...open, status: s });
+              await setOrderStatus(open.id, s, reason, note);
+              setOpen({
+                ...open, status: s,
+                return_reason: s === "Returned" ? (reason ?? null) : null,
+                return_note: s === "Returned" ? (note?.trim() || null) : null,
+              });
               list.reload();
               stats.reload();
             } catch (e) {
@@ -126,10 +131,14 @@ function Mini({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
 }
 
 function OrderDrawer({ order, onClose, onStatus }: {
-  order: OrderListRow; onClose: () => void; onStatus: (s: OrderStatus) => void;
+  order: OrderListRow; onClose: () => void;
+  onStatus: (s: OrderStatus, reason?: ReturnReason, note?: string) => void;
 }) {
   const { t } = useTranslation();
   const items = useAsync(() => getOrderItems(order.id), [order.id], []);
+  const [pendingReturn, setPendingReturn] = useState(false);
+  const [reason, setReason] = useState<ReturnReason | "">("");
+  const [note, setNote] = useState("");
   return (
     <>
       <div className="fixed inset-0 z-[60] bg-black/25" onClick={onClose} />
@@ -149,9 +158,52 @@ function OrderDrawer({ order, onClose, onStatus }: {
           <Card title={t("ord.status")}>
             <div className="flex flex-wrap gap-1.5 p-4">
               {STATUSES.map((s) => (
-                <button key={s} onClick={() => onStatus(s)} className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${order.status === s ? "border-ink bg-ink text-white" : "edge hover:bg-[var(--color-tile)]"}`}>{t(`status.${s}`)}</button>
+                <button
+                  key={s}
+                  onClick={() => {
+                    if (s === "Returned" && order.status !== "Returned") setPendingReturn(true);
+                    else onStatus(s);
+                  }}
+                  className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${order.status === s ? "border-ink bg-ink text-white" : "edge hover:bg-[var(--color-tile)]"}`}
+                >
+                  {t(`status.${s}`)}
+                </button>
               ))}
             </div>
+            {pendingReturn && (
+              <div className="space-y-2 border-t edge p-4">
+                <select className="input" value={reason} onChange={(e) => setReason(e.target.value as ReturnReason)}>
+                  <option value="">{t("ord.return_reason_placeholder")}</option>
+                  {RETURN_REASONS.map((r) => <option key={r} value={r}>{t(`ord.reason.${r}`)}</option>)}
+                </select>
+                <textarea
+                  className="input h-16 resize-none py-2"
+                  placeholder={t("ord.return_note_placeholder")}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+                <div className="flex justify-end gap-2">
+                  <Btn variant="ghost" onClick={() => { setPendingReturn(false); setReason(""); setNote(""); }}>{t("common.cancel")}</Btn>
+                  <Btn
+                    disabled={!reason}
+                    onClick={() => {
+                      onStatus("Returned", reason as ReturnReason, note);
+                      setPendingReturn(false);
+                      setReason("");
+                      setNote("");
+                    }}
+                  >
+                    {t("common.save")}
+                  </Btn>
+                </div>
+              </div>
+            )}
+            {order.status === "Returned" && order.return_reason && (
+              <p className="border-t edge px-4 py-3 text-xs text-ink-soft">
+                {t("ord.return_reason_label")}: {t(`ord.reason.${order.return_reason}`)}
+                {order.return_note && <span> — {order.return_note}</span>}
+              </p>
+            )}
           </Card>
 
           <h3 className="mt-6 text-[11px] tracking-[0.12em] text-ink-soft">{t("ord.items")}</h3>

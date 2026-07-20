@@ -78,6 +78,7 @@ const en = {
     duration_quarter: "Quarter",
     duration_year: "Year",
     top_category: "Top category",
+    return_reasons: "Return reasons",
     trend_loading: "Loading trend…",
     drill_loading: "Loading detail…",
     anomaly_note: "vs. the last 3 periods",
@@ -233,6 +234,17 @@ const en = {
     shipping: "Shipping",
     free: "FREE",
     total: "Total",
+    return_reason_label: "Return reason",
+    return_reason_placeholder: "Select a reason…",
+    return_note_placeholder: "Note (optional)",
+    reason: {
+      defect: "Product defect",
+      wrong_size: "Wrong size",
+      changed_mind: "Changed mind",
+      wrong_shipment: "Wrong/missing item shipped",
+      other: "Other",
+      unspecified: "Unspecified",
+    },
   },
 
   cust: {
@@ -435,6 +447,7 @@ const vi: typeof en = {
     duration_quarter: "Quý",
     duration_year: "Năm",
     top_category: "Danh mục dẫn đầu",
+    return_reasons: "Lý do trả hàng",
     trend_loading: "Đang tải diễn biến…",
     drill_loading: "Đang tải chi tiết…",
     anomaly_note: "so với trung bình 3 kỳ gần nhất",
@@ -590,6 +603,17 @@ const vi: typeof en = {
     shipping: "Vận chuyển",
     free: "MIỄN PHÍ",
     total: "Tổng cộng",
+    return_reason_label: "Lý do trả hàng",
+    return_reason_placeholder: "Chọn lý do…",
+    return_note_placeholder: "Ghi chú (không bắt buộc)",
+    reason: {
+      defect: "Lỗi sản phẩm",
+      wrong_size: "Không vừa size",
+      changed_mind: "Đổi ý",
+      wrong_shipment: "Giao sai/thiếu",
+      other: "Khác",
+      unspecified: "Chưa xác định",
+    },
   },
 
   cust: {

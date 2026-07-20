@@ -215,6 +215,8 @@ export type Database = {
           customer_id: string
           id: string
           placed_at: string
+          return_note: string | null
+          return_reason: Database["public"]["Enums"]["return_reason"] | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
         }
@@ -224,6 +226,8 @@ export type Database = {
           customer_id: string
           id: string
           placed_at?: string
+          return_note?: string | null
+          return_reason?: Database["public"]["Enums"]["return_reason"] | null
           status?: Database["public"]["Enums"]["order_status"]
           total: number
         }
@@ -233,6 +237,8 @@ export type Database = {
           customer_id?: string
           id?: string
           placed_at?: string
+          return_note?: string | null
+          return_reason?: Database["public"]["Enums"]["return_reason"] | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
         }
@@ -525,6 +531,7 @@ export type Database = {
         | "Delivered"
         | "Returned"
         | "Cancelled"
+      return_reason: "defect" | "wrong_size" | "changed_mind" | "wrong_shipment" | "other"
       segment: "VIP" | "Loyal" | "Regular" | "New" | "At-risk"
       style_status: "active" | "draft" | "archived"
     }
