@@ -4,7 +4,8 @@ import { getDashboardStats, EMPTY_STATS } from "../api/dashboard";
 import { useAsync } from "../lib/useAsync";
 import { useAuth } from "../../store/auth";
 import { Stat, Card, Badge } from "../components/ui";
-import { AreaChart, BarList, Donut, CHART_PALETTE } from "../components/charts";
+import { BarList, Donut, CHART_PALETTE } from "../components/charts";
+import { RevenueTrend } from "../components/RevenueTrend";
 import { compactVnd, compact } from "../lib/format";
 
 export default function Dashboard() {
@@ -70,18 +71,7 @@ export default function Dashboard() {
         {/* trend + donut */}
         <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
           <Card title={t("dash.trend")}>
-            <div className="px-4 pb-6 pt-4">
-              {m.months.length > 1 ? (
-                <AreaChart
-                  data={m.months.map((x) => Number(x.v))}
-                  labels={m.months.map((x) => x.m)}
-                  valueFmt={compactVnd}
-                  height={220}
-                />
-              ) : (
-                <p className="py-16 text-center text-xs text-ink-soft">{t("dash.not_enough")}</p>
-              )}
-            </div>
+            <RevenueTrend />
           </Card>
           <Card title={t("dash.by_collection")}>
             <div className="flex items-center justify-center px-5 py-8">
