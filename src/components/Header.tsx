@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart, cartCount } from "../store/cart";
 import { useBodyProfile } from "../store/bodyProfile";
 import { useAuth } from "../store/auth";
-import { CATEGORIES, COLLECTIONS } from "../data/catalog";
+import { SHOP_CATEGORIES, COLLECTIONS } from "../data/catalog";
 
 export default function Header() {
   const [menu, setMenu] = useState(false);
@@ -48,7 +48,7 @@ export default function Header() {
             )}
           </div>
           {/* Categories (utilitarian) */}
-          {CATEGORIES.slice(0, 3).map((cat) => (
+          {SHOP_CATEGORIES.slice(0, 3).map((cat) => (
             <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="nav-link">
               {cat.label}
             </NavLink>
@@ -69,7 +69,7 @@ export default function Header() {
 
         {/* right */}
         <div className="flex items-center justify-end gap-4 md:gap-5">
-          {CATEGORIES.slice(3).map((cat) => (
+          {SHOP_CATEGORIES.slice(3).map((cat) => (
             <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="nav-link hidden xl:block">
               {cat.label}
             </NavLink>
@@ -100,7 +100,7 @@ export default function Header() {
             <NavLink key={c.id} to={`/shop?collection=${c.id}`} className="py-2 font-serif text-lg">{c.label}</NavLink>
           ))}
           <p className="label mt-4 text-ink-soft">Categories</p>
-          {CATEGORIES.map((cat) => (
+          {SHOP_CATEGORIES.map((cat) => (
             <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="py-2 text-sm">{cat.label}</NavLink>
           ))}
         </nav>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { products, COLLECTIONS, CATEGORIES, IMG_BASE } from "../data/catalog";
+import { products, COLLECTIONS, SHOP_CATEGORIES, IMG_BASE } from "../data/catalog";
 import ProductCard from "../components/ProductCard";
 import { useBodyProfile } from "../store/bodyProfile";
 import { useReveal } from "../hooks/useReveal";
@@ -67,9 +67,9 @@ export default function Home() {
           {/* by category — utilitarian */}
           <div>
             <p className="label text-ink-soft">By Category</p>
-            <h2 className="mt-1 font-serif text-2xl">Categories ({CATEGORIES.length})</h2>
+            <h2 className="mt-1 font-serif text-2xl">Categories ({SHOP_CATEGORIES.length})</h2>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {CATEGORIES.map((cat) => (
+              {SHOP_CATEGORIES.map((cat) => (
                 <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex aspect-square flex-col justify-between rounded-sm border edge p-5 transition-colors hover:bg-[var(--color-tile)]">
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-sm">{cat.label}</span>
