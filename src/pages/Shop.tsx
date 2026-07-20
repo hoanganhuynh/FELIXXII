@@ -2,11 +2,10 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   products,
-  accessories,
   PALETTE,
   SILHOUETTES,
   OCCASIONS,
-  CATEGORIES,
+  SHOP_CATEGORIES,
   categoryLabel,
   collectionLabel,
   type CategoryId,
@@ -48,22 +47,18 @@ export default function Shop() {
   const [sort, setSort] = useState<SortId>("new");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAccessoryView = cat === "phu-kien";
-
   const list = useMemo(() => {
-    let pool: (typeof products[number] | typeof accessories[number])[] = isAccessoryView ? accessories : products;
-    if (cat && !isAccessoryView) pool = (pool as typeof products).filter((p) => p.category === cat);
+    let pool = products;
+    if (cat) pool = pool.filter((p) => p.category === cat);
     if (collection) pool = pool.filter((p) => p.collection === collection);
 
     // faceted (each facet AND; values within a facet OR)
     pool = pool.filter((p) => {
       if (colors.length && !p.colors.some((c) => colors.includes(c.name))) return false;
       if (prices.length && !prices.some((id) => PRICE_BUCKETS.find((b) => b.id === id)!.test(p.price))) return false;
-      if (!("type" in p)) {
-        if (sizes.length && !sizes.some((s) => p.sizes.includes(s))) return false;
-        if (sils.length && (!p.silhouette || !sils.includes(p.silhouette))) return false;
-        if (occs.length && !occs.includes(p.occasion)) return false;
-      }
+      if (sizes.length && !sizes.some((s) => p.sizes.includes(s))) return false;
+      if (sils.length && (!p.silhouette || !sils.includes(p.silhouette))) return false;
+      if (occs.length && !occs.includes(p.occasion)) return false;
       return true;
     });
 
@@ -71,12 +66,12 @@ export default function Shop() {
     arr.sort((a, b) => {
       if (sort === "asc") return a.price - b.price;
       if (sort === "desc") return b.price - a.price;
-      if (sort === "best") return (("bestseller" in a && a.bestseller) || 99) - (("bestseller" in b && b.bestseller) || 99);
+      if (sort === "best") return (a.bestseller || 99) - (b.bestseller || 99);
       // new
-      return (("createdAt" in b && b.createdAt) || 0) - (("createdAt" in a && a.createdAt) || 0);
+      return b.createdAt - a.createdAt;
     });
     return arr;
-  }, [cat, collection, colors, sizes, sils, occs, prices, sort, isAccessoryView]);
+  }, [cat, collection, colors, sizes, sils, occs, prices, sort]);
 
   const activeCount = colors.length + sizes.length + sils.length + occs.length + prices.length;
   const clearAll = () => {
@@ -108,7 +103,7 @@ export default function Shop() {
         {/* category quick switch */}
         <div className="no-scrollbar mt-5 flex gap-5 overflow-x-auto">
           <QuickCat active={!cat && !collection} onClick={() => setParams({})} label="All" />
-          {CATEGORIES.map((c) => (
+          {SHOP_CATEGORIES.map((c) => (
             <QuickCat key={c.id} active={cat === c.id} onClick={() => setParams({ cat: c.id })} label={c.label} />
           ))}
         </div>
@@ -143,19 +138,15 @@ export default function Shop() {
             </div>
           </Facet>
 
-          {!isAccessoryView && (
-            <>
-              <Facet title="Size">
-                <ChipRow options={SIZES} active={sizes} onToggle={(v) => setSizes((s) => toggle(s, v))} />
-              </Facet>
-              <Facet title="Silhouette">
-                <ChipRow options={SILHOUETTES.map((s) => s.id)} labels={Object.fromEntries(SILHOUETTES.map((s) => [s.id, s.label]))} active={sils} onToggle={(v) => setSils((s) => toggle(s, v as Silhouette))} />
-              </Facet>
-              <Facet title="Occasion">
-                <ChipRow options={OCCASIONS.map((o) => o.id)} labels={Object.fromEntries(OCCASIONS.map((o) => [o.id, o.label]))} active={occs} onToggle={(v) => setOccs((s) => toggle(s, v as Occasion))} />
-              </Facet>
-            </>
-          )}
+          <Facet title="Size">
+            <ChipRow options={SIZES} active={sizes} onToggle={(v) => setSizes((s) => toggle(s, v))} />
+          </Facet>
+          <Facet title="Silhouette">
+            <ChipRow options={SILHOUETTES.map((s) => s.id)} labels={Object.fromEntries(SILHOUETTES.map((s) => [s.id, s.label]))} active={sils} onToggle={(v) => setSils((s) => toggle(s, v as Silhouette))} />
+          </Facet>
+          <Facet title="Occasion">
+            <ChipRow options={OCCASIONS.map((o) => o.id)} labels={Object.fromEntries(OCCASIONS.map((o) => [o.id, o.label]))} active={occs} onToggle={(v) => setOccs((s) => toggle(s, v as Occasion))} />
+          </Facet>
 
           <Facet title="Price Range">
             <ChipRow options={PRICE_BUCKETS.map((b) => b.id)} labels={Object.fromEntries(PRICE_BUCKETS.map((b) => [b.id, b.label]))} active={prices} onToggle={(v) => setPrices((s) => toggle(s, v))} />
