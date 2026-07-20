@@ -74,7 +74,13 @@ export function Stat({ label, value, delta, hint }: { label: string; value: stri
       <p className="mt-2 font-serif text-2xl tabular-nums leading-none">{value}</p>
       <div className="mt-2 flex items-center gap-2">
         {delta !== undefined && (
-          <span className={`text-[11px] tabular-nums ${delta >= 0 ? "text-emerald-600" : "text-[var(--color-accent)]"}`}>
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] tabular-nums"
+            style={{
+              background: delta >= 0 ? "var(--color-positive-bg)" : "var(--color-negative-bg)",
+              color: delta >= 0 ? "var(--color-positive)" : "var(--color-negative)",
+            }}
+          >
             {delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}%
           </span>
         )}

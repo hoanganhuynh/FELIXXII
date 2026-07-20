@@ -17,6 +17,10 @@
   --color-line: #e2dccf;
   --color-accent: #7c1f2b; /* bordeaux */
   --color-accent-soft: #a8536018;
+  --color-positive: #1e7d3a;
+  --color-positive-bg: #e7f6ec;
+  --color-negative: #c0293b;
+  --color-negative-bg: #fce9ea;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --tracking-wide: 0.02em;
