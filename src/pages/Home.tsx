@@ -67,12 +67,15 @@ export default function Home() {
           {/* by category — utilitarian */}
           <div>
             <p className="label text-ink-soft">By Category</p>
-            <h2 className="mt-1 font-serif text-2xl">Categories</h2>
+            <h2 className="mt-1 font-serif text-2xl">Categories ({CATEGORIES.length})</h2>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {CATEGORIES.map((cat) => (
-                <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex aspect-square flex-col items-center justify-center gap-2 rounded-sm border edge transition-colors hover:bg-[var(--color-tile)]">
-                  <span className="text-sm">{cat.label}</span>
-                  <span className="text-[10px] text-ink-soft transition-transform group-hover:translate-x-1">View →</span>
+                <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex aspect-square flex-col justify-between rounded-sm border edge p-5 transition-colors hover:bg-[var(--color-tile)]">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm">{cat.label}</span>
+                    <img src={cat.icon} alt="" className="h-12 w-12 shrink-0 opacity-60" />
+                  </div>
+                  <span className="text-xs underline underline-offset-2 transition-transform group-hover:translate-x-1">View →</span>
                 </Link>
               ))}
             </div>

@@ -16,7 +16,13 @@ export default function Dashboard() {
     EMPTY_STATS
   );
 
-  const bridal = m.by_category.find((c) => c.id === "dam-bridal")?.value ?? 0;
+  const bridal = Number(m.by_category.find((c) => c.id === "dam-bridal")?.value ?? 0);
+  // by_category sums styles.revenue (lifetime telemetry); m.revenue sums the
+  // orders table (a 220-order slice). Dividing one by the other compared two
+  // different universes and printed "9197% of revenue". Share must be taken
+  // against the same total it came from.
+  const catTotal = m.by_category.reduce((n, c) => n + Number(c.value), 0);
+  const bridalShare = catTotal ? (bridal / catTotal) * 100 : 0;
   const vipShare = m.total_ltv ? (m.vip_ltv / m.total_ltv) * 100 : 0;
 
   // Revenue, AOV and LTV are business data. Rather than render a dashboard of
@@ -143,7 +149,7 @@ export default function Dashboard() {
           <Insight
             tone="accent"
             title={t("dash.insight_bridal_t")}
-            body={t("dash.insight_bridal_b", { pct: m.revenue ? ((bridal / m.revenue) * 100).toFixed(0) : 0 })}
+            body={t("dash.insight_bridal_b", { pct: bridalShare.toFixed(0) })}
           />
           <Insight
             tone="ink"

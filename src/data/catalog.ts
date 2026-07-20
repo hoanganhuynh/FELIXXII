@@ -14,12 +14,12 @@ export interface ColorSwatch {
   hex: string;
 }
 
-export const CATEGORIES: { id: CategoryId; label: string }[] = [
-  { id: "dam-da-hoi", label: "Evening Dresses" },
-  { id: "dam-bridal", label: "Bridal" },
-  { id: "ao", label: "Tops" },
-  { id: "set", label: "Sets" },
-  { id: "phu-kien", label: "Accessories" },
+export const CATEGORIES: { id: CategoryId; label: string; icon: string }[] = [
+  { id: "dam-da-hoi", label: "Evening Dresses", icon: "/cat-icons/dresses.svg" },
+  { id: "dam-bridal", label: "Bridal", icon: "/cat-icons/bridal.svg" },
+  { id: "ao", label: "Tops", icon: "/cat-icons/tops.svg" },
+  { id: "set", label: "Sets", icon: "/cat-icons/sets.svg" },
+  { id: "phu-kien", label: "Accessories", icon: "/cat-icons/accessories.svg" },
 ];
 
 export const COLLECTIONS: { id: CollectionId; label: string; season: string; note: string; image: string }[] = [
