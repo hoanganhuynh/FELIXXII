@@ -17,12 +17,10 @@ export default function Dashboard() {
   );
 
   const bridal = Number(m.by_category.find((c) => c.id === "dam-bridal")?.value ?? 0);
-  // by_category sums styles.revenue (lifetime telemetry); m.revenue sums the
-  // orders table (a 220-order slice). Dividing one by the other compared two
-  // different universes and printed "9197% of revenue". Share must be taken
-  // against the same total it came from.
-  const catTotal = m.by_category.reduce((n, c) => n + Number(c.value), 0);
-  const bridalShare = catTotal ? (bridal / catTotal) * 100 : 0;
+  // by_category now sums the same order-based revenue as m.revenue (see
+  // supabase/migrations/20260720120000_fix_dashboard_revenue.sql), so both
+  // share one total — dividing directly against m.revenue is safe.
+  const bridalShare = m.revenue ? (bridal / m.revenue) * 100 : 0;
   const vipShare = m.total_ltv ? (m.vip_ltv / m.total_ltv) * 100 : 0;
 
   // Revenue, AOV and LTV are business data. Rather than render a dashboard of
