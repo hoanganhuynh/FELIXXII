@@ -1,21 +1,11 @@
 import { Link } from "react-router-dom";
 import ProductImage from "./ProductImage";
-import type { Product, Accessory } from "../data/catalog";
+import type { Product } from "../data/catalog";
 
 export const vnd = (n: number) => `${n.toLocaleString("vi-VN")}₫`;
 
-type Item = Product | Accessory;
-const isAccessory = (it: Item): it is Accessory => "type" in it;
-
-export default function ProductCard({ item, index = 0 }: { item: Item; index?: number }) {
-  const acc = isAccessory(item);
-  const tag = !acc
-    ? item.bestseller && item.bestseller <= 3
-      ? "Bestseller"
-      : item.createdAt >= 20260101
-        ? "New"
-        : null
-    : null;
+export default function ProductCard({ item, index = 0 }: { item: Product; index?: number }) {
+  const tag = item.bestseller && item.bestseller <= 3 ? "Bestseller" : item.createdAt >= 20260101 ? "New" : null;
 
   return (
     <article className="group">
@@ -42,20 +32,16 @@ export default function ProductCard({ item, index = 0 }: { item: Item; index?: n
           </Link>
           <span className="text-xs tabular-nums text-ink-soft">{vnd(item.price)}</span>
         </div>
-        {acc ? (
-          <p className="mt-1.5 text-xs text-ink-soft">{item.detail}</p>
-        ) : (
-          <div className="mt-2 flex items-center gap-1.5">
-            {item.colors.map((c) => (
-              <span
-                key={c.name}
-                title={c.name}
-                className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
-                style={{ background: c.hex }}
-              />
-            ))}
-          </div>
-        )}
+        <div className="mt-2 flex items-center gap-1.5">
+          {item.colors.map((c) => (
+            <span
+              key={c.name}
+              title={c.name}
+              className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
+              style={{ background: c.hex }}
+            />
+          ))}
+        </div>
       </div>
     </article>
   );
