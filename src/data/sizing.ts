@@ -3,14 +3,17 @@ export interface SizeRow {
   bust: [number, number]; // cm
   waist: [number, number];
   hip: [number, number];
+  /** reference height range this size's garment length is cut for (cm) —
+   *  not a sizing criterion, only used to flag a length-fit note */
+  height: [number, number];
 }
 
 /** SEN atelier size chart (cm) */
 export const SIZE_CHART: SizeRow[] = [
-  { size: "S", bust: [78, 84], waist: [60, 66], hip: [84, 90] },
-  { size: "M", bust: [85, 90], waist: [67, 72], hip: [91, 96] },
-  { size: "L", bust: [91, 97], waist: [73, 79], hip: [97, 103] },
-  { size: "XL", bust: [98, 104], waist: [80, 86], hip: [104, 110] },
+  { size: "S", bust: [78, 84], waist: [60, 66], hip: [84, 90], height: [155, 162] },
+  { size: "M", bust: [85, 90], waist: [67, 72], hip: [91, 96], height: [157, 164] },
+  { size: "L", bust: [91, 97], waist: [73, 79], hip: [97, 103], height: [159, 166] },
+  { size: "XL", bust: [98, 104], waist: [80, 86], hip: [104, 110], height: [161, 168] },
 ];
 
 export interface Measurements {
@@ -53,6 +56,12 @@ export function recommendSize(m: Measurements, availableSizes: string[]) {
   note("Ngực", m.bust, best.row.bust);
   note("Eo", m.waist, best.row.waist);
   note("Hông", m.hip, best.row.hip);
+
+  if (m.height > best.row.height[1]) {
+    notes.push("Với chiều cao của bạn, đầm có thể ngắn hơn dự kiến");
+  } else if (m.height < best.row.height[0]) {
+    notes.push("Với chiều cao của bạn, đầm có thể dài hơn dự kiến");
+  }
 
   return { size: best.size, confidence, notes };
 }
