@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "veggie-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--host", "--port", "5180"],
-      "port": 5180
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host", "--port", "5181"],
+      "port": 5181
     }
   ]
 }

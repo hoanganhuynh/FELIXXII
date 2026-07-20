@@ -12,12 +12,20 @@ export async function listCustomers(p: {
   const pageSize = p.pageSize ?? 20;
   const page = p.page ?? 0;
 
+  if (p.q?.trim()) {
+    const { data, error } = await supabase.rpc("search_customers", {
+      q: p.q.trim(),
+      p_segment: p.segment ?? null,
+      p_page: page,
+      p_page_size: pageSize,
+    });
+    if (error) throw error;
+    const rows = (data ?? []).map(({ total_count: _, ...row }: any) => row as CustomerRow);
+    return { rows, total: (data as any[])?.[0]?.total_count ?? 0 };
+  }
+
   let sel = supabase.from("customers").select("*", { count: "exact" });
   if (p.segment) sel = sel.eq("segment", p.segment as Segment);
-  if (p.q?.trim()) {
-    const q = p.q.trim();
-    sel = sel.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
-  }
   const { data, error, count } = await sel
     .order("ltv", { ascending: false })
     .range(page * pageSize, page * pageSize + pageSize - 1);

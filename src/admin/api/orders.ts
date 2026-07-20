@@ -24,18 +24,32 @@ export async function listOrders(p: OrderParams): Promise<{ rows: OrderListRow[]
   const pageSize = p.pageSize ?? 20;
   const page = p.page ?? 0;
 
-  // one query with embedded resources — not N+1 lookups per row
+  if (p.q?.trim()) {
+    const { data, error } = await supabase.rpc("search_orders", {
+      q: p.q.trim(),
+      p_status:  p.status  ?? null,
+      p_channel: p.channel ?? null,
+      p_page:     page,
+      p_page_size: pageSize,
+    });
+    if (error) throw error;
+    const rows = (data ?? []).map((r: any) => ({
+      id: r.id, customer_id: r.customer_id, placed_at: r.placed_at,
+      status: r.status, channel: r.channel, total: r.total, city: r.city,
+      return_reason: r.return_reason, return_note: r.return_note,
+      customers: { name: r.customer_name, email: r.customer_email },
+      order_items: [{ qty: Number(r.item_qty) }],
+    }) as unknown as OrderListRow);
+    return { rows, total: (data as any[])?.[0]?.total_count ?? 0 };
+  }
+
+  // no query — fast path via PostgREST
   let sel = supabase
     .from("orders")
     .select("*, customers!inner(name, email), order_items(qty)", { count: "exact" });
 
-  if (p.status) sel = sel.eq("status", p.status as OrderStatus);
+  if (p.status)  sel = sel.eq("status",  p.status  as OrderStatus);
   if (p.channel) sel = sel.eq("channel", p.channel as OrderChannel);
-  if (p.q?.trim()) {
-    const q = p.q.trim();
-    // filter on the embedded customer name, or the order id
-    sel = sel.or(`id.ilike.%${q}%`);
-  }
 
   const { data, error, count } = await sel
     .order("placed_at", { ascending: false })

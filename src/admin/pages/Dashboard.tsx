@@ -49,14 +49,9 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="font-serif text-3xl">{t("dashboard")}</h1>
-          <p className="mt-1 text-xs text-ink-soft">{loading ? t("dash.loading") : t("dash.subtitle")}</p>
-        </div>
-        <Link to="/admin/products/new" className="h-9 rounded-md bg-ink px-4 text-[11px] leading-9 tracking-[0.08em] text-white transition-opacity hover:opacity-85">
-          {t("dash.new_product")}
-        </Link>
+      <div className="mb-6">
+        <h1 className="font-serif text-3xl">{t("dashboard")}</h1>
+        <p className="mt-1 text-xs text-ink-soft">{loading ? t("dash.loading") : t("dash.subtitle")}</p>
       </div>
 
       {error && (

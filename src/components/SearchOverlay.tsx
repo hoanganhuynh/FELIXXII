@@ -4,9 +4,25 @@ import { products } from "../data/catalog";
 import { useSearch } from "../store/search";
 import { normalizeVi } from "../lib/text";
 import { vnd } from "./ProductCard";
+import ProductImage from "./ProductImage";
 
 const BESTSELLER_LIMIT = 5;
 const RESULT_LIMIT = 8;
+
+function highlightMatch(text: string, query: string) {
+  if (!query) return <>{text}</>;
+  const normText = normalizeVi(text);
+  const normQ = normalizeVi(query);
+  const idx = normText.indexOf(normQ);
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-transparent font-bold not-italic text-ink">{text.slice(idx, idx + normQ.length)}</mark>
+      {text.slice(idx + normQ.length)}
+    </>
+  );
+}
 
 export default function SearchOverlay() {
   const { open, setOpen } = useSearch();
@@ -58,26 +74,54 @@ export default function SearchOverlay() {
           </button>
         </div>
 
-        <p className="mt-8 text-xs tracking-[0.1em] text-ink-soft">
-          {query.trim() ? "RESULTS" : "BESTSELLERS"}
-        </p>
-        <ul className="mt-3 divide-y divide-[var(--color-line)]">
-          {results.map((p) => (
-            <li key={p.id}>
-              <Link
-                to={`/san-pham/${p.id}`}
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-between gap-4 py-4 hover:opacity-70"
-              >
-                <span className="font-serif text-lg">{p.name}</span>
-                <span className="shrink-0 text-sm tabular-nums text-ink-soft">{vnd(p.price)}</span>
-              </Link>
-            </li>
-          ))}
-          {!results.length && (
-            <li className="py-8 text-center text-sm text-ink-soft">No products match "{query}".</li>
-          )}
-        </ul>
+        {query.trim() && !results.length ? (
+          <div className="mt-8">
+            <p className="py-6 text-center text-sm text-ink-soft">
+              Không tìm thấy kết quả cho &ldquo;{query}&rdquo;.
+            </p>
+            <p className="text-xs tracking-[0.1em] text-ink-soft">CÓ THỂ BẠN SẼ THÍCH</p>
+            <ul className="mt-3 divide-y divide-[var(--color-line)]">
+              {bestsellers.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    to={`/san-pham/${p.id}`}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-4 py-4 hover:opacity-70"
+                  >
+                    <span className="h-16 w-12 shrink-0 overflow-hidden rounded-sm bg-[var(--color-tile)]">
+                      <ProductImage item={p} className="h-full w-full object-cover" />
+                    </span>
+                    <span className="min-w-0 flex-1 font-serif text-lg">{p.name}</span>
+                    <span className="shrink-0 text-sm tabular-nums text-ink-soft">{vnd(p.price)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <>
+            <p className="mt-8 text-xs tracking-[0.1em] text-ink-soft">
+              {query.trim() ? "RESULTS" : "BESTSELLERS"}
+            </p>
+            <ul className="mt-3 divide-y divide-[var(--color-line)]">
+              {results.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    to={`/san-pham/${p.id}`}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-4 py-4 hover:opacity-70"
+                  >
+                    <span className="h-16 w-12 shrink-0 overflow-hidden rounded-sm bg-[var(--color-tile)]">
+                      <ProductImage item={p} className="h-full w-full object-cover" />
+                    </span>
+                    <span className="min-w-0 flex-1 font-serif text-lg">{highlightMatch(p.name, query.trim())}</span>
+                    <span className="shrink-0 text-sm tabular-nums text-ink-soft">{vnd(p.price)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );

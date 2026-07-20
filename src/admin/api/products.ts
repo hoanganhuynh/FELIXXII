@@ -43,10 +43,11 @@ export async function listStyles(p: ListParams): Promise<{ rows: StyleRow[]; tot
   if (p.stock === "low") sel = sel.lt("total_stock", 12);
 
   if (p.q?.trim()) {
-    const q = p.q.trim();
-    // style_code is exact-ish, name is fuzzy — ilike covers both well enough for
-    // a filter box. Ranked relevance lives in the SKU view's search_skus() RPC.
-    sel = sel.or(`style_code.ilike.%${q}%,name.ilike.%${q}%,material.ilike.%${q}%`);
+    // Each word must appear in at least one field; all words must match (AND of ORs).
+    // "lua do" → finds styles where "lua" hits name/code/material AND "do" also hits.
+    for (const word of p.q.trim().split(/\s+/)) {
+      sel = sel.or(`style_code.ilike.%${word}%,name.ilike.%${word}%,material.ilike.%${word}%`);
+    }
   }
 
   switch (p.sort) {
