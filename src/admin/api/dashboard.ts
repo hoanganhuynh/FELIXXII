@@ -20,13 +20,14 @@ export interface DashboardStats {
   total_ltv: number;
   avg_ltv: number;
   repeat_rate_by_year: { year: number; rate: number }[];
+  return_reasons: { reason: string; count: number; pct: number }[];
 }
 
 export const EMPTY_STATS: DashboardStats = {
   revenue: 0, orders: 0, aov: 0, units: 0, return_rate: 0, conversion: 0,
   by_category: [], by_collection: [], top: [], stock_outs: [],
   oos_skus: 0, vip_count: 0, vip_ltv: 0, total_ltv: 0,
-  avg_ltv: 0, repeat_rate_by_year: [],
+  avg_ltv: 0, repeat_rate_by_year: [], return_reasons: [],
 };
 
 /** Every dashboard tile in ONE round trip — all aggregation happens in Postgres. */

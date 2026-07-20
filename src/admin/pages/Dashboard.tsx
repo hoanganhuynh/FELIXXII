@@ -92,8 +92,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* category + top + stock */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        {/* category + top + stock + return reasons */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
           <Card title={t("dash.by_category")}>
             <div className="px-5 py-4">
               <BarList items={m.by_category.map((c) => ({ label: c.label, value: Number(c.value) }))} valueFmt={compactVnd} />
@@ -137,6 +137,22 @@ export default function Dashboard() {
               ))}
               {!loading && !m.stock_outs.length && <li className="px-5 py-6 text-center text-xs text-ink-soft">{t("dash.all_in_stock")}</li>}
             </ul>
+          </Card>
+
+          <Card title={t("dash.return_reasons")}>
+            <div className="px-5 py-4">
+              {m.return_reasons.length ? (
+                <BarList
+                  items={m.return_reasons.map((r) => ({
+                    label: t(`ord.reason.${r.reason}`),
+                    value: Number(r.pct),
+                  }))}
+                  valueFmt={(n) => `${n.toFixed(0)}%`}
+                />
+              ) : (
+                <p className="py-6 text-center text-xs text-ink-soft">{t("common.none")}</p>
+              )}
+            </div>
           </Card>
         </div>
 
