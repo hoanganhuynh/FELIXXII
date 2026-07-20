@@ -22,6 +22,14 @@ export const CATEGORIES: { id: CategoryId; label: string; icon: string }[] = [
   { id: "phu-kien", label: "Accessories", icon: "/cat-icons/accessories.svg" },
 ];
 
+/** Storefront-browsable categories only. Excludes "phu-kien" — that entry has
+ *  zero storefront Product entries today and only ever routed to the
+ *  jewelry/bag Accessory poll data, which is no longer a shoppable category.
+ *  CATEGORIES itself must stay intact: the admin seed generator
+ *  (src/admin/data/generate.ts, via scripts/gen-seed.ts) depends on all 5
+ *  entries existing to seed the admin's real "Accessories" garment category. */
+export const SHOP_CATEGORIES = CATEGORIES.filter((c) => c.id !== "phu-kien");
+
 export const COLLECTIONS: { id: CollectionId; label: string; season: string; note: string; image: string }[] = [
   { id: "thu-dong-2025", label: "Fall — Winter 2025", season: "FW25", note: "Velvet, draped silk, warm dark tones.", image: "607653555_1212322397744958_1993799492838073038_n.jpg" },
   { id: "xuan-he-2026", label: "Spring — Summer 2026", season: "SS26", note: "Lightweight chiffon, pastel, flowy fit.", image: "604770326_1209992451311286_3317825646691052207_n.jpg" },
@@ -56,6 +64,17 @@ export const PALETTE: Record<string, ColorSwatch> = {
   bac: { name: "Silver", hex: "#c3c7cc" },
 };
 
+export interface LookOption {
+  accessoryId: string;
+  /** static, illustrative vote share for the demo poll — not derived from real votes */
+  demoVotePct: number;
+}
+
+export interface LookGroup {
+  directorChoice: string; // must match one entry in options[].accessoryId
+  options: LookOption[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -75,8 +94,8 @@ export interface Product {
   blurb: string;
   /** real product photos in /public/product-image-demo (fallback = generated art) */
   images?: string[];
-  /** complete-the-look: accessory ids gợi ý theo type */
-  look?: Partial<Record<AccessoryType, string[]>>;
+  /** best-fit-with: styling poll options per accessory type, with a director's-choice pick */
+  look?: Partial<Record<AccessoryType, LookGroup>>;
 }
 
 /** folder holding the real demo product photos */
@@ -88,7 +107,6 @@ export interface Accessory {
   type: AccessoryType;
   category: "phu-kien";
   collection: CollectionId;
-  price: number;
   colors: ColorSwatch[];
   detail: string; // pendant dài / drop / cuff...
 }
@@ -116,7 +134,12 @@ export const products: Product[] = [
       "607653555_1212322397744958_1993799492838073038_n.jpg",
       "605854033_1212322447744953_8385914445294101481_n.jpg",
     ],
-    look: { necklace: ["day-ngoc"], earrings: ["bong-giot"], bag: ["clutch-lua"], shoes: ["heel-nhung"] },
+    look: {
+      necklace: { directorChoice: "day-ngoc", options: [{ accessoryId: "day-ngoc", demoVotePct: 60 }, { accessoryId: "chain-kim", demoVotePct: 40 }] },
+      earrings: { directorChoice: "bong-giot", options: [{ accessoryId: "bong-giot", demoVotePct: 60 }, { accessoryId: "huggie-vang", demoVotePct: 40 }] },
+      bag: { directorChoice: "clutch-lua", options: [{ accessoryId: "clutch-lua", demoVotePct: 60 }, { accessoryId: "mini-da", demoVotePct: 40 }] },
+      shoes: { directorChoice: "heel-nhung", options: [{ accessoryId: "heel-nhung", demoVotePct: 60 }, { accessoryId: "mule-satin", demoVotePct: 40 }] },
+    },
   },
   {
     id: "suong-mai",
@@ -140,7 +163,11 @@ export const products: Product[] = [
       "606038369_1209992494644615_3834472852269240134_n.jpg",
       "605744430_1209992551311276_4297429810533013933_n.jpg",
     ],
-    look: { earrings: ["huggie-vang"], necklace: ["chain-kim"], shoes: ["mule-satin"] },
+    look: {
+      earrings: { directorChoice: "huggie-vang", options: [{ accessoryId: "huggie-vang", demoVotePct: 60 }, { accessoryId: "bong-giot", demoVotePct: 40 }] },
+      necklace: { directorChoice: "chain-kim", options: [{ accessoryId: "chain-kim", demoVotePct: 60 }, { accessoryId: "day-ngoc", demoVotePct: 40 }] },
+      shoes: { directorChoice: "mule-satin", options: [{ accessoryId: "mule-satin", demoVotePct: 60 }, { accessoryId: "sandal-quai", demoVotePct: 40 }] },
+    },
   },
   {
     id: "nguyet",
@@ -163,7 +190,11 @@ export const products: Product[] = [
       "667405324_1300229082287622_3951756945889064705_n.jpg",
       "668139748_1300226622287868_3536109004282702876_n.jpg",
     ],
-    look: { earrings: ["bong-giot"], bracelet: ["lac-manh"], shoes: ["sandal-quai"] },
+    look: {
+      earrings: { directorChoice: "bong-giot", options: [{ accessoryId: "bong-giot", demoVotePct: 60 }, { accessoryId: "huggie-vang", demoVotePct: 40 }] },
+      bracelet: { directorChoice: "lac-manh", options: [{ accessoryId: "lac-manh", demoVotePct: 60 }, { accessoryId: "cuff-bac", demoVotePct: 40 }] },
+      shoes: { directorChoice: "sandal-quai", options: [{ accessoryId: "sandal-quai", demoVotePct: 60 }, { accessoryId: "heel-nhung", demoVotePct: 40 }] },
+    },
   },
   {
     id: "ha-vu",
@@ -182,7 +213,12 @@ export const products: Product[] = [
     createdAt: 20260210,
     blurb: "Halter neck slip dress, baby pink satin — perfect for casual wear or light parties.",
     images: ["602970875_1205145441795987_18715939281272587_n.jpg"],
-    look: { necklace: ["chain-kim"], earrings: ["huggie-vang"], bag: ["mini-da"], shoes: ["mule-satin"] },
+    look: {
+      necklace: { directorChoice: "chain-kim", options: [{ accessoryId: "chain-kim", demoVotePct: 60 }, { accessoryId: "day-ngoc", demoVotePct: 40 }] },
+      earrings: { directorChoice: "huggie-vang", options: [{ accessoryId: "huggie-vang", demoVotePct: 60 }, { accessoryId: "bong-giot", demoVotePct: 40 }] },
+      bag: { directorChoice: "mini-da", options: [{ accessoryId: "mini-da", demoVotePct: 60 }, { accessoryId: "clutch-lua", demoVotePct: 40 }] },
+      shoes: { directorChoice: "mule-satin", options: [{ accessoryId: "mule-satin", demoVotePct: 60 }, { accessoryId: "sandal-quai", demoVotePct: 40 }] },
+    },
   },
   {
     id: "moc-lan",
@@ -201,7 +237,12 @@ export const products: Product[] = [
     createdAt: 20251001,
     blurb: "Bordeaux satin dress, slightly puffed sleeves to shape shoulders — the signature wine color of the cold season.",
     images: ["608204946_1212322411078290_5493282969479296625_n.jpg"],
-    look: { necklace: ["day-ngoc"], earrings: ["bong-giot"], bag: ["clutch-lua"], shoes: ["heel-nhung"] },
+    look: {
+      necklace: { directorChoice: "day-ngoc", options: [{ accessoryId: "day-ngoc", demoVotePct: 60 }, { accessoryId: "chain-kim", demoVotePct: 40 }] },
+      earrings: { directorChoice: "bong-giot", options: [{ accessoryId: "bong-giot", demoVotePct: 60 }, { accessoryId: "huggie-vang", demoVotePct: 40 }] },
+      bag: { directorChoice: "clutch-lua", options: [{ accessoryId: "clutch-lua", demoVotePct: 60 }, { accessoryId: "mini-da", demoVotePct: 40 }] },
+      shoes: { directorChoice: "heel-nhung", options: [{ accessoryId: "heel-nhung", demoVotePct: 60 }, { accessoryId: "mule-satin", demoVotePct: 40 }] },
+    },
   },
   {
     id: "sen-ao",
@@ -219,7 +260,11 @@ export const products: Product[] = [
     bestseller: 5,
     createdAt: 20260220,
     blurb: "Cross wrap top, lightweight silk chiffon — layer with skirts or trousers.",
-    look: { necklace: ["chain-kim"], earrings: ["huggie-vang"], bag: ["mini-da"] },
+    look: {
+      necklace: { directorChoice: "chain-kim", options: [{ accessoryId: "chain-kim", demoVotePct: 60 }, { accessoryId: "day-ngoc", demoVotePct: 40 }] },
+      earrings: { directorChoice: "huggie-vang", options: [{ accessoryId: "huggie-vang", demoVotePct: 60 }, { accessoryId: "bong-giot", demoVotePct: 40 }] },
+      bag: { directorChoice: "mini-da", options: [{ accessoryId: "mini-da", demoVotePct: 60 }, { accessoryId: "clutch-lua", demoVotePct: 40 }] },
+    },
   },
   {
     id: "vu-khuc",
@@ -237,7 +282,12 @@ export const products: Product[] = [
     bestseller: 8,
     createdAt: 20251005,
     blurb: "Two-piece tweed set: crop top + midi skirt — elegant from office to party.",
-    look: { earrings: ["bong-giot"], bracelet: ["cuff-bac"], bag: ["mini-da"], shoes: ["sandal-quai"] },
+    look: {
+      earrings: { directorChoice: "bong-giot", options: [{ accessoryId: "bong-giot", demoVotePct: 60 }, { accessoryId: "huggie-vang", demoVotePct: 40 }] },
+      bracelet: { directorChoice: "cuff-bac", options: [{ accessoryId: "cuff-bac", demoVotePct: 60 }, { accessoryId: "lac-manh", demoVotePct: 40 }] },
+      bag: { directorChoice: "mini-da", options: [{ accessoryId: "mini-da", demoVotePct: 60 }, { accessoryId: "clutch-lua", demoVotePct: 40 }] },
+      shoes: { directorChoice: "sandal-quai", options: [{ accessoryId: "sandal-quai", demoVotePct: 60 }, { accessoryId: "heel-nhung", demoVotePct: 40 }] },
+    },
   },
   {
     id: "cam-tu",
@@ -255,7 +305,12 @@ export const products: Product[] = [
     bestseller: 7,
     createdAt: 20250915,
     blurb: "Metallic ball-gown brocade dress — a statement for the red carpet and grand banquets.",
-    look: { necklace: ["day-ngoc"], earrings: ["bong-giot"], bag: ["clutch-lua"], shoes: ["heel-nhung"] },
+    look: {
+      necklace: { directorChoice: "day-ngoc", options: [{ accessoryId: "day-ngoc", demoVotePct: 60 }, { accessoryId: "chain-kim", demoVotePct: 40 }] },
+      earrings: { directorChoice: "bong-giot", options: [{ accessoryId: "bong-giot", demoVotePct: 60 }, { accessoryId: "huggie-vang", demoVotePct: 40 }] },
+      bag: { directorChoice: "clutch-lua", options: [{ accessoryId: "clutch-lua", demoVotePct: 60 }, { accessoryId: "mini-da", demoVotePct: 40 }] },
+      shoes: { directorChoice: "heel-nhung", options: [{ accessoryId: "heel-nhung", demoVotePct: 60 }, { accessoryId: "mule-satin", demoVotePct: 40 }] },
+    },
   },
   {
     id: "to-vang",
@@ -278,7 +333,11 @@ export const products: Product[] = [
       "604302658_1207684788208719_2584822847566233407_n.jpg",
       "605730417_1207684818208716_3284772005674759256_n.jpg",
     ],
-    look: { earrings: ["huggie-vang"], necklace: ["chain-kim"], shoes: ["mule-satin"] },
+    look: {
+      earrings: { directorChoice: "huggie-vang", options: [{ accessoryId: "huggie-vang", demoVotePct: 60 }, { accessoryId: "bong-giot", demoVotePct: 40 }] },
+      necklace: { directorChoice: "chain-kim", options: [{ accessoryId: "chain-kim", demoVotePct: 60 }, { accessoryId: "day-ngoc", demoVotePct: 40 }] },
+      shoes: { directorChoice: "mule-satin", options: [{ accessoryId: "mule-satin", demoVotePct: 60 }, { accessoryId: "sandal-quai", demoVotePct: 40 }] },
+    },
   },
   {
     id: "thanh-tan",
@@ -302,22 +361,26 @@ export const products: Product[] = [
       "606001228_1212295194414345_7959480619862527801_n.jpg",
       "608511618_1212295214414343_8768514877154959894_n.jpg",
     ],
-    look: { earrings: ["bong-giot"], necklace: ["day-ngoc"], shoes: ["heel-nhung"] },
+    look: {
+      earrings: { directorChoice: "bong-giot", options: [{ accessoryId: "bong-giot", demoVotePct: 60 }, { accessoryId: "huggie-vang", demoVotePct: 40 }] },
+      necklace: { directorChoice: "day-ngoc", options: [{ accessoryId: "day-ngoc", demoVotePct: 60 }, { accessoryId: "chain-kim", demoVotePct: 40 }] },
+      shoes: { directorChoice: "heel-nhung", options: [{ accessoryId: "heel-nhung", demoVotePct: 60 }, { accessoryId: "mule-satin", demoVotePct: 40 }] },
+    },
   },
 ];
 
 export const accessories: Accessory[] = [
-  { id: "day-ngoc", name: "Dây chuyền Ngọc", type: "necklace", category: "phu-kien", collection: "thu-dong-2025", price: 1250000, colors: c("gold", "bac"), detail: "Long pendant, pearl face" },
-  { id: "chain-kim", name: "Layered Chain Kim", type: "necklace", category: "phu-kien", collection: "xuan-he-2026", price: 980000, colors: c("gold"), detail: "Multi-layered chain" },
-  { id: "bong-giot", name: "Bông tai Giọt", type: "earrings", category: "phu-kien", collection: "thu-dong-2025", price: 650000, colors: c("gold", "bac"), detail: "Teardrop earrings" },
-  { id: "huggie-vang", name: "Huggie Vàng", type: "earrings", category: "phu-kien", collection: "xuan-he-2026", price: 520000, colors: c("gold"), detail: "Ear-hugging huggies, compact" },
-  { id: "lac-manh", name: "Lắc tay Mảnh", type: "bracelet", category: "phu-kien", collection: "xuan-he-2026", price: 480000, colors: c("gold", "bac"), detail: "Delicate, sophisticated thin band" },
-  { id: "cuff-bac", name: "Cuff Bạc", type: "bracelet", category: "phu-kien", collection: "thu-dong-2025", price: 890000, colors: c("bac"), detail: "Large statement cuff" },
-  { id: "clutch-lua", name: "Clutch Lụa", type: "bag", category: "phu-kien", collection: "thu-dong-2025", price: 1650000, colors: c("den", "dodo", "gold"), detail: "Evening clutch, metal clasp" },
-  { id: "mini-da", name: "Mini Bag Da", type: "bag", category: "phu-kien", collection: "xuan-he-2026", price: 2100000, colors: c("be", "den"), detail: "Leather mini bag, chain strap" },
-  { id: "heel-nhung", name: "Block Heel Nhung", type: "shoes", category: "phu-kien", collection: "thu-dong-2025", price: 1980000, colors: c("den", "dodo"), detail: "Velvet block heel, 7cm square heel" },
-  { id: "mule-satin", name: "Mule Satin", type: "shoes", category: "phu-kien", collection: "xuan-he-2026", price: 1750000, colors: c("ngavoi", "hong"), detail: "Pointed-toe satin mule" },
-  { id: "sandal-quai", name: "Sandal Quai Mảnh", type: "shoes", category: "phu-kien", collection: "xuan-he-2026", price: 1550000, colors: c("be", "den"), detail: "Thin-strap sandal, stiletto heel" },
+  { id: "day-ngoc", name: "Dây chuyền Ngọc", type: "necklace", category: "phu-kien", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Long pendant, pearl face" },
+  { id: "chain-kim", name: "Layered Chain Kim", type: "necklace", category: "phu-kien", collection: "xuan-he-2026", colors: c("gold"), detail: "Multi-layered chain" },
+  { id: "bong-giot", name: "Bông tai Giọt", type: "earrings", category: "phu-kien", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Teardrop earrings" },
+  { id: "huggie-vang", name: "Huggie Vàng", type: "earrings", category: "phu-kien", collection: "xuan-he-2026", colors: c("gold"), detail: "Ear-hugging huggies, compact" },
+  { id: "lac-manh", name: "Lắc tay Mảnh", type: "bracelet", category: "phu-kien", collection: "xuan-he-2026", colors: c("gold", "bac"), detail: "Delicate, sophisticated thin band" },
+  { id: "cuff-bac", name: "Cuff Bạc", type: "bracelet", category: "phu-kien", collection: "thu-dong-2025", colors: c("bac"), detail: "Large statement cuff" },
+  { id: "clutch-lua", name: "Clutch Lụa", type: "bag", category: "phu-kien", collection: "thu-dong-2025", colors: c("den", "dodo", "gold"), detail: "Evening clutch, metal clasp" },
+  { id: "mini-da", name: "Mini Bag Da", type: "bag", category: "phu-kien", collection: "xuan-he-2026", colors: c("be", "den"), detail: "Leather mini bag, chain strap" },
+  { id: "heel-nhung", name: "Block Heel Nhung", type: "shoes", category: "phu-kien", collection: "thu-dong-2025", colors: c("den", "dodo"), detail: "Velvet block heel, 7cm square heel" },
+  { id: "mule-satin", name: "Mule Satin", type: "shoes", category: "phu-kien", collection: "xuan-he-2026", colors: c("ngavoi", "hong"), detail: "Pointed-toe satin mule" },
+  { id: "sandal-quai", name: "Sandal Quai Mảnh", type: "shoes", category: "phu-kien", collection: "xuan-he-2026", colors: c("be", "den"), detail: "Thin-strap sandal, stiletto heel" },
 ];
 
 export const LOOK_LABELS: Record<AccessoryType, string> = {
