@@ -24,6 +24,12 @@ export default function Dashboard() {
   const bridalShare = m.revenue ? (bridal / m.revenue) * 100 : 0;
   const vipShare = m.total_ltv ? (m.vip_ltv / m.total_ltv) * 100 : 0;
 
+  const repeatYears = m.repeat_rate_by_year;
+  const latestRepeat = repeatYears.length ? Number(repeatYears[repeatYears.length - 1].rate) : 0;
+  const prevRepeat = repeatYears.length > 1 ? Number(repeatYears[repeatYears.length - 2].rate) : undefined;
+  const repeatDelta = prevRepeat !== undefined ? latestRepeat - prevRepeat : undefined;
+  const latestRepeatYear = repeatYears.length ? String(repeatYears[repeatYears.length - 1].year) : "";
+
   // Revenue, AOV and LTV are business data. Rather than render a dashboard of
   // zeros (which reads as broken), say plainly that it needs an admin session.
   if (ready && !isAdmin) {
@@ -59,13 +65,15 @@ export default function Dashboard() {
 
       <div className={loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat label={t("dash.revenue")} value={compactVnd(m.revenue)} delta={12.4} hint={t("dash.vs_last")} />
           <Stat label={t("dash.orders")} value={compact(m.orders)} delta={8.1} />
           <Stat label={t("dash.aov")} value={compactVnd(m.aov)} delta={3.9} />
           <Stat label={t("dash.units")} value={compact(m.units)} delta={6.2} />
           <Stat label={t("dash.conversion")} value={`${Number(m.conversion).toFixed(1)}%`} delta={-0.4} />
           <Stat label={t("dash.return_rate")} value={`${Number(m.return_rate).toFixed(1)}%`} delta={-1.2} hint={t("dash.lower_better")} />
+          <Stat label={t("dash.repeat_rate")} value={`${latestRepeat.toFixed(1)}%`} delta={repeatDelta} hint={latestRepeatYear} />
+          <Stat label={t("dash.avg_ltv")} value={compactVnd(m.avg_ltv)} />
         </div>
 
         {/* trend + donut */}
