@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useCart, cartTotal, cartCount } from "../store/cart";
-import { products, productById, accessoryById } from "../data/catalog";
+import { products, productById } from "../data/catalog";
 import ProductCard, { vnd } from "./ProductCard";
 import ProductImage from "./ProductImage";
 
@@ -48,7 +48,7 @@ export default function CartDrawer() {
           <div className="grid gap-12 lg:grid-cols-[1fr_360px]">
             <div>
               {lines.map((l) => {
-                const src = productById(l.id) ?? accessoryById(l.id);
+                const src = productById(l.id);
                 return (
                 <div key={l.key} className="grid grid-cols-[100px_1fr_auto] gap-5 border-b edge py-8">
                   <div className="aspect-[3/4] w-full overflow-hidden rounded-sm bg-[var(--color-tile)]">
