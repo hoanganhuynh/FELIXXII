@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
 import BodyProfileModal from "./components/BodyProfileModal";
 import LoginDrawer from "./components/LoginDrawer";
+import SearchOverlay from "./components/SearchOverlay";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
@@ -38,6 +39,7 @@ function Storefront() {
       <CartDrawer />
       <BodyProfileModal />
       <LoginDrawer />
+      <SearchOverlay />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />

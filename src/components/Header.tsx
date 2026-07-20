@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart, cartCount } from "../store/cart";
 import { useBodyProfile } from "../store/bodyProfile";
 import { useAuth } from "../store/auth";
+import { useSearch } from "../store/search";
 import { SHOP_CATEGORIES, COLLECTIONS } from "../data/catalog";
 
 export default function Header() {
@@ -12,6 +13,7 @@ export default function Header() {
   const openCart = useCart((s) => s.setOpen);
   const hasProfile = useBodyProfile((s) => !!s.measurements);
   const { user, setLoginOpen } = useAuth();
+  const openSearch = useSearch((s) => s.setOpen);
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
 
@@ -74,7 +76,7 @@ export default function Header() {
               {cat.label}
             </NavLink>
           ))}
-          <button aria-label="Search" className="hidden text-ink transition-opacity hover:opacity-50 md:block">
+          <button aria-label="Search" onClick={() => openSearch(true)} className="text-ink transition-opacity hover:opacity-50">
             <Icon><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></Icon>
           </button>
           <button
