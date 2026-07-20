@@ -467,6 +467,14 @@ export type Database = {
         Returns: number
       }
       dashboard_stats: { Args: never; Returns: Json }
+      dashboard_trend: {
+        Args: { granularity: string; range_start: string; range_end: string }
+        Returns: Json
+      }
+      dashboard_trend_detail: {
+        Args: { bucket_start: string; bucket_granularity: string }
+        Returns: Json
+      }
       f_unaccent: { Args: { "": string }; Returns: string }
       facet_counts: {
         Args: { collection?: string }
