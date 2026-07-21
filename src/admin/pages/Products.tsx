@@ -86,7 +86,7 @@ export default function AdminProducts() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-md border edge p-0.5 text-[11px]">
+          <div className="flex rounded-md border edge p-0.5 text-[12px]">
             {(["styles", "skus"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} className={`rounded px-3 py-1.5 tracking-[0.06em] transition-colors ${view === v ? "bg-ink text-white" : "text-ink-soft"}`}>
                 {v === "styles" ? t("prod.styles") : t("prod.skus")}
@@ -97,7 +97,7 @@ export default function AdminProducts() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="mr-1.5 inline-block align-[-2px]"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             {t("prod.import")}
           </Btn>
-          <Link to="/admin/products/new" className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink px-4 text-[11px] tracking-[0.08em] text-white transition-opacity hover:opacity-85">
+          <Link to="/admin/products/new" className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink px-4 text-[12px] tracking-[0.08em] text-white transition-opacity hover:opacity-85">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
             {t("prod.new")}
           </Link>
@@ -138,8 +138,8 @@ export default function AdminProducts() {
         <div className="mb-3 flex items-center justify-between rounded-md bg-ink px-4 py-2.5 text-white">
           <span className="text-xs">{t("prod.selected", { count: sel.size })}</span>
           <div className="flex items-center gap-2">
-            <button onClick={() => setBulkOpen(true)} className="rounded bg-white/15 px-3 py-1.5 text-[11px] tracking-[0.06em] hover:bg-white/25">{t("prod.bulk_edit")}</button>
-            <button onClick={() => setSel(new Set())} className="text-[11px] text-white/60 hover:text-white">{t("prod.clear")}</button>
+            <button onClick={() => setBulkOpen(true)} className="rounded bg-white/15 px-3 py-1.5 text-[12px] tracking-[0.06em] hover:bg-white/25">{t("prod.bulk_edit")}</button>
+            <button onClick={() => setSel(new Set())} className="text-[12px] text-white/60 hover:text-white">{t("prod.clear")}</button>
           </div>
         </div>
       )}
@@ -149,7 +149,7 @@ export default function AdminProducts() {
         <div className="overflow-x-auto rounded-lg border edge bg-white/40">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+              <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
                 <th className="w-10 px-3 py-2.5"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-[var(--color-accent)]" /></th>
                 <th className="w-14 px-2 py-2.5"></th>
                 <th className="px-2 py-2.5">{t("prod.col_style")}</th><th className="px-2 py-2.5">{t("prod.col_code")}</th>
@@ -175,9 +175,9 @@ export default function AdminProducts() {
                   </td>
                   <td className="px-2 py-2.5">
                     <Link to={`/admin/products/${s.id}`} className="font-serif text-[15px] link-underline">{s.name}</Link>
-                    <p className="text-[10px] text-ink-soft">{s.sku_count} SKUs · {s.silhouette}</p>
+                    <p className="text-[12px] text-ink-soft">{s.sku_count} SKUs · {s.silhouette}</p>
                   </td>
-                  <td className="px-2 py-2.5 font-mono text-[11px] text-ink-soft">{s.style_code}</td>
+                  <td className="px-2 py-2.5 font-mono text-[12px] text-ink-soft">{s.style_code}</td>
                   <td className="px-2 py-2.5"><div className="flex gap-1">{colorsOf(s).slice(0, 4).map((c) => <Dot key={c.name} hex={c.hex} title={c.name} />)}</div></td>
                   <td className="px-2 py-2.5 text-right text-xs tabular-nums">{vnd(s.price!)}</td>
                   <td className={`px-2 py-2.5 text-right text-xs tabular-nums ${(s.total_stock ?? 0) < 12 ? "text-[var(--color-accent)]" : ""}`}>{s.total_stock}</td>
@@ -206,7 +206,7 @@ export default function AdminProducts() {
         <div className="overflow-x-auto rounded-lg border edge bg-white/40">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+              <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
                 <th className="px-3 py-2.5">{t("prod.col_sku")}</th><th className="px-2 py-2.5">{t("prod.col_style")}</th><th className="px-2 py-2.5">{t("prod.col_color")}</th>
                 <th className="px-2 py-2.5">{t("prod.col_size")}</th><th className="px-2 py-2.5">{t("prod.col_barcode")}</th>
                 <th className="px-2 py-2.5 text-right">{t("prod.col_price")}</th><th className="px-2 py-2.5 text-right">{t("prod.col_stock")}</th>
@@ -220,10 +220,10 @@ export default function AdminProducts() {
                   <td className="px-2 py-2"><Link to={`/admin/products/${h.style_id}`} className="link-underline">{h.style_name}</Link></td>
                   <td className="px-2 py-2"><span className="flex items-center gap-1.5 text-xs"><Dot hex={h.color_hex} />{h.color_name}</span></td>
                   <td className="px-2 py-2 text-xs">{h.size}</td>
-                  <td className="px-2 py-2 font-mono text-[11px] text-ink-soft">{h.barcode}</td>
+                  <td className="px-2 py-2 font-mono text-[12px] text-ink-soft">{h.barcode}</td>
                   <td className="px-2 py-2 text-right text-xs tabular-nums">{vnd(h.price)}</td>
                   <td className={`px-2 py-2 text-right text-xs tabular-nums ${h.stock === 0 ? "text-[var(--color-accent)]" : ""}`}>{h.stock}</td>
-                  <td className="px-2 py-2 text-right text-[10px] tabular-nums text-ink-soft">{h.score.toFixed(0)}</td>
+                  <td className="px-2 py-2 text-right text-[12px] tabular-nums text-ink-soft">{h.score.toFixed(0)}</td>
                 </tr>
               ))}
               {!skus.loading && !skus.data.length && (
@@ -299,7 +299,7 @@ function BulkModal({ count, cats, cols, onClose, onApply }: {
         <p className="mt-1 text-xs text-ink-soft">{t("prod.bulk_body", { count })}</p>
 
         <label className="mt-5 block">
-          <span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("prod.attribute")}</span>
+          <span className="text-[12px] tracking-[0.1em] text-ink-soft">{t("prod.attribute")}</span>
           <select value={attr} onChange={(e) => onAttr(e.target.value as BulkPatch["attribute"])} className="input mt-1">
             <option value="status">{t("prod.attr_status")}</option>
             <option value="collection">{t("prod.attr_collection")}</option>
@@ -310,7 +310,7 @@ function BulkModal({ count, cats, cols, onClose, onApply }: {
         </label>
 
         <label className="mt-4 block">
-          <span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("prod.new_value")}</span>
+          <span className="text-[12px] tracking-[0.1em] text-ink-soft">{t("prod.new_value")}</span>
           {attr === "status" && (
             <select value={value} onChange={(e) => setValue(e.target.value)} className="input mt-1">
               {STATUSES.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}

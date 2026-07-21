@@ -243,7 +243,7 @@ export default function ProductEditor() {
                     <div key={`${url}-${i}`} className="group relative aspect-square overflow-hidden rounded-md border edge bg-[var(--color-tile)]">
                       <img src={url} alt="" className="h-full w-full object-cover object-top" />
                       {i === 0 && (
-                        <span className="absolute left-1.5 top-1.5 rounded bg-ink px-1.5 py-0.5 text-[9px] tracking-wider text-white">
+                        <span className="absolute left-1.5 top-1.5 rounded bg-ink px-1.5 py-0.5 text-[12px] tracking-wider text-white">
                           {t("editor.cover")}
                         </span>
                       )}
@@ -270,7 +270,7 @@ export default function ProductEditor() {
                 </div>
               )}
               {images.length === 0 && (
-                <p className="mb-4 text-center text-[11px] text-ink-soft">{t("editor.no_images")}</p>
+                <p className="mb-4 text-center text-[12px] text-ink-soft">{t("editor.no_images")}</p>
               )}
 
               {/* URL input and File Upload */}
@@ -302,7 +302,7 @@ export default function ProductEditor() {
               {/* Library picker */}
               <button
                 onClick={() => setLibraryOpen((v) => !v)}
-                className="mt-3 flex items-center gap-1.5 text-[11px] text-ink-soft link-underline"
+                className="mt-3 flex items-center gap-1.5 text-[12px] text-ink-soft link-underline"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                 {t("editor.browse_library")}
@@ -332,7 +332,7 @@ export default function ProductEditor() {
                 </div>
               )}
 
-              <p className="mt-3 text-[10px] text-ink-soft">{t("editor.images_hint")}</p>
+              <p className="mt-3 text-[12px] text-ink-soft">{t("editor.images_hint")}</p>
             </div>
           </Card>
 
@@ -368,14 +368,14 @@ export default function ProductEditor() {
             <div className="max-h-80 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-[var(--color-bg)]">
-                  <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+                  <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
                     <th className="px-4 py-2">{t("prod.col_sku")}</th><th className="px-2 py-2">{t("prod.col_color")}</th><th className="px-2 py-2">{t("prod.col_size")}</th><th className="px-2 py-2 text-right">{t("prod.col_stock")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {variantsPreview.map((v) => (
                     <tr key={v.sku} className="border-b edge last:border-0">
-                      <td className="px-4 py-1.5 font-mono text-[11px]">{v.sku}</td>
+                      <td className="px-4 py-1.5 font-mono text-[12px]">{v.sku}</td>
                       <td className="px-2 py-1.5"><span className="flex items-center gap-1.5 text-xs"><Dot hex={v.color_hex} />{v.color_name}</span></td>
                       <td className="px-2 py-1.5 text-xs">{v.size}</td>
                       <td className="px-2 py-1.5 text-right text-xs tabular-nums">{v.stock}</td>
@@ -392,16 +392,16 @@ export default function ProductEditor() {
           <Card title={t("editor.sku_coding")}>
             <div className="p-5">
               <p className="font-mono text-lg">{code}</p>
-              <p className="mt-1 text-[11px] text-ink-soft">{t("editor.style_code_hint")}</p>
+              <p className="mt-1 text-[12px] text-ink-soft">{t("editor.style_code_hint")}</p>
               <p className="mt-3 font-mono text-sm">{skuCode(category, serial, colorNames[0] ?? "Black", sizes[0] ?? "M")}</p>
-              <dl className="mt-4 space-y-1.5 text-[11px] text-ink-soft">
+              <dl className="mt-4 space-y-1.5 text-[12px] text-ink-soft">
                 <Row k="FX" v={t("editor.brand")} />
                 <Row k={CATEGORY_CODE[category]} v={cats.data.find((c) => c.id === category)?.label ?? category} />
                 <Row k={String(serial).padStart(4, "0")} v={t("editor.serial")} />
                 <Row k="KK" v={t("editor.colour_code")} />
                 <Row k="ZZ" v={t("editor.size_code")} />
               </dl>
-              <Link to="/admin/reference" className="mt-4 inline-block text-[11px] text-ink-soft link-underline">{t("editor.full_spec")}</Link>
+              <Link to="/admin/reference" className="mt-4 inline-block text-[12px] text-ink-soft link-underline">{t("editor.full_spec")}</Link>
             </div>
           </Card>
 
@@ -410,7 +410,7 @@ export default function ProductEditor() {
               <div className="flex flex-wrap gap-1.5">
                 {rules.data.map((b) => (
                   <button key={b.body_type} onClick={() => setBodyType(b.body_type)}
-                    className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${bodyType === b.body_type ? "border-ink bg-ink text-white" : "edge"}`}>
+                    className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${bodyType === b.body_type ? "border-ink bg-ink text-white" : "edge"}`}>
                     {t(`body.${b.body_type}`)}
                   </button>
                 ))}
@@ -418,8 +418,8 @@ export default function ProductEditor() {
               {rule && (
                 <div className="mt-4 rounded-md bg-[var(--color-tile)] p-3">
                   <p className="text-xs">{rule.guidance}</p>
-                  <p className="mt-1.5 text-[11px] text-ink-soft">{rule.ease_note}</p>
-                  <Link to="/admin/size-rules" className="mt-2 inline-block text-[10px] text-ink-soft link-underline">{t("editor.edit_chart")}</Link>
+                  <p className="mt-1.5 text-[12px] text-ink-soft">{rule.ease_note}</p>
+                  <Link to="/admin/size-rules" className="mt-2 inline-block text-[12px] text-ink-soft link-underline">{t("editor.edit_chart")}</Link>
                 </div>
               )}
             </div>
@@ -456,7 +456,7 @@ export default function ProductEditor() {
 function Field({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-[10px] tracking-[0.1em] text-ink-soft">{label.toUpperCase()}</span>
+      <span className="text-[12px] tracking-[0.1em] text-ink-soft">{label.toUpperCase()}</span>
       <div className="mt-1">{children}</div>
     </label>
   );
@@ -467,9 +467,9 @@ function Row({ k, v }: { k: string; v: string }) {
 function Metric({ k, v, hint }: { k: string; v: string; hint?: string }) {
   return (
     <div className="bg-white/50 px-3 py-3">
-      <p className="text-[10px] tracking-[0.1em] text-ink-soft">{k.toUpperCase()}</p>
+      <p className="text-[12px] tracking-[0.1em] text-ink-soft">{k.toUpperCase()}</p>
       <p className="mt-1 text-sm tabular-nums">{v}</p>
-      {hint && <p className="mt-0.5 text-[10px] text-ink-soft/70 tabular-nums">{hint}</p>}
+      {hint && <p className="mt-0.5 text-[12px] text-ink-soft/70 tabular-nums">{hint}</p>}
     </div>
   );
 }

@@ -103,7 +103,7 @@ export function AreaChart({
 
       {hover !== null && tooltip && (
         <div
-          className="pointer-events-none absolute z-10 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-3 py-2 text-[11px] leading-relaxed text-white shadow-lg"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-3 py-2 text-[12px] leading-relaxed text-white shadow-lg"
           style={{
             left: `${(pts[hover][0] / w) * 100}%`,
             top: `${Math.max((pts[hover][1] / h) * 100 - 14, 0)}%`,
@@ -186,7 +186,7 @@ export function Donut({
                     <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--color-line)]">
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: s.color }} />
                     </div>
-                    <span className="shrink-0 tabular-nums text-[11px] text-ink-soft">{valueFmt(s.value)}</span>
+                    <span className="shrink-0 tabular-nums text-[12px] text-ink-soft">{valueFmt(s.value)}</span>
                   </div>
                 </div>
               )}

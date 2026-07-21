@@ -81,7 +81,7 @@ export default function Dashboard() {
         <div className="mt-8 rounded-lg border edge bg-white/40 px-6 py-16 text-center">
           <p className="font-serif text-xl">{t("dash.gate_title")}</p>
           <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-ink-soft">{t("dash.gate_body")}</p>
-          <button onClick={() => setLoginOpen(true)} className="mt-6 h-10 rounded-md bg-ink px-6 text-[11px] tracking-[0.1em] text-white transition-opacity hover:opacity-85">
+          <button onClick={() => setLoginOpen(true)} className="mt-6 h-10 rounded-md bg-ink px-6 text-[12px] tracking-[0.1em] text-white transition-opacity hover:opacity-85">
             {t("dash.gate_cta")}
           </button>
         </div>
@@ -99,7 +99,7 @@ export default function Dashboard() {
         
         <div className="flex items-center gap-3">
           {!loading && (
-            <span className="text-[10px] text-ink-soft uppercase tracking-wider">
+            <span className="text-[12px] text-ink-soft uppercase tracking-wider">
               {t("dash.last_updated", "Cập nhật:")} {lastUpdated.toLocaleTimeString()}
             </span>
           )}
@@ -148,7 +148,7 @@ export default function Dashboard() {
                       valueFmt={compactVnd}
                       center={
                         <div>
-                          <div className="text-[11px] text-ink-soft">{t("dash.total")}</div>
+                          <div className="text-[12px] text-ink-soft">{t("dash.total")}</div>
                           <div className="text-sm font-medium tabular-nums">{compactVnd(collTotal)}</div>
                         </div>
                       }
@@ -156,7 +156,7 @@ export default function Dashboard() {
                   </div>
                   {insights.length > 0 && (
                     <div className="border-t border-[var(--color-line)] px-5 pt-4 pb-5 space-y-2.5">
-                      <p className="text-[9px] tracking-[0.12em] text-ink-soft uppercase mb-3">{t("dash.coll_notes")}</p>
+                      <p className="text-[12px] tracking-[0.12em] text-ink-soft uppercase mb-3">{t("dash.coll_notes")}</p>
                       {insights.map((ins, idx) => (
                         <div key={idx} className="flex items-start gap-2.5">
                           <span className="mt-0.5 shrink-0">
@@ -170,7 +170,7 @@ export default function Dashboard() {
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                             )}
                           </span>
-                          <p className="text-[11px] leading-snug text-ink-soft">{t(ins.tKey, ins.vars as any) as string}</p>
+                          <p className="text-[12px] leading-snug text-ink-soft">{t(ins.tKey, ins.vars as any) as string}</p>
                         </div>
                       ))}
                     </div>
@@ -189,12 +189,12 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card title={t("dash.top_styles")} action={<Link to="/admin/products" className="text-[10px] text-ink-soft link-underline">{t("common.all")}</Link>}>
+          <Card title={t("dash.top_styles")} action={<Link to="/admin/products" className="text-[12px] text-ink-soft link-underline">{t("common.all")}</Link>}>
             <ul className="divide-y divide-[var(--color-line)]">
               {m.top.map((s, i) => (
                 <li key={s.id}>
                   <Link to={`/admin/products/${s.id}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-[var(--color-tile)]">
-                    <span className="w-4 text-center text-[11px] tabular-nums text-ink-soft">{i + 1}</span>
+                    <span className="w-4 text-center text-[12px] tabular-nums text-ink-soft">{i + 1}</span>
                     {s.images?.[0] ? (
                       <img src={s.images[0]} alt="" className="h-10 w-10 shrink-0 rounded object-cover object-top bg-[var(--color-tile)]" />
                     ) : (
@@ -204,7 +204,7 @@ export default function Dashboard() {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-serif text-sm">{s.name}</p>
-                      <p className="text-[10px] text-ink-soft">{s.style_code} · {compact(s.units_sold)} {t("dash.sold")}</p>
+                      <p className="text-[12px] text-ink-soft">{s.style_code} · {compact(s.units_sold)} {t("dash.sold")}</p>
                     </div>
                     <span className="shrink-0 text-xs tabular-nums">{compactVnd(Number(s.revenue))}</span>
                   </Link>
@@ -228,9 +228,9 @@ export default function Dashboard() {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-serif text-sm">{s.name}</p>
-                      <p className="text-[10px] text-ink-soft">{s.style_code} · {s.sku_count} SKUs · {compact(s.units_sold)} {t("dash.sold")}</p>
+                      <p className="text-[12px] text-ink-soft">{s.style_code} · {s.sku_count} SKUs · {compact(s.units_sold)} {t("dash.sold")}</p>
                     </div>
-                    <span className="shrink-0 text-right text-[11px] tabular-nums">
+                    <span className="shrink-0 text-right text-[12px] tabular-nums">
                       {s.oos_count > 0 && <span className="text-[var(--color-accent)]">{s.oos_count} {t("dash.out")}</span>}
                       {s.oos_count > 0 && s.low_count > 0 && <span className="text-ink-soft"> · </span>}
                       {s.low_count > 0 && <span className="text-amber-600">{s.low_count} {t("dash.low")}</span>}
@@ -321,7 +321,7 @@ export default function Dashboard() {
                     className="flex items-center gap-3 px-6 py-4 hover:bg-[var(--color-tile)]"
                     onClick={() => setTopReturnedOpen(false)}
                   >
-                    <span className="w-4 text-center text-[11px] tabular-nums text-ink-soft">{i + 1}</span>
+                    <span className="w-4 text-center text-[12px] tabular-nums text-ink-soft">{i + 1}</span>
                     {s.images?.[0] ? (
                       <img src={s.images[0]} alt="" className="h-10 w-10 shrink-0 rounded object-cover object-top bg-[var(--color-tile)]" />
                     ) : (
@@ -331,9 +331,9 @@ export default function Dashboard() {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-serif text-sm">{s.name}</p>
-                      <p className="text-[10px] text-ink-soft">{s.style_code}</p>
+                      <p className="text-[12px] text-ink-soft">{s.style_code}</p>
                     </div>
-                    <span className="shrink-0 text-right text-[11px] tabular-nums text-red-600">
+                    <span className="shrink-0 text-right text-[12px] tabular-nums text-red-600">
                       {s.returned_qty} {t("dash.returned", "lượt trả")}
                     </span>
                   </Link>

@@ -39,7 +39,7 @@ export function RevenueTrend() {
           <button
             key={g}
             onClick={() => { setGranularity(g); setDrill(null); }}
-            className={`h-7 rounded-md px-3 text-[11px] tracking-wide transition-colors ${
+            className={`h-7 rounded-md px-3 text-[12px] tracking-wide transition-colors ${
               g === granularity ? "bg-[var(--color-accent)] text-white" : "bg-[var(--color-tile)] text-ink-soft hover:bg-[var(--color-tile-deep)]"
             }`}
           >
@@ -101,8 +101,8 @@ export function RevenueTrend() {
       {drill && (
         <div className="mt-3 rounded-md border edge bg-white/60 px-4 py-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-ink-soft">{drill.bucket.bucket_label}</span>
-            <button onClick={() => setDrill(null)} className="text-[11px] text-ink-soft hover:text-ink">✕</button>
+            <span className="text-[12px] font-medium text-ink-soft">{drill.bucket.bucket_label}</span>
+            <button onClick={() => setDrill(null)} className="text-[12px] text-ink-soft hover:text-ink">✕</button>
           </div>
           {detailLoading ? (
             <p className="text-xs text-ink-soft">{t("dash.drill_loading")}</p>

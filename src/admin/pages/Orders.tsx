@@ -64,7 +64,7 @@ export default function AdminOrders() {
       <div className="overflow-x-auto rounded-lg border edge bg-white/40">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+            <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
               <th className="px-4 py-2.5">{t("ord.col_order")}</th><th className="px-2 py-2.5">{t("ord.col_date")}</th><th className="px-2 py-2.5">{t("ord.col_customer")}</th>
               <th className="px-2 py-2.5">{t("ord.col_channel")}</th><th className="px-2 py-2.5 text-right">{t("ord.col_items")}</th>
               <th className="px-2 py-2.5 text-right">{t("ord.col_total")}</th><th className="px-2 py-2.5">{t("ord.col_status")}</th>
@@ -73,7 +73,7 @@ export default function AdminOrders() {
           <tbody className={list.loading ? "opacity-40" : ""}>
             {list.data.rows.map((o) => (
               <tr key={o.id} onClick={() => setOpen(o)} className="cursor-pointer border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
-                <td className="px-4 py-2.5 font-mono text-[11px]">{o.id}</td>
+                <td className="px-4 py-2.5 font-mono text-[12px]">{o.id}</td>
                 <td className="px-2 py-2.5 text-xs text-ink-soft">{fmtDate(o.placed_at)}</td>
                 <td className="px-2 py-2.5 text-xs">{o.customers?.name}<span className="ml-1.5 text-ink-soft">· {o.city}</span></td>
                 <td className="px-2 py-2.5 text-xs text-ink-soft">{t(`channel.${o.channel}`)}</td>
@@ -124,7 +124,7 @@ export default function AdminOrders() {
 function Mini({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
   return (
     <div className={`rounded-lg border edge px-4 py-3 ${accent ? "bg-[var(--color-accent-soft)]" : "bg-white/40"}`}>
-      <p className="text-[10px] tracking-[0.1em] text-ink-soft">{k.toUpperCase()}</p>
+      <p className="text-[12px] tracking-[0.1em] text-ink-soft">{k.toUpperCase()}</p>
       <p className="mt-1 font-serif text-xl tabular-nums">{v}</p>
     </div>
   );
@@ -164,7 +164,7 @@ function OrderDrawer({ order, onClose, onStatus }: {
                     if (s === "Returned" && order.status !== "Returned") setPendingReturn(true);
                     else onStatus(s);
                   }}
-                  className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${order.status === s ? "border-ink bg-ink text-white" : "edge hover:bg-[var(--color-tile)]"}`}
+                  className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${order.status === s ? "border-ink bg-ink text-white" : "edge hover:bg-[var(--color-tile)]"}`}
                 >
                   {t(`status.${s}`)}
                 </button>
@@ -206,7 +206,7 @@ function OrderDrawer({ order, onClose, onStatus }: {
             )}
           </Card>
 
-          <h3 className="mt-6 text-[11px] tracking-[0.12em] text-ink-soft">{t("ord.items")}</h3>
+          <h3 className="mt-6 text-[12px] tracking-[0.12em] text-ink-soft">{t("ord.items")}</h3>
           <ul className="mt-2 divide-y divide-[var(--color-line)] border-y edge">
             {items.data.map((i) => {
               const image = i.variants?.styles?.images?.[0];
@@ -221,8 +221,8 @@ function OrderDrawer({ order, onClose, onStatus }: {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="font-serif text-sm">{i.name}</p>
-                    <p className="font-mono text-[10px] text-ink-soft">{i.sku}</p>
-                    <p className="text-[11px] text-ink-soft">{i.size} / {i.color} × {i.qty}</p>
+                    <p className="font-mono text-[12px] text-ink-soft">{i.sku}</p>
+                    <p className="text-[12px] text-ink-soft">{i.size} / {i.color} × {i.qty}</p>
                   </div>
                   <span className="shrink-0 text-xs tabular-nums">{vnd(i.price * i.qty)}</span>
                 </li>

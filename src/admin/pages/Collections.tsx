@@ -77,8 +77,8 @@ export default function AdminCollections() {
         {cols.data.map((c) => (
           <Card key={c.id} title={c.season} action={
             <div className="flex gap-2">
-              <button disabled={ready && !isAdmin} onClick={() => setEditing({ id: c.id, label: c.label, season: c.season, note: c.note ?? "", isNew: false })} className="text-[10px] text-ink-soft link-underline disabled:opacity-40">{t("common.edit")}</button>
-              <button disabled={ready && !isAdmin} onClick={() => remove(c)} className="text-[10px] text-[var(--color-accent)] link-underline disabled:opacity-40">{t("common.delete")}</button>
+              <button disabled={ready && !isAdmin} onClick={() => setEditing({ id: c.id, label: c.label, season: c.season, note: c.note ?? "", isNew: false })} className="text-[12px] text-ink-soft link-underline disabled:opacity-40">{t("common.edit")}</button>
+              <button disabled={ready && !isAdmin} onClick={() => remove(c)} className="text-[12px] text-[var(--color-accent)] link-underline disabled:opacity-40">{t("common.delete")}</button>
             </div>
           }>
             <div className="p-5">
@@ -90,7 +90,7 @@ export default function AdminCollections() {
                 <Cell k={t("coll.units")} v={compact(c.units)} />
                 <Cell k={t("coll.revenue")} v={compactVnd(c.revenue)} />
               </div>
-              <Link to={`/admin/products?collection=${c.id}`} className="mt-4 inline-block text-[11px] text-ink-soft link-underline">{t("coll.view_styles")}</Link>
+              <Link to={`/admin/products?collection=${c.id}`} className="mt-4 inline-block text-[12px] text-ink-soft link-underline">{t("coll.view_styles")}</Link>
             </div>
           </Card>
         ))}
@@ -101,7 +101,7 @@ export default function AdminCollections() {
       <div className="overflow-hidden rounded-lg border edge bg-white/40">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+            <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
               <th className="px-4 py-2.5">{t("coll.col_category")}</th><th className="px-2 py-2.5">{t("coll.col_prefix")}</th>
               <th className="px-2 py-2.5 text-right">{t("coll.col_styles")}</th><th className="px-2 py-2.5 text-right">{t("coll.col_skus")}</th><th className="px-2 py-2.5 text-right">{t("coll.col_revenue")}</th>
             </tr>
@@ -119,7 +119,7 @@ export default function AdminCollections() {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[11px] text-ink-soft">
+      <p className="mt-2 text-[12px] text-ink-soft">
         {t("coll.tax_note")}
       </p>
 
@@ -129,7 +129,7 @@ export default function AdminCollections() {
 }
 
 function Cell({ k, v }: { k: string; v: string }) {
-  return <div><p className="text-[10px] tracking-[0.08em] text-ink-soft">{k.toUpperCase()}</p><p className="mt-0.5 text-sm tabular-nums">{v}</p></div>;
+  return <div><p className="text-[12px] tracking-[0.08em] text-ink-soft">{k.toUpperCase()}</p><p className="mt-0.5 text-sm tabular-nums">{v}</p></div>;
 }
 
 function EditModal({ d, onClose, onSave }: { d: Draft; onClose: () => void; onSave: (d: Draft) => void }) {
@@ -141,11 +141,11 @@ function EditModal({ d, onClose, onSave }: { d: Draft; onClose: () => void; onSa
       <div className="relative z-10 w-full max-w-md rounded-lg bg-[var(--color-bg)] p-6 shadow-2xl">
         <h2 className="font-serif text-xl">{f.isNew ? t("coll.new_title") : t("coll.edit_title")}</h2>
         <div className="mt-5 space-y-4">
-          <label className="block"><span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("coll.f_name")}</span>
+          <label className="block"><span className="text-[12px] tracking-[0.1em] text-ink-soft">{t("coll.f_name")}</span>
             <input value={f.label} onChange={(e) => setF({ ...f, label: e.target.value })} placeholder="Fall — Winter 2026" className="input mt-1" /></label>
-          <label className="block"><span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("coll.f_season")}</span>
+          <label className="block"><span className="text-[12px] tracking-[0.1em] text-ink-soft">{t("coll.f_season")}</span>
             <input value={f.season} onChange={(e) => setF({ ...f, season: e.target.value })} placeholder="FW26" className="input mt-1" /></label>
-          <label className="block"><span className="text-[10px] tracking-[0.1em] text-ink-soft">{t("coll.f_note")}</span>
+          <label className="block"><span className="text-[12px] tracking-[0.1em] text-ink-soft">{t("coll.f_note")}</span>
             <input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Velvet, draped silk, warm dark tones." className="input mt-1" /></label>
         </div>
         <div className="mt-6 flex justify-end gap-2">

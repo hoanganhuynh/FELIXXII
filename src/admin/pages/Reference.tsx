@@ -127,14 +127,14 @@ export default function Reference() {
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-md bg-[var(--color-tile)] p-4">
-              <p className="text-[10px] tracking-[0.1em] text-ink-soft">{t('ref.style_code')}</p>
+              <p className="text-[12px] tracking-[0.1em] text-ink-soft">{t('ref.style_code')}</p>
               <p className="mt-1 font-mono text-base">FX-EV-0142</p>
-              <p className="mt-1.5 text-[11px] text-ink-soft">{t('ref.style_desc')}</p>
+              <p className="mt-1.5 text-[12px] text-ink-soft">{t('ref.style_desc')}</p>
             </div>
             <div className="rounded-md bg-[var(--color-tile)] p-4">
-              <p className="text-[10px] tracking-[0.1em] text-ink-soft">{t('ref.full_sku')}</p>
+              <p className="text-[12px] tracking-[0.1em] text-ink-soft">{t('ref.full_sku')}</p>
               <p className="mt-1 font-mono text-base">FX-EV-0142-NV-M</p>
-              <p className="mt-1.5 text-[11px] text-ink-soft">{t('ref.full_sku_desc')}</p>
+              <p className="mt-1.5 text-[12px] text-ink-soft">{t('ref.full_sku_desc')}</p>
             </div>
           </div>
 
@@ -194,7 +194,7 @@ export default function Reference() {
             <Note k={t('ref.note5_k')} v={t('ref.note5_v')} />
             <Note k={t('ref.note6_k')} v={t('ref.note6_v')} />
           </div>
-          <pre className="mt-5 max-h-80 overflow-auto rounded-md bg-ink p-4 font-mono text-[11px] leading-relaxed text-white/85">{ES_MAPPING}</pre>
+          <pre className="mt-5 max-h-80 overflow-auto rounded-md bg-ink p-4 font-mono text-[12px] leading-relaxed text-white/85">{ES_MAPPING}</pre>
         </div>
       </Card>
 
@@ -203,7 +203,7 @@ export default function Reference() {
           <p className="text-xs leading-relaxed text-ink-soft">
             {t('ref.query_desc')}
           </p>
-          <pre className="mt-4 max-h-80 overflow-auto rounded-md bg-ink p-4 font-mono text-[11px] leading-relaxed text-white/85">{ES_QUERY}</pre>
+          <pre className="mt-4 max-h-80 overflow-auto rounded-md bg-ink p-4 font-mono text-[12px] leading-relaxed text-white/85">{ES_QUERY}</pre>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <Note k={t('ref.typo')} v={t('ref.typo_desc')} />
@@ -225,8 +225,8 @@ export default function Reference() {
             {hits.data.map((h) => (
               <li key={h.sku} className="flex items-center justify-between gap-3 py-2">
                 <div className="min-w-0">
-                  <p className="font-mono text-[11px]">{h.sku}</p>
-                  <p className="truncate text-[11px] text-ink-soft">{h.style_name} · {h.color_name} / {h.size}</p>
+                  <p className="font-mono text-[12px]">{h.sku}</p>
+                  <p className="truncate text-[12px] text-ink-soft">{h.style_name} · {h.color_name} / {h.size}</p>
                 </div>
                 <Badge>{`${t('ref.score')} ${h.score.toFixed(0)}`}</Badge>
               </li>
@@ -244,15 +244,15 @@ function Seg({ v, k, accent }: { v: string; k: string; accent?: boolean }) {
     <span className="flex flex-col items-center">
       <span className={accent ? "text-[var(--color-accent)]" : ""}>{v}</span>
       <span className="mt-1.5 h-px w-full bg-[var(--color-line)]" />
-      <span className="mt-1 font-sans text-[9px] tracking-[0.08em] text-ink-soft">{k.toUpperCase()}</span>
+      <span className="mt-1 font-sans text-[12px] tracking-[0.08em] text-ink-soft">{k.toUpperCase()}</span>
     </span>
   );
 }
 function Note({ k, v }: { k: string; v: string }) {
   return (
     <div className="rounded-md bg-[var(--color-tile)] p-3">
-      <p className="font-mono text-[11px]">{k}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-ink-soft">{v}</p>
+      <p className="font-mono text-[12px]">{k}</p>
+      <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">{v}</p>
     </div>
   );
 }

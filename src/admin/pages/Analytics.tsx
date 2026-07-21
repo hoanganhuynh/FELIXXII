@@ -25,7 +25,7 @@ export default function Analytics() {
         <h1 className="font-serif text-3xl">Phân Tích</h1>
         <div className="mt-8 rounded-lg border edge bg-white/40 px-6 py-16 text-center">
           <p className="font-serif text-xl">Yêu cầu quyền Admin</p>
-          <button onClick={() => setLoginOpen(true)} className="mt-6 h-10 rounded-md bg-ink px-6 text-[11px] tracking-[0.1em] text-white transition-opacity hover:opacity-85">
+          <button onClick={() => setLoginOpen(true)} className="mt-6 h-10 rounded-md bg-ink px-6 text-[12px] tracking-[0.1em] text-white transition-opacity hover:opacity-85">
             Đăng nhập
           </button>
         </div>
@@ -53,7 +53,7 @@ export default function Analytics() {
         </div>
         <div className="flex items-center gap-3">
           {!loading && (
-            <span className="text-[10px] text-ink-soft uppercase tracking-wider">
+            <span className="text-[12px] text-ink-soft uppercase tracking-wider">
               Cập nhật: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
@@ -84,8 +84,8 @@ export default function Analytics() {
             title="Cảnh Báo Hàng Chết"
             action={
               m.dead_stock.length > 0
-                ? <span className="rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-[10px] text-white">{m.dead_stock.length} sản phẩm</span>
-                : <span className="text-[10px] text-emerald-600">✓ Không có</span>
+                ? <span className="rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-[12px] text-white">{m.dead_stock.length} sản phẩm</span>
+                : <span className="text-[12px] text-emerald-600">✓ Không có</span>
             }
           >
             <div className="divide-y divide-[var(--color-line)]">
@@ -101,9 +101,9 @@ export default function Analytics() {
                   }
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-serif text-sm">{s.name}</p>
-                    <p className="text-[10px] text-ink-soft">{s.category} · {s.days_live} ngày · {s.total_stock} tồn · {s.units_sold} bán</p>
+                    <p className="text-[12px] text-ink-soft">{s.category} · {s.days_live} ngày · {s.total_stock} tồn · {s.units_sold} bán</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium ${
                     s.alert === "critical" ? "bg-red-100 text-red-700"
                     : s.alert === "warning" ? "bg-amber-100 text-amber-700"
                     : s.alert === "low_conversion" ? "bg-orange-100 text-orange-700"
@@ -117,14 +117,14 @@ export default function Analytics() {
                 </Link>
               ))}
               {m.dead_stock.length > 6 && (
-                <p className="px-5 py-2.5 text-center text-[11px] text-ink-soft">
+                <p className="px-5 py-2.5 text-center text-[12px] text-ink-soft">
                   + {m.dead_stock.length - 6} sản phẩm khác
                 </p>
               )}
             </div>
             {m.dead_stock.length > 0 && (
               <div className="border-t border-[var(--color-line)] px-5 py-3">
-                <p className="text-[10px] text-ink-soft leading-relaxed">
+                <p className="text-[12px] text-ink-soft leading-relaxed">
                   <strong className="text-ink">Hành động đề xuất:</strong>{" "}
                   {m.dead_stock.filter(s => s.alert === "critical").length > 0
                     ? `${m.dead_stock.filter(s => s.alert === "critical").length} sản phẩm nguy hiểm — nên archive hoặc flash sale ngay.`
@@ -139,14 +139,14 @@ export default function Analytics() {
             title="Dự Báo Hết Hàng"
             action={
               m.reorder_urgency.filter(s => s.urgency === "critical").length > 0
-                ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] text-red-700">
+                ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-[12px] text-red-700">
                     {m.reorder_urgency.filter(s => s.urgency === "critical").length} cần nhập gấp
                   </span>
                 : m.reorder_urgency.length > 0
-                ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">
+                ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[12px] text-amber-700">
                     {m.reorder_urgency.length} cần theo dõi
                   </span>
-                : <span className="text-[10px] text-emerald-600">✓ Ổn định</span>
+                : <span className="text-[12px] text-emerald-600">✓ Ổn định</span>
             }
           >
             <div className="divide-y divide-[var(--color-line)]">
@@ -162,7 +162,7 @@ export default function Analytics() {
                   }
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-serif text-sm">{s.name}</p>
-                    <p className="text-[10px] text-ink-soft">{s.total_stock} tồn · {Number(s.units_per_day).toFixed(1)} đơn/ngày</p>
+                    <p className="text-[12px] text-ink-soft">{s.total_stock} tồn · {Number(s.units_per_day).toFixed(1)} đơn/ngày</p>
                   </div>
                   <div className="shrink-0 text-right">
                     <p className={`text-xs font-semibold tabular-nums ${
@@ -172,14 +172,14 @@ export default function Analytics() {
                     }`}>
                       {s.days_until_oos != null ? `${s.days_until_oos} ngày` : "—"}
                     </p>
-                    <p className="text-[9px] text-ink-soft">đến khi hết</p>
+                    <p className="text-[12px] text-ink-soft">đến khi hết</p>
                   </div>
                 </Link>
               ))}
             </div>
             {m.reorder_urgency.length > 0 && (
               <div className="border-t border-[var(--color-line)] px-5 py-3">
-                <p className="text-[10px] text-ink-soft">
+                <p className="text-[12px] text-ink-soft">
                   <strong className="text-ink">Nhập gấp (&lt;7 ngày):</strong>{" "}
                   {m.reorder_urgency.filter(s => s.urgency === "critical").map(s => s.style_code).join(", ") || "Không có"}
                 </p>
@@ -202,7 +202,7 @@ export default function Analytics() {
                 const pct = Math.round((cat.rpv / maxRpv) * 100);
                 return (
                   <div key={cat.id}>
-                    <div className="mb-1 flex items-center justify-between text-[11px]">
+                    <div className="mb-1 flex items-center justify-between text-[12px]">
                       <span className="truncate text-ink">{cat.label}</span>
                       <span className="ml-2 shrink-0 tabular-nums text-ink-soft">
                         {compactVnd(cat.rpv)}/lượt xem
@@ -223,7 +223,7 @@ export default function Analytics() {
               const worst = m.rpv_by_category[m.rpv_by_category.length - 1];
               return (
                 <div className="border-t border-[var(--color-line)] px-5 py-3">
-                  <p className="text-[10px] text-ink-soft leading-relaxed">
+                  <p className="text-[12px] text-ink-soft leading-relaxed">
                     <strong className="text-emerald-600">{best.label}</strong> chuyển đổi traffic hiệu quả nhất.{" "}
                     {worst.rpv < best.rpv * 0.3
                       ? <><strong className="text-[var(--color-accent)]">{worst.label}</strong> cần cải thiện ảnh sản phẩm hoặc điều chỉnh giá.</>
@@ -242,7 +242,7 @@ export default function Analytics() {
               )}
               {m.return_revenue_by_cat.map((cat) => (
                 <div key={cat.id}>
-                  <div className="mb-1 flex items-center justify-between text-[11px]">
+                  <div className="mb-1 flex items-center justify-between text-[12px]">
                     <span className="truncate text-ink">{cat.label}</span>
                     <span className={`ml-2 shrink-0 tabular-nums font-medium ${
                       cat.return_pct >= 15 ? "text-[var(--color-accent)]"
@@ -264,13 +264,13 @@ export default function Analytics() {
                       />
                     </div>
                   </div>
-                  <p className="mt-0.5 text-[9px] text-ink-soft">{compactVnd(cat.return_value)} bị trả / {compactVnd(cat.paid_revenue + cat.return_value)} tổng</p>
+                  <p className="mt-0.5 text-[12px] text-ink-soft">{compactVnd(cat.return_value)} bị trả / {compactVnd(cat.paid_revenue + cat.return_value)} tổng</p>
                 </div>
               ))}
             </div>
             {m.return_revenue_by_cat.some(c => c.return_pct >= 15) && (
               <div className="border-t border-[var(--color-line)] px-5 py-3">
-                <p className="text-[10px] text-ink-soft">
+                <p className="text-[12px] text-ink-soft">
                   <strong className="text-[var(--color-accent)]">Cảnh báo:</strong>{" "}
                   {m.return_revenue_by_cat.filter(c => c.return_pct >= 15).map(c => c.label).join(", ")} có tỷ lệ trả &gt;15% — cần review QC.
                 </p>
@@ -294,8 +294,8 @@ export default function Analytics() {
                       <span className="text-base">{icons[ch.channel] ?? "📊"}</span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-[11px] font-medium text-ink">{ch.channel}</p>
-                          <p className="text-[11px] tabular-nums text-ink-soft">{compactVnd(ch.revenue)}</p>
+                          <p className="text-[12px] font-medium text-ink">{ch.channel}</p>
+                          <p className="text-[12px] tabular-nums text-ink-soft">{compactVnd(ch.revenue)}</p>
                         </div>
                         <div className="mt-1 h-1 w-full rounded-full bg-[var(--color-tile)]">
                           <div
@@ -303,7 +303,7 @@ export default function Analytics() {
                             style={{ width: `${share}%` }}
                           />
                         </div>
-                        <p className="mt-0.5 text-[9px] text-ink-soft">{ch.orders} đơn · AOV {compactVnd(ch.aov)} · {share}% doanh thu</p>
+                        <p className="mt-0.5 text-[12px] text-ink-soft">{ch.orders} đơn · AOV {compactVnd(ch.aov)} · {share}% doanh thu</p>
                       </div>
                     </div>
                   );
@@ -314,7 +314,7 @@ export default function Analytics() {
               const top = [...m.channel_perf].sort((a, b) => b.aov - a.aov)[0];
               return (
                 <div className="border-t border-[var(--color-line)] px-5 py-3">
-                  <p className="text-[10px] text-ink-soft">
+                  <p className="text-[12px] text-ink-soft">
                     <strong className="text-ink">{top.channel}</strong> có AOV cao nhất ({compactVnd(top.aov)}) — ưu tiên đầu tư vào kênh này.
                   </p>
                 </div>

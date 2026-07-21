@@ -105,9 +105,9 @@ export default function Banners() {
             {/* info */}
             <div className="min-w-0 flex-1 py-4">
               <p className="truncate font-serif text-[15px]">{b.heading || <span className="text-ink-soft italic">{t("ban.no_heading")}</span>}</p>
-              <p className="mt-0.5 text-[10px] tracking-[0.08em] text-ink-soft">{b.collection_tag}</p>
+              <p className="mt-0.5 text-[12px] tracking-[0.08em] text-ink-soft">{b.collection_tag}</p>
               {b.cta1_label && (
-                <p className="mt-1.5 text-[10px] text-ink-soft">
+                <p className="mt-1.5 text-[12px] text-ink-soft">
                   <span className="rounded border edge px-1.5 py-0.5">{b.cta1_label}</span>
                   {b.cta2_label && <span className="ml-1.5 rounded border edge px-1.5 py-0.5">{b.cta2_label}</span>}
                 </p>
@@ -119,7 +119,7 @@ export default function Banners() {
               disabled={ready && !isAdmin}
               onClick={() => toggleActive(b)}
               title={b.active ? t("ban.active") : t("ban.inactive")}
-              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors disabled:opacity-40 ${
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors disabled:opacity-40 ${
                 b.active ? "bg-emerald-50 text-emerald-700" : "bg-[var(--color-tile)] text-ink-soft"
               }`}
             >
@@ -149,14 +149,14 @@ export default function Banners() {
               <button
                 disabled={ready && !isAdmin}
                 onClick={() => setEditing({ ...b })}
-                className="text-[10px] text-ink-soft link-underline disabled:opacity-40"
+                className="text-[12px] text-ink-soft link-underline disabled:opacity-40"
               >
                 {t("common.edit")}
               </button>
               <button
                 disabled={ready && !isAdmin}
                 onClick={() => remove(b)}
-                className="text-[10px] text-[var(--color-accent)] link-underline disabled:opacity-40"
+                className="text-[12px] text-[var(--color-accent)] link-underline disabled:opacity-40"
               >
                 {t("common.delete")}
               </button>
@@ -171,7 +171,7 @@ export default function Banners() {
         )}
       </div>
 
-      <p className="mt-4 text-[11px] text-ink-soft">{t("ban.hint")}</p>
+      <p className="mt-4 text-[12px] text-ink-soft">{t("ban.hint")}</p>
 
       {editing !== null && (
         <EditModal
@@ -212,7 +212,7 @@ function EditModal({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           {f.collection_tag && (
-            <p className="absolute bottom-8 left-5 text-[10px] tracking-[0.1em] text-white/70">{f.collection_tag}</p>
+            <p className="absolute bottom-8 left-5 text-[12px] tracking-[0.1em] text-white/70">{f.collection_tag}</p>
           )}
           {f.heading && (
             <p className="absolute bottom-4 left-5 font-serif text-white text-base leading-tight">{f.heading}</p>
@@ -273,7 +273,7 @@ function EditModal({
                 onChange={(e) => set("active", e.target.checked)}
                 className="h-4 w-4 rounded border edge accent-ink"
               />
-              <span className="text-[11px]">{t("ban.f_active")}</span>
+              <span className="text-[12px]">{t("ban.f_active")}</span>
             </label>
           </div>
 
@@ -292,7 +292,7 @@ function EditModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-[10px] tracking-[0.1em] text-ink-soft">{label}</span>
+      <span className="text-[12px] tracking-[0.1em] text-ink-soft">{label}</span>
       {children}
     </label>
   );

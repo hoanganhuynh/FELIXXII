@@ -65,7 +65,7 @@ export default function Settings() {
         
         <form onSubmit={handleUpdate} className="mt-6 space-y-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-medium tracking-wider text-ink-soft uppercase">
+            <label className="mb-1.5 block text-[12px] font-medium tracking-wider text-ink-soft uppercase">
               {t("settings.new_password", "Mật khẩu mới")}
             </label>
             <input
@@ -78,7 +78,7 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-[11px] font-medium tracking-wider text-ink-soft uppercase">
+            <label className="mb-1.5 block text-[12px] font-medium tracking-wider text-ink-soft uppercase">
               {t("settings.confirm_password", "Xác nhận mật khẩu")}
             </label>
             <input
@@ -91,8 +91,8 @@ export default function Settings() {
             />
           </div>
           
-          {error && <p className="text-[11px] text-[var(--color-accent)]">{error}</p>}
-          {success && <p className="text-[11px] text-emerald-600">{t("settings.success", "Đã cập nhật mật khẩu thành công.")}</p>}
+          {error && <p className="text-[12px] text-[var(--color-accent)]">{error}</p>}
+          {success && <p className="text-[12px] text-emerald-600">{t("settings.success", "Đã cập nhật mật khẩu thành công.")}</p>}
           
           <button
             type="submit"

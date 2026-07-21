@@ -23,7 +23,7 @@ const TONE: Record<string, string> = {
 export function Badge({ children, label }: { children: string; label?: string }) {
   const tone = TONE[children] ?? "bg-stone-100 text-stone-600 ring-stone-500/15";
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] tracking-wide ring-1 ${tone}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[12px] tracking-wide ring-1 ${tone}`}>
       {label ?? children}
     </span>
   );
@@ -35,7 +35,7 @@ export function Card({ title, action, children, className = "" }: { title?: stri
     <section className={`rounded-lg border edge bg-white/40 ${className}`}>
       {title && (
         <header className="flex items-center justify-between border-b edge px-5 py-3.5">
-          <h3 className="text-[11px] font-medium tracking-[0.12em] text-ink-soft">{title.toUpperCase()}</h3>
+          <h3 className="text-[12px] font-medium tracking-[0.12em] text-ink-soft">{title.toUpperCase()}</h3>
           {action}
         </header>
       )}
@@ -60,7 +60,7 @@ export function Btn({ children, onClick, variant = "solid", type = "button", dis
         ? "border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white"
         : "border edge hover:bg-[var(--color-tile)]";
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={`h-9 rounded-md px-4 text-[11px] tracking-[0.08em] transition-colors disabled:opacity-40 ${styles} ${className}`}>
+    <button type={type} onClick={onClick} disabled={disabled} className={`h-9 rounded-md px-4 text-[12px] tracking-[0.08em] transition-colors disabled:opacity-40 ${styles} ${className}`}>
       {children}
     </button>
   );
@@ -70,12 +70,12 @@ export function Btn({ children, onClick, variant = "solid", type = "button", dis
 export function Stat({ label, value, delta, hint }: { label: string; value: string; delta?: number; hint?: string }) {
   return (
     <div className="rounded-lg border edge bg-white/40 px-5 py-4">
-      <p className="text-[10px] tracking-[0.12em] text-ink-soft">{label.toUpperCase()}</p>
+      <p className="text-[12px] tracking-[0.12em] text-ink-soft">{label.toUpperCase()}</p>
       <p className="mt-2 font-serif text-2xl tabular-nums leading-none">{value}</p>
       <div className="mt-2 flex items-center gap-2">
         {delta !== undefined && (
           <span
-            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] tabular-nums"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] tabular-nums"
             style={{
               background: delta >= 0 ? "var(--color-positive-bg)" : "var(--color-negative-bg)",
               color: delta >= 0 ? "var(--color-positive)" : "var(--color-negative)",
@@ -84,7 +84,7 @@ export function Stat({ label, value, delta, hint }: { label: string; value: stri
             {delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}%
           </span>
         )}
-        {hint && <span className="text-[10px] text-ink-soft">{hint}</span>}
+        {hint && <span className="text-[12px] text-ink-soft">{hint}</span>}
       </div>
     </div>
   );

@@ -47,7 +47,7 @@ export default function AdminCustomers() {
 
       <div className="mb-4 grid gap-4 lg:grid-cols-[1fr_2fr]">
         <div className="rounded-lg border edge bg-white/40 p-5">
-          <p className="text-[10px] tracking-[0.12em] text-ink-soft">{t("cust.segments")}</p>
+          <p className="text-[12px] tracking-[0.12em] text-ink-soft">{t("cust.segments")}</p>
           <div className="mt-4"><Donut segments={segData} size={130} /></div>
         </div>
         <div className="rounded-lg border edge bg-[var(--color-accent-soft)] p-5">
@@ -70,7 +70,7 @@ export default function AdminCustomers() {
       <div className="overflow-x-auto rounded-lg border edge bg-white/40">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+            <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
               <th className="px-4 py-2.5">{t("cust.col_customer")}</th><th className="px-2 py-2.5">{t("cust.col_city")}</th><th className="px-2 py-2.5">{t("cust.col_body")}</th>
               <th className="px-2 py-2.5 text-right">{t("cust.col_orders")}</th><th className="px-2 py-2.5 text-right">{t("cust.col_ltv")}</th><th className="px-2 py-2.5">{t("cust.col_segment")}</th>
             </tr>
@@ -78,7 +78,7 @@ export default function AdminCustomers() {
           <tbody className={list.loading ? "opacity-40" : ""}>
             {list.data.rows.map((c) => (
               <tr key={c.id} onClick={() => setOpen(c)} className="cursor-pointer border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
-                <td className="px-4 py-2.5"><p className="font-serif text-[15px]">{c.name}</p><p className="text-[10px] text-ink-soft">{c.email}</p></td>
+                <td className="px-4 py-2.5"><p className="font-serif text-[15px]">{c.name}</p><p className="text-[12px] text-ink-soft">{c.email}</p></td>
                 <td className="px-2 py-2.5 text-xs text-ink-soft">{c.city}</td>
                 <td className="px-2 py-2.5 text-xs text-ink-soft">{c.body_type ? t(`body.${c.body_type}`) : "—"}</td>
                 <td className="px-2 py-2.5 text-right text-xs tabular-nums">{c.orders_count}</td>
@@ -123,22 +123,22 @@ function CustomerDrawer({ c, onClose }: { c: CustomerRow; onClose: () => void })
         <div className="mt-3"><Badge label={t(`segment.${c.segment}`)}>{c.segment}</Badge></div>
 
         <div className="mt-6 grid grid-cols-3 gap-3 border-y edge py-4 text-center">
-          <div><p className="text-[10px] tracking-[0.1em] text-ink-soft">{t("cust.orders")}</p><p className="mt-1 font-serif text-lg tabular-nums">{c.orders_count}</p></div>
-          <div><p className="text-[10px] tracking-[0.1em] text-ink-soft">{t("cust.ltv")}</p><p className="mt-1 font-serif text-lg tabular-nums">{compactVnd(c.ltv)}</p></div>
-          <div><p className="text-[10px] tracking-[0.1em] text-ink-soft">{t("cust.aov")}</p><p className="mt-1 font-serif text-lg tabular-nums">{compactVnd(c.orders_count ? c.ltv / c.orders_count : 0)}</p></div>
+          <div><p className="text-[12px] tracking-[0.1em] text-ink-soft">{t("cust.orders")}</p><p className="mt-1 font-serif text-lg tabular-nums">{c.orders_count}</p></div>
+          <div><p className="text-[12px] tracking-[0.1em] text-ink-soft">{t("cust.ltv")}</p><p className="mt-1 font-serif text-lg tabular-nums">{compactVnd(c.ltv)}</p></div>
+          <div><p className="text-[12px] tracking-[0.1em] text-ink-soft">{t("cust.aov")}</p><p className="mt-1 font-serif text-lg tabular-nums">{compactVnd(c.orders_count ? c.ltv / c.orders_count : 0)}</p></div>
         </div>
 
-        <p className="mt-5 text-[11px] tracking-[0.12em] text-ink-soft">{t("cust.body_profile")}</p>
+        <p className="mt-5 text-[12px] tracking-[0.12em] text-ink-soft">{t("cust.body_profile")}</p>
         <p className="mt-1 text-sm">{c.body_type ? t(`body.${c.body_type}`) : "—"}</p>
         {c.bust && <p className="mt-1 text-xs text-ink-soft">{c.bust} / {c.waist} / {c.hip} cm</p>}
         <p className="mt-1 text-xs text-ink-soft">{t("cust.body_note")}</p>
 
-        <p className="mt-6 text-[11px] tracking-[0.12em] text-ink-soft">{t("cust.recent")}</p>
+        <p className="mt-6 text-[12px] tracking-[0.12em] text-ink-soft">{t("cust.recent")}</p>
         <ul className="mt-2 divide-y divide-[var(--color-line)] border-y edge">
           {orders.data.map((o) => (
             <li key={o.id} className="flex items-center justify-between py-2.5 text-xs">
               <div>
-                <p className="font-mono text-[10px] text-ink-soft">{o.id} · {fmtDate(o.placed_at)}</p>
+                <p className="font-mono text-[12px] text-ink-soft">{o.id} · {fmtDate(o.placed_at)}</p>
                 <p>{o.order_items.map((i) => i.name).join(", ")}</p>
               </div>
               <div className="text-right"><p className="tabular-nums">{vnd(o.total)}</p><Badge label={t(`status.${o.status}`)}>{o.status}</Badge></div>

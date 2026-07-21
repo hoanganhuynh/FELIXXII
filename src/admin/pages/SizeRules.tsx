@@ -72,12 +72,12 @@ export default function SizeRules() {
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <Card
             title={t("rules.chart", { label: t(`body.${rule.body_type}`) })}
-            action={dirty ? <Btn onClick={save} disabled={busy || !isAdmin} className="!h-7">{busy ? t("common.saving") : t("common.save")}</Btn> : <span className="text-[10px] text-ink-soft">{t("common.saved")}</span>}
+            action={dirty ? <Btn onClick={save} disabled={busy || !isAdmin} className="!h-7">{busy ? t("common.saving") : t("common.save")}</Btn> : <span className="text-[12px] text-ink-soft">{t("common.saved")}</span>}
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+                  <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
                     <th className="px-5 py-2.5">{t("rules.size")}</th>
                     <th className="px-2 py-2.5">{t("rules.bust")}</th><th className="px-2 py-2.5">{t("rules.waist")}</th><th className="px-2 py-2.5">{t("rules.hip")}</th>
                   </tr>
@@ -108,10 +108,10 @@ export default function SizeRules() {
               <div className="p-5">
                 <p className="text-sm">{rule.guidance}</p>
                 <div className="mt-3 rounded-md bg-[var(--color-tile)] p-3">
-                  <p className="text-[10px] tracking-[0.1em] text-ink-soft">{t("rules.ease_rule")}</p>
+                  <p className="text-[12px] tracking-[0.1em] text-ink-soft">{t("rules.ease_rule")}</p>
                   <p className="mt-1 text-xs leading-relaxed">{rule.ease_note}</p>
                 </div>
-                <p className="mt-4 text-[11px] text-ink-soft">
+                <p className="mt-4 text-[12px] text-ink-soft">
                   <b className="text-ink">{usage.data}</b> {t("rules.tagged")}
                 </p>
               </div>

@@ -33,10 +33,10 @@ export default function AdminLayout() {
           </button>
           <Link to="/admin" className="flex items-center gap-2">
             <img src="/logo.svg" alt="FELIXXII" className="h-5 w-auto" />
-            <span className="rounded bg-ink px-1.5 py-0.5 text-[9px] tracking-[0.15em] text-white">ADMIN</span>
+            <span className="rounded bg-ink px-1.5 py-0.5 text-[12px] tracking-[0.15em] text-white">ADMIN</span>
           </Link>
         </div>
-        <div className="flex items-center gap-4 text-[11px] text-ink-soft">
+        <div className="flex items-center gap-4 text-[12px] text-ink-soft">
           {/* Show both languages with the active one marked. A single "EN" label
               is ambiguous — it reads equally as "you are in English" or "switch
               to English". */}
@@ -73,7 +73,7 @@ export default function AdminLayout() {
           write is denied until the session carries the admin role. Say so up
           front instead of letting saves fail one by one. */}
       {ready && !isAdmin && (
-        <div className="fixed inset-x-0 top-14 z-30 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] text-amber-800 lg:pl-56">
+        <div className="fixed inset-x-0 top-14 z-30 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[12px] text-amber-800 lg:pl-56">
           {user
             ? t('read_only_user', { email: user.email })
             : t('read_only_guest')}

@@ -129,7 +129,7 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
           <div className="max-h-[420px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-[var(--color-bg)]">
-                <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
+                <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
                   <th className="px-4 py-2">{t("imp.col_column")}</th><th className="px-2 py-2">{t("imp.col_rule")}</th>
                 </tr>
               </thead>
@@ -137,12 +137,12 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
                 {COLUMNS.map((c) => (
                   <tr key={c.key} className="border-b edge last:border-0">
                     <td className="px-4 py-2 align-top">
-                      <p className="font-mono text-[11px]">{c.key}</p>
-                      {c.req ? <span className="text-[9px] text-[var(--color-accent)]">{t("imp.required")}</span> : <span className="text-[9px] text-ink-soft">{t("imp.optional")}</span>}
+                      <p className="font-mono text-[12px]">{c.key}</p>
+                      {c.req ? <span className="text-[12px] text-[var(--color-accent)]">{t("imp.required")}</span> : <span className="text-[12px] text-ink-soft">{t("imp.optional")}</span>}
                     </td>
                     <td className="px-2 py-2">
-                      <p className="text-[11px] text-ink-soft">{c.desc}</p>
-                      <p className="mt-0.5 font-mono text-[10px]">{c.ex}</p>
+                      <p className="text-[12px] text-ink-soft">{c.desc}</p>
+                      <p className="mt-0.5 font-mono text-[12px]">{c.ex}</p>
                     </td>
                   </tr>
                 ))}
@@ -157,12 +157,12 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
             <div className="p-5">
               <div className="mb-4 flex gap-1.5">
                 {(["create", "upsert", "overwrite"] as const).map((m) => (
-                  <button key={m} onClick={() => setMode(m)} className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${mode === m ? "border-ink bg-ink text-white" : "edge"}`}>
+                  <button key={m} onClick={() => setMode(m)} className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${mode === m ? "border-ink bg-ink text-white" : "edge"}`}>
                     {m === "create" ? t("imp.create_only") : m === "upsert" ? t("imp.upsert") : t("imp.overwrite")}
                   </button>
                 ))}
               </div>
-              <p className="mb-3 text-[11px] text-ink-soft">
+              <p className="mb-3 text-[12px] text-ink-soft">
                 {mode === "create" && t("imp.mode_create")}
                 {mode === "upsert" && t("imp.mode_upsert")}
                 {mode === "overwrite" && t("imp.mode_overwrite")}
@@ -179,7 +179,7 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setRaw(e.target.value)}
                 placeholder={t("imp.paste")}
                 rows={5}
-                className="mt-3 w-full rounded-md border edge bg-white/50 p-3 font-mono text-[11px] focus:border-ink focus:outline-none"
+                className="mt-3 w-full rounded-md border edge bg-white/50 p-3 font-mono text-[12px] focus:border-ink focus:outline-none"
               />
               <div className="mt-3 flex gap-2">
                 <Btn onClick={() => void validate()} disabled={!raw.trim() || checking}>
@@ -202,10 +202,10 @@ export default function ImportPanel({ onClose }: { onClose: () => void }) {
                     <tbody>
                       {results.map((r) => (
                         <tr key={r.line} className="border-b edge last:border-0">
-                          <td className="w-10 px-4 py-2 text-[10px] text-ink-soft">L{r.line}</td>
-                          <td className="px-2 py-2 font-mono text-[11px]">{r.sku}</td>
+                          <td className="w-10 px-4 py-2 text-[12px] text-ink-soft">L{r.line}</td>
+                          <td className="px-2 py-2 font-mono text-[12px]">{r.sku}</td>
                           <td className="px-2 py-2">
-                            <span className={`text-[11px] ${r.status === "error" ? "text-[var(--color-accent)]" : r.status === "warn" ? "text-amber-600" : "text-emerald-600"}`}>{r.message}</span>
+                            <span className={`text-[12px] ${r.status === "error" ? "text-[var(--color-accent)]" : r.status === "warn" ? "text-amber-600" : "text-emerald-600"}`}>{r.message}</span>
                           </td>
                         </tr>
                       ))}
