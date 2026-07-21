@@ -208,16 +208,26 @@ function OrderDrawer({ order, onClose, onStatus }: {
 
           <h3 className="mt-6 text-[11px] tracking-[0.12em] text-ink-soft">{t("ord.items")}</h3>
           <ul className="mt-2 divide-y divide-[var(--color-line)] border-y edge">
-            {items.data.map((i) => (
-              <li key={i.id} className="flex items-start justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="font-serif text-sm">{i.name}</p>
-                  <p className="font-mono text-[10px] text-ink-soft">{i.sku}</p>
-                  <p className="text-[11px] text-ink-soft">{i.size} / {i.color} × {i.qty}</p>
-                </div>
-                <span className="shrink-0 text-xs tabular-nums">{vnd(i.price * i.qty)}</span>
-              </li>
-            ))}
+            {items.data.map((i) => {
+              const image = i.variants?.styles?.images?.[0];
+              return (
+                <li key={i.id} className="flex items-start justify-between gap-3 py-3">
+                  {image ? (
+                    <img src={image} alt="" className="h-10 w-10 shrink-0 rounded object-cover object-top bg-[var(--color-tile)]" />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[var(--color-tile)] text-ink-soft opacity-50">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-serif text-sm">{i.name}</p>
+                    <p className="font-mono text-[10px] text-ink-soft">{i.sku}</p>
+                    <p className="text-[11px] text-ink-soft">{i.size} / {i.color} × {i.qty}</p>
+                  </div>
+                  <span className="shrink-0 text-xs tabular-nums">{vnd(i.price * i.qty)}</span>
+                </li>
+              );
+            })}
             {items.loading && <li className="py-4 text-center text-xs text-ink-soft">{t("common.loading")}</li>}
           </ul>
 

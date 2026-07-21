@@ -7,6 +7,7 @@ import "./lib/i18n";
 
 const NAV: { to: string; labelKey: string; icon: ReactNode; end?: boolean }[] = [
   { to: "/admin", end: true, labelKey: "dashboard", icon: <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /> },
+  { to: "/admin/analytics", labelKey: "analytics", icon: <><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></> },
   { to: "/admin/products", labelKey: "products", icon: <path d="M20 7L12 3 4 7v10l8 4 8-4V7zM12 3v18M4 7l8 4 8-4" /> },
   { to: "/admin/collections", labelKey: "collections", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
   { to: "/admin/orders", labelKey: "orders", icon: <path d="M6 2l1.5 3h9L18 2M4 8h16l-1 12H5L4 8zM9 12h6" /> },
@@ -14,6 +15,7 @@ const NAV: { to: string; labelKey: string; icon: ReactNode; end?: boolean }[] = 
   { to: "/admin/size-rules", labelKey: "size_rules", icon: <path d="M3 8l4-4 14 14-4 4L3 8zM7 12l2-2M11 16l2-2" /> },
   { to: "/admin/banners", labelKey: "banners", icon: <path d="M2 6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM2 10h20M7 15h.01M12 15h5" /> },
   { to: "/admin/reference", labelKey: "reference", icon: <path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.3-4.3" /> },
+  { to: "/admin/settings", labelKey: "settings", icon: <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z" /> },
 ];
 
 export default function AdminLayout() {

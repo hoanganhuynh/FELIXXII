@@ -9,7 +9,7 @@ const COLUMNS = [
   { key: "sku", req: true, desc: "FX-{CC}-{SSSS}-{KK}-{ZZ}. Leave blank to auto-generate.", ex: "FX-EV-0142-NV-M" },
   { key: "style_code", req: true, desc: "Groups variants into one design.", ex: "FX-EV-0142" },
   { key: "name", req: true, desc: "Style name (shared by all variants).", ex: "Nguyệt Couture" },
-  { key: "category", req: true, desc: "dam-da-hoi | dam-bridal | ao | set | phu-kien", ex: "dam-da-hoi" },
+  { key: "category", req: true, desc: "dam-da-hoi | dam-bridal | ao | set", ex: "dam-da-hoi" },
   { key: "collection", req: true, desc: "thu-dong-2025 | xuan-he-2026", ex: "thu-dong-2025" },
   { key: "color", req: true, desc: "Must match the palette name.", ex: "Navy" },
   { key: "size", req: true, desc: "XS S M L XL 2XL Custom", ex: "M" },

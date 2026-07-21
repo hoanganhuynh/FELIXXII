@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { supabase } from "../../lib/supabase";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   getStyle, getVariants, updateStyle, createStyle, replaceVariants,
@@ -63,6 +64,27 @@ export default function ProductEditor() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [serial, setSerial] = useState(9000);
   const [busy, setBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(filename, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(filename);
+      setImages((p) => [...p, publicUrl]);
+    } catch (err) {
+      alert("Upload failed: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
   const [err, setErr] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -251,7 +273,7 @@ export default function ProductEditor() {
                 <p className="mb-4 text-center text-[11px] text-ink-soft">{t("editor.no_images")}</p>
               )}
 
-              {/* URL input */}
+              {/* URL input and File Upload */}
               <div className="flex gap-2">
                 <input
                   value={imageInput}
@@ -267,9 +289,13 @@ export default function ProductEditor() {
                 />
                 <Btn
                   onClick={() => { if (imageInput.trim()) { setImages((p) => [...p, imageInput.trim()]); setImageInput(""); } }}
-                  disabled={!imageInput.trim()}
+                  disabled={!imageInput.trim() || uploading}
                 >
                   {t("editor.add")}
+                </Btn>
+                <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleUpload} />
+                <Btn variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                  {uploading ? t("common.loading") : t("Upload from Device")}
                 </Btn>
               </div>
 

@@ -70,7 +70,7 @@ function HeroCarousel() {
           <img
             src={b.image_url}
             alt={b.heading}
-            className="h-full w-full object-cover object-[center_30%]"
+            className="absolute inset-0 h-full w-full object-cover object-[center_30%]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/20" />
           <div className="relative flex h-full flex-col justify-end px-5 pb-14 md:px-10 text-white">
@@ -176,12 +176,12 @@ export default function Home() {
           </div>
 
           {/* by category — utilitarian */}
-          <div>
+          <div className="flex h-full flex-col">
             <p className="label text-ink-soft">By Category</p>
             <h2 className="mt-1 font-serif text-2xl">Categories ({SHOP_CATEGORIES.length})</h2>
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-5 flex-1 grid grid-cols-2 gap-3 auto-rows-fr">
               {SHOP_CATEGORIES.map((cat) => (
-                <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex aspect-square flex-col justify-between rounded-sm border edge p-5 transition-colors hover:bg-[var(--color-tile)]">
+                <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex flex-col justify-between rounded-sm border edge p-5 transition-colors hover:bg-[var(--color-tile)]">
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-sm">{cat.label}</span>
                     <img src={cat.icon} alt="" className="h-12 w-12 shrink-0 opacity-60" />

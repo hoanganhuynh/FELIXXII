@@ -76,6 +76,8 @@ export interface Order {
   customerName: string;
   channel: "Web" | "Boutique" | "Instagram" | "Wholesale";
   status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Returned" | "Cancelled";
+  returnReason?: string;
+  returnNote?: string;
   city: string;
   items: { sku: string; styleName: string; size: string; color: string; qty: number; price: number }[];
   total: number;
@@ -117,7 +119,7 @@ const COLOR_KEYS = Object.keys(PALETTE);
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "Custom"];
 
 /* real seed photos — spread the 10 real designs across a handful of styles */
-const REAL_IMAGE_SETS = seedProducts.filter((p) => p.images?.length).map((p) => p.images!);
+const REAL_IMAGE_SETS = seedProducts.filter((p) => p.images?.length).map((p) => p.images!.map(img => `/product-image-demo/${img}`));
 
 function pick<T>(rand: () => number, arr: T[]): T {
   return arr[Math.floor(rand() * arr.length)];
@@ -138,7 +140,7 @@ export function generateDataset(seed = 20260716) {
   const rand = mulberry32(seed);
   const styles: Style[] = [];
   const serialByCat: Record<CategoryId, number> = {
-    "dam-da-hoi": 0, "dam-bridal": 0, ao: 0, set: 0, "phu-kien": 0,
+    "dam-da-hoi": 0, "dam-bridal": 0, ao: 0, set: 0,
   };
 
   const TARGET_SKUS = 7000;
@@ -163,9 +165,7 @@ export function generateDataset(seed = 20260716) {
     const basePrice =
       category === "dam-bridal"
         ? round(6_000_000 + rand() * 9_000_000, 100_000)
-        : category === "phu-kien"
-          ? round(400_000 + rand() * 2_000_000, 50_000)
-          : round(1_500_000 + rand() * 5_000_000, 50_000);
+        : round(1_500_000 + rand() * 5_000_000, 50_000);
 
     const status: StyleStatus =
       rand() > 0.9 ? "draft" : rand() > 0.92 ? "archived" : "active";
@@ -214,7 +214,7 @@ export function generateDataset(seed = 20260716) {
       colors,
       sizes,
       variants,
-      images: rand() > 0.82 ? pick(rand, REAL_IMAGE_SETS) : undefined,
+      images: pick(rand, REAL_IMAGE_SETS),
       createdAt: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
       unitsSold,
       revenue: unitsSold * basePrice,
@@ -275,10 +275,18 @@ export function generateDataset(seed = 20260716) {
       customerName: cust.name,
       channel: pick(rand, CHANNELS),
       status: pick(rand, STATUSES),
+      returnReason: undefined,
+      returnNote: undefined,
       city: cust.city,
       items,
       total,
     });
+    const o = orders[orders.length - 1];
+    if (o.status === "Returned") {
+      o.returnReason = pick(rand, ["defect", "wrong_size", "changed_mind", "wrong_shipment", "other"]);
+      if (o.returnReason === "defect") o.returnNote = "Lỗi chỉ may";
+      if (o.returnReason === "wrong_size") o.returnNote = "Rộng hơn size chart";
+    }
   }
   orders.sort((a, b) => (a.date < b.date ? 1 : -1));
 

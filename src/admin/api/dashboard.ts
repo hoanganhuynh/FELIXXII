@@ -9,9 +9,10 @@ export interface DashboardStats {
   conversion: number;
   by_category: { id: string; label: string; value: number }[];
   by_collection: { id: string; label: string; value: number }[];
-  top: { id: string; name: string; style_code: string; revenue: number; units_sold: number }[];
+  top: { id: string; name: string; style_code: string; images: string[]; revenue: number; units_sold: number }[];
+  top_returned: { id: string; name: string; style_code: string; images: string[]; returned_qty: number }[];
   stock_outs: {
-    id: string; name: string; style_code: string;
+    id: string; name: string; style_code: string; images: string[];
     sku_count: number; units_sold: number; oos_count: number; low_count: number;
   }[];
   oos_skus: number;
@@ -21,14 +22,39 @@ export interface DashboardStats {
   avg_ltv: number;
   repeat_rate_by_year: { year: number; rate: number }[];
   return_reasons: { reason: string; count: number; pct: number }[];
+  // Smart analytics
+  dead_stock: {
+    id: string; name: string; style_code: string; images: string[];
+    units_sold: number; views: number; price: number; category: string;
+    total_stock: number; days_live: number; score: number;
+    alert: "critical" | "warning" | "low_conversion" | "watch";
+  }[];
+  reorder_urgency: {
+    id: string; name: string; style_code: string; images: string[];
+    category: string; units_sold: number; total_stock: number;
+    units_per_day: number; days_until_oos: number | null;
+    urgency: "critical" | "warning" | "normal";
+  }[];
+  rpv_by_category: {
+    id: string; label: string; revenue: number; views: number; units_sold: number; rpv: number;
+  }[];
+  return_revenue_by_cat: {
+    id: string; label: string; paid_revenue: number; return_value: number; return_pct: number;
+  }[];
+  channel_perf: {
+    channel: string; orders: number; revenue: number; aov: number;
+  }[];
 }
 
 export const EMPTY_STATS: DashboardStats = {
   revenue: 0, orders: 0, aov: 0, units: 0, return_rate: 0, conversion: 0,
-  by_category: [], by_collection: [], top: [], stock_outs: [],
+  by_category: [], by_collection: [], top: [], top_returned: [], stock_outs: [],
   oos_skus: 0, vip_count: 0, vip_ltv: 0, total_ltv: 0,
   avg_ltv: 0, repeat_rate_by_year: [], return_reasons: [],
+  dead_stock: [], reorder_urgency: [], rpv_by_category: [],
+  return_revenue_by_cat: [], channel_perf: [],
 };
+
 
 /** Every dashboard tile in ONE round trip — all aggregation happens in Postgres. */
 export async function getDashboardStats(): Promise<DashboardStats> {

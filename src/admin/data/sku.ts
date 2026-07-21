@@ -16,7 +16,6 @@ export const CATEGORY_CODE: Record<CategoryId, string> = {
   "dam-bridal": "BR",
   ao: "TP",
   set: "ST",
-  "phu-kien": "AC",
 };
 
 export const CODE_CATEGORY: Record<string, CategoryId> = Object.fromEntries(

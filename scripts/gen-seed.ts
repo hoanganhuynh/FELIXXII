@@ -140,11 +140,14 @@ const emailOf = new Map(customers.map((c) => [c.id, c.email]));
 parts.push(
   batched(
     "public.orders",
-    ["id", "customer_id", "status", "channel", "city", "total", "placed_at"],
+    ["id", "customer_id", "status", "return_reason", "return_note", "channel", "city", "total", "placed_at"],
     orders.map((o) => [
       q(o.id),
       `(select id from public.customers where email = ${q(emailOf.get(o.customerId)!)})`,
-      `${q(o.status)}::public.order_status`, `${q(o.channel)}::public.order_channel`,
+      `${q(o.status)}::public.order_status`,
+      o.returnReason ? `${q(o.returnReason)}::public.return_reason` : "null",
+      o.returnNote ? q(o.returnNote) : "null",
+      `${q(o.channel)}::public.order_channel`,
       q(o.city), String(o.total), q(o.date),
     ])
   )

@@ -151,6 +151,7 @@ export default function AdminProducts() {
             <thead>
               <tr className="border-b edge text-left text-[10px] tracking-[0.1em] text-ink-soft">
                 <th className="w-10 px-3 py-2.5"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-[var(--color-accent)]" /></th>
+                <th className="w-14 px-2 py-2.5"></th>
                 <th className="px-2 py-2.5">{t("prod.col_style")}</th><th className="px-2 py-2.5">{t("prod.col_code")}</th>
                 <th className="px-2 py-2.5">{t("prod.col_colors")}</th>
                 <th className="px-2 py-2.5 text-right">{t("prod.col_price")}</th><th className="px-2 py-2.5 text-right">{t("prod.col_stock")}</th>
@@ -161,6 +162,17 @@ export default function AdminProducts() {
               {rows.map((s) => (
                 <tr key={s.id} className="border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
                   <td className="px-3 py-2.5"><input type="checkbox" checked={sel.has(s.id!)} onChange={() => toggle(s.id!)} className="accent-[var(--color-accent)]" /></td>
+                  <td className="px-2 py-2.5">
+                    {Array.isArray(s.images) && s.images[0] ? (
+                      <div className="h-10 w-10 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                        <img src={s.images[0] as string} alt="" className="h-full w-full object-cover object-top" />
+                      </div>
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-800 text-ink-soft opacity-50">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-2 py-2.5">
                     <Link to={`/admin/products/${s.id}`} className="font-serif text-[15px] link-underline">{s.name}</Link>
                     <p className="text-[10px] text-ink-soft">{s.sku_count} SKUs · {s.silhouette}</p>

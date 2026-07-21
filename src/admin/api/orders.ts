@@ -27,8 +27,8 @@ export async function listOrders(p: OrderParams): Promise<{ rows: OrderListRow[]
   if (p.q?.trim()) {
     const { data, error } = await supabase.rpc("search_orders", {
       q: p.q.trim(),
-      p_status:  p.status  || null,
-      p_channel: p.channel || null,
+      p_status:  p.status  ?? undefined,
+      p_channel: p.channel ?? undefined,
       p_page:     page,
       p_page_size: pageSize,
     });
@@ -58,10 +58,14 @@ export async function listOrders(p: OrderParams): Promise<{ rows: OrderListRow[]
   return { rows: (data ?? []) as unknown as OrderListRow[], total: count ?? 0 };
 }
 
-export async function getOrderItems(orderId: string): Promise<OrderItemRow[]> {
-  const { data, error } = await supabase.from("order_items").select("*").eq("order_id", orderId);
+export interface OrderItemWithImage extends OrderItemRow {
+  variants?: { styles?: { images: string[] | null } | null } | null;
+}
+
+export async function getOrderItems(orderId: string): Promise<OrderItemWithImage[]> {
+  const { data, error } = await supabase.from("order_items").select("*, variants(styles(images))").eq("order_id", orderId);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 /** RLS denies by matching zero rows, so check what came back.

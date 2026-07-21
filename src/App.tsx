@@ -24,6 +24,8 @@ import AdminCustomers from "./admin/pages/Customers";
 import SizeRules from "./admin/pages/SizeRules";
 import Reference from "./admin/pages/Reference";
 import Banners from "./admin/pages/Banners";
+import Settings from "./admin/pages/Settings";
+import Analytics from "./admin/pages/Analytics";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -79,6 +81,8 @@ export default function App() {
           <Route path="import" element={<Navigate to="/admin/products" replace />} />
           <Route path="banners" element={<Banners />} />
           <Route path="reference" element={<Reference />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* ---- storefront ---- */}

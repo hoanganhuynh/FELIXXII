@@ -160,6 +160,51 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_banners: {
+        Row: {
+          active: boolean
+          collection_tag: string
+          created_at: string
+          cta1_label: string
+          cta1_url: string
+          cta2_label: string
+          cta2_url: string
+          heading: string
+          id: string
+          image_url: string
+          sort_order: number
+          subheading: string
+        }
+        Insert: {
+          active?: boolean
+          collection_tag?: string
+          created_at?: string
+          cta1_label?: string
+          cta1_url?: string
+          cta2_label?: string
+          cta2_url?: string
+          heading?: string
+          id?: string
+          image_url: string
+          sort_order?: number
+          subheading?: string
+        }
+        Update: {
+          active?: boolean
+          collection_tag?: string
+          created_at?: string
+          cta1_label?: string
+          cta1_url?: string
+          cta2_label?: string
+          cta2_url?: string
+          heading?: string
+          id?: string
+          image_url?: string
+          sort_order?: number
+          subheading?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           color: string
@@ -474,11 +519,11 @@ export type Database = {
       }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_trend: {
-        Args: { granularity: string; range_start: string; range_end: string }
+        Args: { granularity: string; range_end: string; range_start: string }
         Returns: Json
       }
       dashboard_trend_detail: {
-        Args: { bucket_start: string; bucket_granularity: string }
+        Args: { bucket_granularity: string; bucket_start: string }
         Returns: Json
       }
       f_unaccent: { Args: { "": string }; Returns: string }
@@ -491,6 +536,58 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      me: { Args: never; Returns: Json }
+      search_customers: {
+        Args: {
+          p_page?: number
+          p_page_size?: number
+          p_segment?: string
+          q?: string
+        }
+        Returns: {
+          body_type: Database["public"]["Enums"]["body_type"]
+          bust: number
+          city: string
+          email: string
+          height: number
+          hip: number
+          id: string
+          joined: string
+          ltv: number
+          name: string
+          orders_count: number
+          phone: string
+          segment: Database["public"]["Enums"]["segment"]
+          total_count: number
+          user_id: string
+          waist: number
+          weight: number
+        }[]
+      }
+      search_orders: {
+        Args: {
+          p_channel?: string
+          p_page?: number
+          p_page_size?: number
+          p_status?: string
+          q?: string
+        }
+        Returns: {
+          channel: Database["public"]["Enums"]["order_channel"]
+          city: string
+          customer_email: string
+          customer_id: string
+          customer_name: string
+          id: string
+          item_qty: number
+          placed_at: string
+          return_note: string
+          return_reason: Database["public"]["Enums"]["return_reason"]
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+          total_count: number
+        }[]
+      }
       search_skus: {
         Args: {
           in_stock_only?: boolean
@@ -512,6 +609,45 @@ export type Database = {
           style_name: string
         }[]
       }
+      search_styles: {
+        Args: {
+          p_category?: string
+          p_collection?: string
+          p_page?: number
+          p_page_size?: number
+          p_sort?: string
+          p_status?: string
+          p_stock?: string
+          q?: string
+        }
+        Returns: {
+          body_type: Database["public"]["Enums"]["body_type"]
+          category_id: string
+          collection_id: string
+          colors: Json
+          created_at: string
+          id: string
+          images: string[]
+          low_count: number
+          material: string
+          name: string
+          occasion: string
+          oos_count: number
+          price: number
+          returns: number
+          revenue: number
+          serial: number
+          silhouette: string
+          sizes: string[]
+          sku_count: number
+          status: Database["public"]["Enums"]["style_status"]
+          style_code: string
+          total_count: number
+          total_stock: number
+          units_sold: number
+          views: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }
@@ -531,7 +667,12 @@ export type Database = {
         | "Delivered"
         | "Returned"
         | "Cancelled"
-      return_reason: "defect" | "wrong_size" | "changed_mind" | "wrong_shipment" | "other"
+      return_reason:
+        | "defect"
+        | "wrong_size"
+        | "changed_mind"
+        | "wrong_shipment"
+        | "other"
       segment: "VIP" | "Loyal" | "Regular" | "New" | "At-risk"
       style_status: "active" | "draft" | "archived"
     }
@@ -679,6 +820,13 @@ export const Constants = {
         "Delivered",
         "Returned",
         "Cancelled",
+      ],
+      return_reason: [
+        "defect",
+        "wrong_size",
+        "changed_mind",
+        "wrong_shipment",
+        "other",
       ],
       segment: ["VIP", "Loyal", "Regular", "New", "At-risk"],
       style_status: ["active", "draft", "archived"],
