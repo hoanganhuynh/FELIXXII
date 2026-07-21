@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getDashboardStats, EMPTY_STATS } from "../api/dashboard";
 import { useAsync } from "../lib/useAsync";
 import { useAuth } from "../../store/auth";
@@ -7,6 +8,7 @@ import { Card } from "../components/ui";
 import { compactVnd } from "../lib/format";
 
 export default function Analytics() {
+  const { t } = useTranslation();
   const { isAdmin, ready, setLoginOpen } = useAuth();
   const { data: m, loading, error, reload } = useAsync(
     () => (isAdmin ? getDashboardStats() : Promise.resolve(EMPTY_STATS)),
@@ -14,6 +16,10 @@ export default function Analytics() {
     EMPTY_STATS
   );
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  const bridal = Number(m.by_category.find((c) => c.id === "dam-bridal")?.value ?? 0);
+  const bridalShare = m.revenue ? (bridal / m.revenue) * 100 : 0;
+  const vipShare = m.total_ltv ? (m.vip_ltv / m.total_ltv) * 100 : 0;
 
   useEffect(() => {
     if (!loading && !error) setLastUpdated(new Date());
@@ -188,6 +194,25 @@ export default function Analytics() {
           </Card>
         </div>
 
+        {/* Business Insights */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <Insight
+            tone="accent"
+            title={t("dash.insight_bridal_t")}
+            body={t("dash.insight_bridal_b", { pct: bridalShare.toFixed(0) })}
+          />
+          <Insight
+            tone="ink"
+            title={t("dash.insight_vip_t", { count: m.vip_count })}
+            body={t("dash.insight_vip_b", { pct: vipShare.toFixed(0) })}
+          />
+          <Insight
+            tone="soft"
+            title={t("dash.insight_restock_t")}
+            body={t("dash.insight_restock_b", { count: m.oos_skus })}
+          />
+        </div>
+
         {/* Row 2: RPV + Return Revenue + Channel Perf */}
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
 
@@ -323,6 +348,16 @@ export default function Analytics() {
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Insight({ title, body, tone }: { title: string; body: string; tone: "accent" | "ink" | "soft" }) {
+  const bg = tone === "accent" ? "bg-[var(--color-accent-soft)]" : tone === "ink" ? "bg-ink text-white" : "bg-white/50";
+  return (
+    <div className={`rounded-lg border edge p-5 ${bg}`}>
+      <p className={`font-serif text-base ${tone === "ink" ? "text-white" : ""}`}>{title}</p>
+      <p className={`mt-1.5 text-xs leading-relaxed ${tone === "ink" ? "text-white/70" : "text-ink-soft"}`}>{body}</p>
     </div>
   );
 }
