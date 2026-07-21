@@ -35,7 +35,7 @@ values
  '/hero-banner/592347093_1190008066643058_5631399014138437439_n.jpg',
  'Fall — Winter 2025 · FW25',
  'Draped silk, deep tones, and your silhouette.',
- '',
+ 'Rich fabrics, architectural volume, and a palette drawn from dusk. The autumn-winter collection, now available.',
  'Explore Collection', '/shop?collection=thu-dong-2025',
  'Shop by Category', '/shop?cat=dam-da-hoi'),
 
