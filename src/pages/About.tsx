@@ -7,7 +7,7 @@ export default function About() {
   return (
     <div ref={reveal} className="pt-[62px]">
       <section className="border-b edge px-5 py-20 text-center md:px-8">
-        <p className="label reveal text-ink-soft">SEN — Atelier</p>
+        <p className="label reveal text-ink-soft">FELIXXII</p>
         <h1 className="reveal mx-auto mt-4 max-w-3xl font-serif text-4xl leading-tight md:text-5xl">
           Couture fashion, tailored around your silhouette.
         </h1>

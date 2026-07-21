@@ -65,8 +65,8 @@ export default function Header() {
         </button>
 
         {/* wordmark */}
-        <Link to="/" className="flex items-center justify-center" aria-label="SEN Atelier — home">
-          <img src="/logo.svg" alt="SEN Atelier" className="h-6 md:h-7 w-auto" />
+        <Link to="/" className="flex items-center justify-center" aria-label="FELIXXII — home">
+          <img src="/logo.svg" alt="FELIXXII" className="h-6 md:h-7 w-auto" />
         </Link>
 
         {/* right */}

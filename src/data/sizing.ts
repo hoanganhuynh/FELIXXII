@@ -8,7 +8,7 @@ export interface SizeRow {
   height: [number, number];
 }
 
-/** SEN atelier size chart (cm) */
+/** FELIXXII size chart (cm) */
 export const SIZE_CHART: SizeRow[] = [
   { size: "S", bust: [78, 84], waist: [60, 66], hip: [84, 90], height: [155, 162] },
   { size: "M", bust: [85, 90], waist: [67, 72], hip: [91, 96], height: [157, 164] },

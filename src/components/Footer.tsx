@@ -6,8 +6,8 @@ const cols: { title: string; links: [string, string][] }[] = [
     links: [
       ["Evening Dresses", "/shop?cat=dam-da-hoi"],
       ["Bridal", "/shop?cat=dam-bridal"],
-      ["Accessories", "/shop?cat=phu-kien"],
-      ["Collections", "/shop"],
+      ["Tops", "/shop?cat=ao"],
+      ["Sets", "/shop?cat=set"],
     ],
   },
   {
@@ -34,7 +34,7 @@ export default function Footer() {
 
       <div className="mx-auto grid max-w-[1800px] gap-8 px-5 py-12 md:grid-cols-[1.4fr_1fr_1fr] md:px-8">
         <div>
-          <img src="/logo.svg" alt="SEN Atelier" className="h-7 w-auto" />
+          <img src="/logo.svg" alt="FELIXXII" className="h-7 w-auto" />
           <p className="mt-3 max-w-xs text-xs leading-relaxed text-ink-soft">
             Evening & bridal couture. Demo/case-study — branding, imagery, and content are original.
           </p>
@@ -52,7 +52,7 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto flex max-w-[1800px] flex-col justify-between gap-3 border-t edge px-5 py-6 text-[0.72rem] text-ink-soft md:flex-row md:px-8">
-        <span>© {new Date().getFullYear()} SEN Atelier</span>
+        <span>© {new Date().getFullYear()} FELIXXII</span>
         <span>Powered by <a href="https://williens.com" target="_blank" rel="noopener noreferrer" className="hover:text-ink transition-colors">Williens Creative Space</a></span>
       </div>
     </footer>

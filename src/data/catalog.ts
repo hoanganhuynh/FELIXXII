@@ -1,9 +1,9 @@
 /* ============================================================
-   SEN — Atelier · catalogue
+   FELIXXII · catalogue
    Fashion model: Category (loại SP) × Collection (câu chuyện mùa)
    ============================================================ */
 
-export type CategoryId = "dam-da-hoi" | "dam-bridal" | "ao" | "set" | "phu-kien";
+export type CategoryId = "dam-da-hoi" | "dam-bridal" | "ao" | "set";
 export type CollectionId = "thu-dong-2025" | "xuan-he-2026";
 export type Silhouette = "a-line" | "mermaid" | "wrap" | "slip" | "ball-gown" | "shift";
 export type Occasion = "event" | "daily" | "bridal";
@@ -19,16 +19,9 @@ export const CATEGORIES: { id: CategoryId; label: string; icon: string }[] = [
   { id: "dam-bridal", label: "Bridal", icon: "/cat-icons/bridal.svg" },
   { id: "ao", label: "Tops", icon: "/cat-icons/tops.svg" },
   { id: "set", label: "Sets", icon: "/cat-icons/sets.svg" },
-  { id: "phu-kien", label: "Accessories", icon: "/cat-icons/accessories.svg" },
 ];
 
-/** Storefront-browsable categories only. Excludes "phu-kien" — that entry has
- *  zero storefront Product entries today and only ever routed to the
- *  jewelry/bag Accessory poll data, which is no longer a shoppable category.
- *  CATEGORIES itself must stay intact: the admin seed generator
- *  (src/admin/data/generate.ts, via scripts/gen-seed.ts) depends on all 5
- *  entries existing to seed the admin's real "Accessories" garment category. */
-export const SHOP_CATEGORIES = CATEGORIES.filter((c) => c.id !== "phu-kien");
+export const SHOP_CATEGORIES = [...CATEGORIES];
 
 export const COLLECTIONS: { id: CollectionId; label: string; season: string; note: string; image: string }[] = [
   { id: "thu-dong-2025", label: "Fall — Winter 2025", season: "FW25", note: "Velvet, draped silk, warm dark tones.", image: "607653555_1212322397744958_1993799492838073038_n.jpg" },
@@ -105,7 +98,6 @@ export interface Accessory {
   id: string;
   name: string;
   type: AccessoryType;
-  category: "phu-kien";
   collection: CollectionId;
   colors: ColorSwatch[];
   detail: string; // pendant dài / drop / cuff...
@@ -370,17 +362,17 @@ export const products: Product[] = [
 ];
 
 export const accessories: Accessory[] = [
-  { id: "day-ngoc", name: "Dây chuyền Ngọc", type: "necklace", category: "phu-kien", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Long pendant, pearl face" },
-  { id: "chain-kim", name: "Layered Chain Kim", type: "necklace", category: "phu-kien", collection: "xuan-he-2026", colors: c("gold"), detail: "Multi-layered chain" },
-  { id: "bong-giot", name: "Bông tai Giọt", type: "earrings", category: "phu-kien", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Teardrop earrings" },
-  { id: "huggie-vang", name: "Huggie Vàng", type: "earrings", category: "phu-kien", collection: "xuan-he-2026", colors: c("gold"), detail: "Ear-hugging huggies, compact" },
-  { id: "lac-manh", name: "Lắc tay Mảnh", type: "bracelet", category: "phu-kien", collection: "xuan-he-2026", colors: c("gold", "bac"), detail: "Delicate, sophisticated thin band" },
-  { id: "cuff-bac", name: "Cuff Bạc", type: "bracelet", category: "phu-kien", collection: "thu-dong-2025", colors: c("bac"), detail: "Large statement cuff" },
-  { id: "clutch-lua", name: "Clutch Lụa", type: "bag", category: "phu-kien", collection: "thu-dong-2025", colors: c("den", "dodo", "gold"), detail: "Evening clutch, metal clasp" },
-  { id: "mini-da", name: "Mini Bag Da", type: "bag", category: "phu-kien", collection: "xuan-he-2026", colors: c("be", "den"), detail: "Leather mini bag, chain strap" },
-  { id: "heel-nhung", name: "Block Heel Nhung", type: "shoes", category: "phu-kien", collection: "thu-dong-2025", colors: c("den", "dodo"), detail: "Velvet block heel, 7cm square heel" },
-  { id: "mule-satin", name: "Mule Satin", type: "shoes", category: "phu-kien", collection: "xuan-he-2026", colors: c("ngavoi", "hong"), detail: "Pointed-toe satin mule" },
-  { id: "sandal-quai", name: "Sandal Quai Mảnh", type: "shoes", category: "phu-kien", collection: "xuan-he-2026", colors: c("be", "den"), detail: "Thin-strap sandal, stiletto heel" },
+  { id: "day-ngoc", name: "Dây chuyền Ngọc", type: "necklace", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Long pendant, pearl face" },
+  { id: "chain-kim", name: "Layered Chain Kim", type: "necklace", collection: "xuan-he-2026", colors: c("gold"), detail: "Multi-layered chain" },
+  { id: "bong-giot", name: "Bông tai Giọt", type: "earrings", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Teardrop earrings" },
+  { id: "huggie-vang", name: "Huggie Vàng", type: "earrings", collection: "xuan-he-2026", colors: c("gold"), detail: "Ear-hugging huggies, compact" },
+  { id: "lac-manh", name: "Lắc tay Mảnh", type: "bracelet", collection: "xuan-he-2026", colors: c("gold", "bac"), detail: "Delicate, sophisticated thin band" },
+  { id: "cuff-bac", name: "Cuff Bạc", type: "bracelet", collection: "thu-dong-2025", colors: c("bac"), detail: "Large statement cuff" },
+  { id: "clutch-lua", name: "Clutch Lụa", type: "bag", collection: "thu-dong-2025", colors: c("den", "dodo", "gold"), detail: "Evening clutch, metal clasp" },
+  { id: "mini-da", name: "Mini Bag Da", type: "bag", collection: "xuan-he-2026", colors: c("be", "den"), detail: "Leather mini bag, chain strap" },
+  { id: "heel-nhung", name: "Block Heel Nhung", type: "shoes", collection: "thu-dong-2025", colors: c("den", "dodo"), detail: "Velvet block heel, 7cm square heel" },
+  { id: "mule-satin", name: "Mule Satin", type: "shoes", collection: "xuan-he-2026", colors: c("ngavoi", "hong"), detail: "Pointed-toe satin mule" },
+  { id: "sandal-quai", name: "Sandal Quai Mảnh", type: "shoes", collection: "xuan-he-2026", colors: c("be", "den"), detail: "Thin-strap sandal, stiletto heel" },
 ];
 
 export const LOOK_LABELS: Record<AccessoryType, string> = {
