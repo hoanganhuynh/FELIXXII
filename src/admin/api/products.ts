@@ -34,29 +34,40 @@ export async function listStyles(p: ListParams): Promise<{ rows: StyleRow[]; tot
   const pageSize = p.pageSize ?? 25;
   const page = p.page ?? 0;
 
+  if (p.q?.trim()) {
+    // RPC uses search_vector (built with f_unaccent) + pg_trgm fallback,
+    // so "lua" matches "Lụa", "dam do" matches "Đầm Đỏ", etc.
+    const { data, error } = await supabase.rpc("search_styles", {
+      q:            p.q.trim(),
+      p_category:   p.category   ?? null,
+      p_collection: p.collection ?? null,
+      p_status:     p.status     ?? null,
+      p_stock:      p.stock      ?? null,
+      p_sort:       p.sort       ?? "new",
+      p_page:       page,
+      p_page_size:  pageSize,
+    });
+    if (error) throw error;
+    const rows = (data ?? []).map(({ total_count: _, ...row }: any) => row as StyleRow);
+    return { rows, total: (data as any[])?.[0]?.total_count ?? 0 };
+  }
+
+  // no query — fast PostgREST path, no extra JOIN needed
   let sel = supabase.from("style_list").select("*", { count: "exact" });
 
-  if (p.category) sel = sel.eq("category_id", p.category);
-  if (p.collection) sel = sel.eq("collection_id", p.collection);
-  if (p.status) sel = sel.eq("status", p.status as StyleStatus);
+  if (p.category)   sel = sel.eq("category_id",   p.category);
+  if (p.collection) sel = sel.eq("collection_id",  p.collection);
+  if (p.status)     sel = sel.eq("status",         p.status as StyleStatus);
   if (p.stock === "out") sel = sel.eq("total_stock", 0);
   if (p.stock === "low") sel = sel.lt("total_stock", 12);
 
-  if (p.q?.trim()) {
-    // Each word must appear in at least one field; all words must match (AND of ORs).
-    // "lua do" → finds styles where "lua" hits name/code/material AND "do" also hits.
-    for (const word of p.q.trim().split(/\s+/)) {
-      sel = sel.or(`style_code.ilike.%${word}%,name.ilike.%${word}%,material.ilike.%${word}%`);
-    }
-  }
-
   switch (p.sort) {
     case "best": sel = sel.order("units_sold", { ascending: false }); break;
-    case "asc":  sel = sel.order("price", { ascending: true }); break;
-    case "desc": sel = sel.order("price", { ascending: false }); break;
+    case "asc":  sel = sel.order("price",      { ascending: true  }); break;
+    case "desc": sel = sel.order("price",      { ascending: false }); break;
     default:     sel = sel.order("created_at", { ascending: false });
   }
-  sel = sel.order("style_code", { ascending: true }); // stable tiebreak
+  sel = sel.order("style_code", { ascending: true });
 
   const { data, error, count } = await sel.range(page * pageSize, page * pageSize + pageSize - 1);
   if (error) throw error;
