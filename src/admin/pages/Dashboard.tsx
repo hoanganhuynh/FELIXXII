@@ -181,14 +181,53 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* category + top + stock + return reasons */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        {/* Row 1: Sales by Category + Return Reasons */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Card title={t("dash.by_category")}>
             <div className="px-5 py-4">
               <BarList items={m.by_category.map((c) => ({ label: c.label, value: Number(c.value) }))} valueFmt={compactVnd} />
             </div>
           </Card>
 
+          <Card title={t("dash.return_reasons")}>
+            <div className="px-5 py-4">
+              {m.return_reasons.length ? (
+                <>
+                  <BarList
+                    items={m.return_reasons.map((r) => ({
+                      label: t(`ord.reason.${r.reason}`),
+                      value: Number(r.pct),
+                    }))}
+                    valueFmt={(n) => `${n.toFixed(0)}%`}
+                  />
+                  {m.return_reasons[0] && (
+                    <div className="mt-4 rounded-lg bg-[var(--color-accent-soft)] p-3 text-xs">
+                      <strong className="block text-ink">{t("common.suggestion", "Gợi ý hành động:")}</strong>
+                      <span className="mt-1 block text-ink-soft">
+                        {m.return_reasons[0].reason === "defect" && "Tỷ lệ lỗi cao. Cần kiểm tra lại chất lượng xưởng may và QC trước khi xuất hàng."}
+                        {m.return_reasons[0].reason === "wrong_size" && "Nhiều đơn sai kích cỡ. Đề nghị cập nhật lại Size Guide cho sát với thực tế."}
+                        {m.return_reasons[0].reason === "changed_mind" && "Khách đổi ý nhiều. Cân nhắc xem lại chính sách đổi trả hoặc làm nổi bật hơn mô tả sản phẩm."}
+                        {m.return_reasons[0].reason === "wrong_shipment" && "Lỗi giao sai hàng. Vui lòng kiểm tra lại quy trình đóng gói tại kho."}
+                        {m.return_reasons[0].reason === "unspecified" && "Lý do chưa rõ ràng. Nên bắt buộc nhân viên ghi chú lý do khi nhận hàng hoàn."}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setTopReturnedOpen(true)}
+                    className="mt-4 w-full rounded-md border edge py-2.5 text-xs font-medium text-ink hover:bg-[var(--color-tile)] transition-colors"
+                  >
+                    {t("dash.top_returned", "SẢN PHẨM TRẢ VỀ NHIỀU NHẤT")} &rarr;
+                  </button>
+                </>
+              ) : (
+                <p className="py-6 text-center text-xs text-ink-soft">{t("common.none")}</p>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Row 2: Top Styles + Stock-Outs */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Card title={t("dash.top_styles")} action={<Link to="/admin/products" className="text-[12px] text-ink-soft link-underline">{t("common.all")}</Link>}>
             <ul className="divide-y divide-[var(--color-line)]">
               {m.top.map((s, i) => (
@@ -240,43 +279,6 @@ export default function Dashboard() {
               ))}
               {!loading && !m.stock_outs.length && <li className="px-5 py-6 text-center text-xs text-ink-soft">{t("dash.all_in_stock")}</li>}
             </ul>
-          </Card>
-
-          <Card title={t("dash.return_reasons")}>
-            <div className="px-5 py-4">
-              {m.return_reasons.length ? (
-                <>
-                  <BarList
-                    items={m.return_reasons.map((r) => ({
-                      label: t(`ord.reason.${r.reason}`),
-                      value: Number(r.pct),
-                    }))}
-                    valueFmt={(n) => `${n.toFixed(0)}%`}
-                  />
-                  {m.return_reasons[0] && (
-                    <div className="mt-4 rounded-lg bg-[var(--color-accent-soft)] p-3 text-xs">
-                      <strong className="block text-ink">{t("common.suggestion", "Gợi ý hành động:")}</strong>
-                      <span className="mt-1 block text-ink-soft">
-                        {m.return_reasons[0].reason === "defect" && "Tỷ lệ lỗi cao. Cần kiểm tra lại chất lượng xưởng may và QC trước khi xuất hàng."}
-                        {m.return_reasons[0].reason === "wrong_size" && "Nhiều đơn sai kích cỡ. Đề nghị cập nhật lại Size Guide cho sát với thực tế."}
-                        {m.return_reasons[0].reason === "changed_mind" && "Khách đổi ý nhiều. Cân nhắc xem lại chính sách đổi trả hoặc làm nổi bật hơn mô tả sản phẩm."}
-                        {m.return_reasons[0].reason === "wrong_shipment" && "Lỗi giao sai hàng. Vui lòng kiểm tra lại quy trình đóng gói tại kho."}
-                        {m.return_reasons[0].reason === "unspecified" && "Lý do chưa rõ ràng. Nên bắt buộc nhân viên ghi chú lý do khi nhận hàng hoàn."}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <button 
-                    onClick={() => setTopReturnedOpen(true)}
-                    className="mt-4 w-full rounded-md border edge py-2.5 text-xs font-medium text-ink hover:bg-[var(--color-tile)] transition-colors"
-                  >
-                    {t("dash.top_returned", "SẢN PHẨM TRẢ VỀ NHIỀU NHẤT")} &rarr;
-                  </button>
-                </>
-              ) : (
-                <p className="py-6 text-center text-xs text-ink-soft">{t("common.none")}</p>
-              )}
-            </div>
           </Card>
         </div>
 
