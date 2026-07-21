@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getDashboardStats, EMPTY_STATS } from "../api/dashboard";
@@ -44,11 +45,19 @@ function buildCollInsights(sorted: { label: string; value: number }[], total: nu
 export default function Dashboard() {
   const { t } = useTranslation();
   const { isAdmin, ready, setLoginOpen } = useAuth();
-  const { data: m, loading, error } = useAsync(
+  const { data: m, loading, error, reload } = useAsync(
     () => (isAdmin ? getDashboardStats() : Promise.resolve(EMPTY_STATS)),
     [isAdmin],
     EMPTY_STATS
   );
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [topReturnedOpen, setTopReturnedOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !error) {
+      setLastUpdated(new Date());
+    }
+  }, [loading, error, m]);
 
   const bridal = Number(m.by_category.find((c) => c.id === "dam-bridal")?.value ?? 0);
   // by_category now sums the same order-based revenue as m.revenue (see
@@ -82,9 +91,27 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-serif text-3xl">{t("dashboard")}</h1>
-        <p className="mt-1 text-xs text-ink-soft">{loading ? t("dash.loading") : t("dash.subtitle")}</p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl">{t("dashboard")}</h1>
+          <p className="mt-1 text-xs text-ink-soft">{loading ? t("dash.loading") : t("dash.subtitle")}</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {!loading && (
+            <span className="text-[10px] text-ink-soft uppercase tracking-wider">
+              {t("dash.last_updated", "Cập nhật:")} {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+          <button 
+            onClick={reload} 
+            disabled={loading}
+            className="flex items-center gap-1.5 rounded-full border edge px-3 py-1.5 text-xs text-ink hover:bg-[var(--color-tile)] disabled:opacity-50 transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? "animate-spin" : ""}><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+            {t("common.refresh", "Làm mới")}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -104,8 +131,7 @@ export default function Dashboard() {
           <Stat label={t("dash.avg_ltv")} value={compactVnd(m.avg_ltv)} />
         </div>
 
-        {/* trend + donut */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Card title={t("dash.trend")}>
             <RevenueTrend />
           </Card>
@@ -144,7 +170,7 @@ export default function Dashboard() {
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                             )}
                           </span>
-                          <p className="text-[11px] leading-snug text-ink-soft">{t(ins.tKey, ins.vars as any)}</p>
+                          <p className="text-[11px] leading-snug text-ink-soft">{t(ins.tKey, ins.vars as any) as string}</p>
                         </div>
                       ))}
                     </div>
@@ -169,6 +195,13 @@ export default function Dashboard() {
                 <li key={s.id}>
                   <Link to={`/admin/products/${s.id}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-[var(--color-tile)]">
                     <span className="w-4 text-center text-[11px] tabular-nums text-ink-soft">{i + 1}</span>
+                    {s.images?.[0] ? (
+                      <img src={s.images[0]} alt="" className="h-10 w-10 shrink-0 rounded object-cover object-top bg-[var(--color-tile)]" />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[var(--color-tile)] text-ink-soft opacity-50">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-serif text-sm">{s.name}</p>
                       <p className="text-[10px] text-ink-soft">{s.style_code} · {compact(s.units_sold)} {t("dash.sold")}</p>
@@ -186,6 +219,13 @@ export default function Dashboard() {
               {m.stock_outs.map((s) => (
                 <li key={s.id}>
                   <Link to={`/admin/products/${s.id}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-[var(--color-tile)]">
+                    {s.images?.[0] ? (
+                      <img src={s.images[0]} alt="" className="h-10 w-10 shrink-0 rounded object-cover object-top bg-[var(--color-tile)]" />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[var(--color-tile)] text-ink-soft opacity-50">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-serif text-sm">{s.name}</p>
                       <p className="text-[10px] text-ink-soft">{s.style_code} · {s.sku_count} SKUs · {compact(s.units_sold)} {t("dash.sold")}</p>
@@ -205,19 +245,42 @@ export default function Dashboard() {
           <Card title={t("dash.return_reasons")}>
             <div className="px-5 py-4">
               {m.return_reasons.length ? (
-                <BarList
-                  items={m.return_reasons.map((r) => ({
-                    label: t(`ord.reason.${r.reason}`),
-                    value: Number(r.pct),
-                  }))}
-                  valueFmt={(n) => `${n.toFixed(0)}%`}
-                />
+                <>
+                  <BarList
+                    items={m.return_reasons.map((r) => ({
+                      label: t(`ord.reason.${r.reason}`),
+                      value: Number(r.pct),
+                    }))}
+                    valueFmt={(n) => `${n.toFixed(0)}%`}
+                  />
+                  {m.return_reasons[0] && (
+                    <div className="mt-4 rounded-lg bg-[var(--color-accent-soft)] p-3 text-xs">
+                      <strong className="block text-ink">{t("common.suggestion", "Gợi ý hành động:")}</strong>
+                      <span className="mt-1 block text-ink-soft">
+                        {m.return_reasons[0].reason === "defect" && "Tỷ lệ lỗi cao. Cần kiểm tra lại chất lượng xưởng may và QC trước khi xuất hàng."}
+                        {m.return_reasons[0].reason === "wrong_size" && "Nhiều đơn sai kích cỡ. Đề nghị cập nhật lại Size Guide cho sát với thực tế."}
+                        {m.return_reasons[0].reason === "changed_mind" && "Khách đổi ý nhiều. Cân nhắc xem lại chính sách đổi trả hoặc làm nổi bật hơn mô tả sản phẩm."}
+                        {m.return_reasons[0].reason === "wrong_shipment" && "Lỗi giao sai hàng. Vui lòng kiểm tra lại quy trình đóng gói tại kho."}
+                        {m.return_reasons[0].reason === "unspecified" && "Lý do chưa rõ ràng. Nên bắt buộc nhân viên ghi chú lý do khi nhận hàng hoàn."}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <button 
+                    onClick={() => setTopReturnedOpen(true)}
+                    className="mt-4 w-full rounded-md border edge py-2.5 text-xs font-medium text-ink hover:bg-[var(--color-tile)] transition-colors"
+                  >
+                    {t("dash.top_returned", "SẢN PHẨM TRẢ VỀ NHIỀU NHẤT")} &rarr;
+                  </button>
+                </>
               ) : (
                 <p className="py-6 text-center text-xs text-ink-soft">{t("common.none")}</p>
               )}
             </div>
           </Card>
         </div>
+
+
 
         {/* insights */}
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
@@ -238,6 +301,49 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+
+      {topReturnedOpen && (
+        <>
+          <div className="fixed inset-0 z-[60] bg-black/25" onClick={() => setTopReturnedOpen(false)} />
+          <aside className="fixed right-0 top-0 z-[70] h-full w-full max-w-sm overflow-y-auto bg-[var(--color-bg)] shadow-2xl">
+            <header className="flex items-center justify-between border-b edge px-6 py-5">
+              <h2 className="font-serif text-xl">{t("dash.top_returned", "SẢN PHẨM TRẢ VỀ NHIỀU NHẤT")}</h2>
+              <button onClick={() => setTopReturnedOpen(false)} className="text-ink hover:opacity-60">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </header>
+            <ul className="divide-y divide-[var(--color-line)]">
+              {m.top_returned.map((s, i) => (
+                <li key={s.id}>
+                  <Link 
+                    to={`/admin/products/${s.id}`} 
+                    className="flex items-center gap-3 px-6 py-4 hover:bg-[var(--color-tile)]"
+                    onClick={() => setTopReturnedOpen(false)}
+                  >
+                    <span className="w-4 text-center text-[11px] tabular-nums text-ink-soft">{i + 1}</span>
+                    {s.images?.[0] ? (
+                      <img src={s.images[0]} alt="" className="h-10 w-10 shrink-0 rounded object-cover object-top bg-[var(--color-tile)]" />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[var(--color-tile)] text-ink-soft opacity-50">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-serif text-sm">{s.name}</p>
+                      <p className="text-[10px] text-ink-soft">{s.style_code}</p>
+                    </div>
+                    <span className="shrink-0 text-right text-[11px] tabular-nums text-red-600">
+                      {s.returned_qty} {t("dash.returned", "lượt trả")}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              {!m.top_returned.length && <li className="px-6 py-8 text-center text-xs text-ink-soft">{t("common.none")}</li>}
+            </ul>
+          </aside>
+        </>
+      )}
     </div>
   );
 }

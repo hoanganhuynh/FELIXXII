@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "veggie-dev",
+      "name": "felixxii-dev",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--host", "--port", "5181"],
       "port": 5181

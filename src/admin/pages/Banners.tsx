@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../store/auth";
 import { useAsync } from "../lib/useAsync";
-import { Card, Btn, Badge } from "../components/ui";
+import { Card, Btn } from "../components/ui";
 import {
   listAllBanners, createBanner, updateBanner, deleteBanner, swapBannerOrder,
   type HeroBanner,
