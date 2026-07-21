@@ -12,6 +12,7 @@ const NAV: { to: string; labelKey: string; icon: ReactNode; end?: boolean }[] = 
   { to: "/admin/orders", labelKey: "orders", icon: <path d="M6 2l1.5 3h9L18 2M4 8h16l-1 12H5L4 8zM9 12h6" /> },
   { to: "/admin/customers", labelKey: "customers", icon: <path d="M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8z" /> },
   { to: "/admin/size-rules", labelKey: "size_rules", icon: <path d="M3 8l4-4 14 14-4 4L3 8zM7 12l2-2M11 16l2-2" /> },
+  { to: "/admin/banners", labelKey: "banners", icon: <path d="M2 6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM2 10h20M7 15h.01M12 15h5" /> },
   { to: "/admin/reference", labelKey: "reference", icon: <path d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.3-4.3" /> },
 ];
 

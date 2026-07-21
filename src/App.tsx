@@ -23,6 +23,7 @@ import AdminOrders from "./admin/pages/Orders";
 import AdminCustomers from "./admin/pages/Customers";
 import SizeRules from "./admin/pages/SizeRules";
 import Reference from "./admin/pages/Reference";
+import Banners from "./admin/pages/Banners";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="size-rules" element={<SizeRules />} />
           {/* Import folded into Products as a panel — keep the old path working */}
           <Route path="import" element={<Navigate to="/admin/products" replace />} />
+          <Route path="banners" element={<Banners />} />
           <Route path="reference" element={<Reference />} />
         </Route>
 
