@@ -52,8 +52,8 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto flex max-w-[1800px] flex-col justify-between gap-3 border-t edge px-5 py-6 text-[0.72rem] text-ink-soft md:flex-row md:px-8">
-        <span>© {new Date().getFullYear()} SEN Atelier — demo build.</span>
-        <span>Vietnam · ₫ VND</span>
+        <span>© {new Date().getFullYear()} SEN Atelier</span>
+        <span>Powered by <a href="https://williens.com" target="_blank" rel="noopener noreferrer" className="hover:text-ink transition-colors">Williens Creative Space</a></span>
       </div>
     </footer>
   );
