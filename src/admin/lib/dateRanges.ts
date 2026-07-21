@@ -12,6 +12,11 @@ function toISODate(d: Date): string {
  *  12 months, 8 quarters (24 months), or 5 years. */
 export function defaultTrendRange(granularity: Granularity): { start: string; end: string } {
   const now = new Date();
+  if (granularity === "day") {
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // tomorrow (exclusive)
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29); // 30 days window
+    return { start: toISODate(start), end: toISODate(end) };
+  }
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   let start: Date;
   if (granularity === "month") start = new Date(end.getFullYear(), end.getMonth() - 12, 1);

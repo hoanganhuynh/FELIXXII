@@ -37,7 +37,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return data as unknown as DashboardStats;
 }
 
-export type Granularity = "month" | "quarter" | "year";
+export type Granularity = "day" | "month" | "quarter" | "year";
 
 export interface TrendPoint {
   bucket_start: string;

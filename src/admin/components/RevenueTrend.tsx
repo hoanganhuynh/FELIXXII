@@ -8,7 +8,7 @@ import { getDashboardTrend, getDashboardTrendDetail, type Granularity, type Tren
 import { AreaChart } from "./charts";
 import { compactVnd, compact } from "../lib/format";
 
-const GRANULARITIES: Granularity[] = ["month", "quarter", "year"];
+const GRANULARITIES: Granularity[] = ["day", "month", "quarter", "year"];
 
 export function RevenueTrend() {
   const { t } = useTranslation();
@@ -56,7 +56,7 @@ export function RevenueTrend() {
           labels={series.map((p) => p.bucket_label)}
           valueFmt={compactVnd}
           height={220}
-          onPointClick={(i) => setDrill({ index: i, bucket: series[i] })}
+          onPointClick={(i) => granularity !== "day" && setDrill({ index: i, bucket: series[i] })}
           tooltip={(i) => {
             const p = series[i];
             const prev = series[i - 1];
