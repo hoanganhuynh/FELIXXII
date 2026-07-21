@@ -93,8 +93,14 @@ export default function AdminProducts() {
               </button>
             ))}
           </div>
-          <Btn variant="ghost" onClick={() => setImportOpen(true)}>{t("prod.import")}</Btn>
-          <Link to="/admin/products/new" className="h-9 rounded-md bg-ink px-4 text-[11px] leading-9 tracking-[0.08em] text-white transition-opacity hover:opacity-85">{t("prod.new")}</Link>
+          <Btn variant="ghost" onClick={() => setImportOpen(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="mr-1.5 inline-block align-[-2px]"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            {t("prod.import")}
+          </Btn>
+          <Link to="/admin/products/new" className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink px-4 text-[11px] tracking-[0.08em] text-white transition-opacity hover:opacity-85">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            {t("prod.new")}
+          </Link>
         </div>
       </div>
 
