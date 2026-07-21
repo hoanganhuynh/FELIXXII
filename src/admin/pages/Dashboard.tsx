@@ -77,12 +77,23 @@ export default function Dashboard() {
             <RevenueTrend />
           </Card>
           <Card title={t("dash.by_collection")}>
-            <div className="flex items-center justify-center px-5 py-8">
-              <Donut
-                segments={m.by_collection.map((c, i) => ({
-                  label: c.label, value: Number(c.value), color: CHART_PALETTE[i],
-                }))}
-              />
+            <div className="flex items-center justify-center px-5 py-6">
+              {(() => {
+                const sorted = [...m.by_collection].sort((a, b) => Number(b.value) - Number(a.value));
+                const collTotal = sorted.reduce((n, c) => n + Number(c.value), 0);
+                return (
+                  <Donut
+                    segments={sorted.map((c, i) => ({ label: c.label, value: Number(c.value), color: CHART_PALETTE[i] }))}
+                    valueFmt={compactVnd}
+                    center={
+                      <div>
+                        <div className="text-[11px] text-ink-soft">{t("dash.total")}</div>
+                        <div className="text-sm font-medium tabular-nums">{compactVnd(collTotal)}</div>
+                      </div>
+                    }
+                  />
+                );
+              })()}
             </div>
           </Card>
         </div>

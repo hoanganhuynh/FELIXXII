@@ -121,7 +121,7 @@ export default function AdminProducts() {
             <Sel value={col} onChange={(v) => { setCol(v); reset(); }} ph={t("prod.collection")} opts={cols.data.map((c) => [c.id, c.season])} />
             <Sel value={status} onChange={(v) => { setStatus(v); reset(); }} ph={t("prod.status")} opts={STATUSES.map((s) => [s, t(`status.${s}`)])} />
             <Sel value={stock} onChange={(v) => { setStock(v as "" | "low" | "out"); reset(); }} ph={t("prod.stock")} opts={[["low", t("prod.stock_low")], ["out", t("prod.stock_out")]]} />
-            <select value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); reset(); }} className="h-9 rounded-md border edge bg-white/50 px-2 text-xs focus:outline-none">
+            <select value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); reset(); }} className="h-9 rounded-md border edge bg-white/50 pl-3 pr-7 text-xs focus:outline-none">
               {SORTS.map((s) => <option key={s} value={s}>{t(`prod.sort_${s}`)}</option>)}
             </select>
           </>
@@ -253,7 +253,7 @@ export default function AdminProducts() {
 
 function Sel({ value, onChange, ph, opts }: { value: string; onChange: (v: string) => void; ph: string; opts: [string, string][] }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="h-9 rounded-md border edge bg-white/50 px-2 text-xs focus:border-ink focus:outline-none">
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="h-9 rounded-md border edge bg-white/50 pl-3 pr-7 text-xs focus:border-ink focus:outline-none">
       <option value="">{ph}</option>
       {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>

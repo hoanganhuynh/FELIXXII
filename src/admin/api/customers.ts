@@ -15,7 +15,7 @@ export async function listCustomers(p: {
   if (p.q?.trim()) {
     const { data, error } = await supabase.rpc("search_customers", {
       q: p.q.trim(),
-      p_segment: p.segment ?? null,
+      p_segment: p.segment || null,
       p_page: page,
       p_page_size: pageSize,
     });

@@ -9,7 +9,7 @@ import { listRules } from "../api/rules";
 import { useAsync } from "../lib/useAsync";
 import { useAuth } from "../../store/auth";
 import { Card, Btn, Dot, Badge } from "../components/ui";
-import { vnd } from "../lib/format";
+import { vnd, compactVnd } from "../lib/format";
 import { skuCode, styleCode, barcode, CATEGORY_CODE } from "../data/sku";
 import { PALETTE, SILHOUETTES, type CategoryId, type Silhouette } from "../../data/catalog";
 import type { StyleStatus, BodyType } from "../api/products";
@@ -281,12 +281,23 @@ export default function ProductEditor() {
 
           {isEdit && existing.data && (
             <Card title={t("editor.performance")}>
-              <div className="grid grid-cols-2 gap-px overflow-hidden bg-[var(--color-line)] text-center">
-                <Metric k={t("editor.units_sold")} v={(existing.data.units_sold ?? 0).toLocaleString()} />
-                <Metric k={t("editor.revenue")} v={vnd(existing.data.revenue ?? 0)} />
-                <Metric k={t("editor.views")} v={(existing.data.views ?? 0).toLocaleString()} />
-                <Metric k={t("editor.returns")} v={String(existing.data.returns ?? 0)} />
-              </div>
+              {(() => {
+                const d = existing.data;
+                const units = d.units_sold ?? 0;
+                const rev = d.revenue ?? 0;
+                const views = d.views ?? 0;
+                const returns = d.returns ?? 0;
+                const convRate = views > 0 ? ((units / views) * 100).toFixed(1) + "%" : "—";
+                const returnRate = units > 0 ? ((returns / (units + returns)) * 100).toFixed(1) + "%" : "—";
+                return (
+                  <div className="grid grid-cols-2 gap-px overflow-hidden bg-[var(--color-line)] text-center">
+                    <Metric k={t("editor.units_sold")} v={units.toLocaleString()} />
+                    <Metric k={t("editor.revenue")} v={compactVnd(rev)} hint={vnd(rev)} />
+                    <Metric k={t("editor.conversion")} v={convRate} hint={`${views.toLocaleString()} ${t("editor.views_label")}`} />
+                    <Metric k={t("editor.return_rate")} v={returnRate} hint={`${returns} ${t("editor.returns_label")}`} />
+                  </div>
+                );
+              })()}
               <div className="p-4"><Badge label={t(`status.${existing.data.status}`)}>{existing.data.status!}</Badge></div>
             </Card>
           )}
@@ -307,6 +318,12 @@ function Field({ label, children, className = "" }: { label: string; children: R
 function Row({ k, v }: { k: string; v: string }) {
   return <div className="flex justify-between"><span className="font-mono text-ink">{k}</span><span>{v}</span></div>;
 }
-function Metric({ k, v }: { k: string; v: string }) {
-  return <div className="bg-white/50 px-3 py-3"><p className="text-[10px] tracking-[0.1em] text-ink-soft">{k.toUpperCase()}</p><p className="mt-1 text-sm tabular-nums">{v}</p></div>;
+function Metric({ k, v, hint }: { k: string; v: string; hint?: string }) {
+  return (
+    <div className="bg-white/50 px-3 py-3">
+      <p className="text-[10px] tracking-[0.1em] text-ink-soft">{k.toUpperCase()}</p>
+      <p className="mt-1 text-sm tabular-nums">{v}</p>
+      {hint && <p className="mt-0.5 text-[10px] text-ink-soft/70 tabular-nums">{hint}</p>}
+    </div>
+  );
 }

@@ -27,8 +27,8 @@ export async function listOrders(p: OrderParams): Promise<{ rows: OrderListRow[]
   if (p.q?.trim()) {
     const { data, error } = await supabase.rpc("search_orders", {
       q: p.q.trim(),
-      p_status:  p.status  ?? null,
-      p_channel: p.channel ?? null,
+      p_status:  p.status  || null,
+      p_channel: p.channel || null,
       p_page:     page,
       p_page_size: pageSize,
     });

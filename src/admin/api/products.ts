@@ -39,10 +39,10 @@ export async function listStyles(p: ListParams): Promise<{ rows: StyleRow[]; tot
     // so "lua" matches "Lụa", "dam do" matches "Đầm Đỏ", etc.
     const { data, error } = await supabase.rpc("search_styles", {
       q:            p.q.trim(),
-      p_category:   p.category   ?? null,
-      p_collection: p.collection ?? null,
-      p_status:     p.status     ?? null,
-      p_stock:      p.stock      ?? null,
+      p_category:   p.category   || null,
+      p_collection: p.collection || null,
+      p_status:     p.status     || null,
+      p_stock:      p.stock      || null,
       p_sort:       p.sort       ?? "new",
       p_page:       page,
       p_page_size:  pageSize,

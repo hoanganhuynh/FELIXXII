@@ -85,6 +85,7 @@ const en = {
     anomaly_note: "vs. the last 3 periods",
     not_enough: "Not enough data.",
     by_collection: "Revenue by collection",
+    total: "Total",
     by_category: "Sales by category",
     top_styles: "Top styles",
     sold: "sold",
@@ -185,6 +186,10 @@ const en = {
     revenue: "Revenue",
     views: "Views",
     returns: "Returns",
+    conversion: "Conversion",
+    return_rate: "Return rate",
+    views_label: "views",
+    returns_label: "returns",
   },
 
   coll: {
@@ -455,6 +460,7 @@ const vi: typeof en = {
     anomaly_note: "so với trung bình 3 kỳ gần nhất",
     not_enough: "Chưa đủ dữ liệu.",
     by_collection: "Doanh thu theo bộ sưu tập",
+    total: "Tổng",
     by_category: "Doanh thu theo danh mục",
     top_styles: "Sản phẩm bán chạy",
     sold: "đã bán",
@@ -555,6 +561,10 @@ const vi: typeof en = {
     revenue: "Doanh thu",
     views: "Lượt xem",
     returns: "Trả hàng",
+    conversion: "Tỷ lệ chuyển đổi",
+    return_rate: "Tỷ lệ trả hàng",
+    views_label: "lượt xem",
+    returns_label: "lần trả",
   },
 
   coll: {

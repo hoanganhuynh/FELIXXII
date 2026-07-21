@@ -137,32 +137,62 @@ export function BarList({ items, valueFmt }: { items: { label: string; value: nu
 }
 
 /* ---- donut ---- */
-export function Donut({ segments, size = 150 }: { segments: { label: string; value: number; color: string }[]; size?: number }) {
+export function Donut({
+  segments, size = 150, valueFmt, center,
+}: {
+  segments: { label: string; value: number; color: string }[];
+  size?: number;
+  valueFmt?: (n: number) => string;
+  center?: ReactNode;
+}) {
   const total = segments.reduce((n, s) => n + s.value, 0) || 1;
   const r = size / 2 - 12, cx = size / 2, cy = size / 2, circ = 2 * Math.PI * r;
   let offset = 0;
   return (
     <div className="flex items-center gap-5">
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="shrink-0 -rotate-90">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke={GRID} strokeWidth="14" />
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90">
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={GRID} strokeWidth="14" />
+          {segments.map((s) => {
+            const len = (s.value / total) * circ;
+            const el = (
+              <circle key={s.label} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth="14"
+                strokeDasharray={`${len} ${circ - len}`} strokeDashoffset={-offset} />
+            );
+            offset += len;
+            return el;
+          })}
+        </svg>
+        {center && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+            {center}
+          </div>
+        )}
+      </div>
+      <ul className="min-w-0 flex-1 space-y-2.5">
         {segments.map((s) => {
-          const len = (s.value / total) * circ;
-          const el = (
-            <circle key={s.label} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth="14"
-              strokeDasharray={`${len} ${circ - len}`} strokeDashoffset={-offset} />
+          const pct = (s.value / total) * 100;
+          return (
+            <li key={s.label} className="space-y-0.5">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.color }} />
+                <span className="font-medium text-ink">{s.label}</span>
+                <span className="ml-auto tabular-nums text-ink-soft">{pct.toFixed(0)}%</span>
+              </div>
+              {valueFmt && (
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 shrink-0 opacity-0" />
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--color-line)]">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: s.color }} />
+                    </div>
+                    <span className="shrink-0 tabular-nums text-[11px] text-ink-soft">{valueFmt(s.value)}</span>
+                  </div>
+                </div>
+              )}
+            </li>
           );
-          offset += len;
-          return el;
         })}
-      </svg>
-      <ul className="space-y-1.5">
-        {segments.map((s) => (
-          <li key={s.label} className="flex items-center gap-2 text-xs">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
-            <span className="text-ink-soft">{s.label}</span>
-            <span className="tabular-nums">{((s.value / total) * 100).toFixed(0)}%</span>
-          </li>
-        ))}
       </ul>
     </div>
   );
