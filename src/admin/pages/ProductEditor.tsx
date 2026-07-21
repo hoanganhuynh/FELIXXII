@@ -16,6 +16,25 @@ import type { StyleStatus, BodyType } from "../api/products";
 
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "Custom"];
 
+const PRODUCT_LIBRARY = [
+  "/product-image-demo/600332183_1201900768787121_2051984339437065533_n.jpg",
+  "/product-image-demo/602970875_1205145441795987_18715939281272587_n.jpg",
+  "/product-image-demo/604302658_1207684788208719_2584822847566233407_n.jpg",
+  "/product-image-demo/604770326_1209992451311286_3317825646691052207_n.jpg",
+  "/product-image-demo/605730417_1207684818208716_3284772005674759256_n.jpg",
+  "/product-image-demo/605744430_1209992551311276_4297429810533013933_n.jpg",
+  "/product-image-demo/605854033_1212322447744953_8385914445294101481_n.jpg",
+  "/product-image-demo/606001228_1212295194414345_7959480619862527801_n.jpg",
+  "/product-image-demo/606038369_1209992494644615_3834472852269240134_n.jpg",
+  "/product-image-demo/607653555_1212322397744958_1993799492838073038_n.jpg",
+  "/product-image-demo/608051236_1212295184414346_1759387043234619556_n.jpg",
+  "/product-image-demo/608204946_1212322411078290_5493282969479296625_n.jpg",
+  "/product-image-demo/608511618_1212295214414343_8768514877154959894_n.jpg",
+  "/product-image-demo/667405324_1300229082287622_3951756945889064705_n.jpg",
+  "/product-image-demo/667453997_1300228645620999_7198445231715406264_n.jpg",
+  "/product-image-demo/668139748_1300226622287868_3536109004282702876_n.jpg",
+];
+
 export default function ProductEditor() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -39,6 +58,9 @@ export default function ProductEditor() {
   const [bodyType, setBodyType] = useState<BodyType>("hourglass");
   const [colorNames, setColorNames] = useState<string[]>(["Black"]);
   const [sizes, setSizes] = useState<string[]>(["S", "M", "L"]);
+  const [images, setImages] = useState<string[]>([]);
+  const [imageInput, setImageInput] = useState("");
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [serial, setSerial] = useState(9000);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -57,6 +79,7 @@ export default function ProductEditor() {
     setStatus((s.status as StyleStatus) ?? "draft");
     setBodyType((s.body_type as BodyType) ?? "hourglass");
     setSerial(s.serial ?? 9000);
+    setImages(Array.isArray(s.images) ? (s.images as string[]) : []);
     setHydrated(true);
   }, [existing.data, hydrated]);
 
@@ -111,14 +134,14 @@ export default function ProductEditor() {
       if (isEdit && styleId) {
         await updateStyle(styleId, {
           name, category_id: category, collection_id: collection, silhouette,
-          price, material, status, body_type: bodyType,
+          price, material, status, body_type: bodyType, images,
         });
       } else {
         styleId = await createStyle({
           style_code: code, serial, name,
           category_id: category, collection_id: collection, silhouette,
           occasion: category === "dam-bridal" ? "bridal" : "event",
-          price, material, status, body_type: bodyType,
+          price, material, status, body_type: bodyType, images,
         });
       }
       await replaceVariants(styleId, variantsPreview.map((v) => ({ ...v, style_id: styleId! })));
@@ -187,6 +210,103 @@ export default function ProductEditor() {
                   {(["active", "draft", "archived"] as StyleStatus[]).map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                 </select>
               </Field>
+            </div>
+          </Card>
+
+          <Card title={t("editor.images")}>
+            <div className="p-5">
+              {images.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {images.map((url, i) => (
+                    <div key={`${url}-${i}`} className="group relative aspect-square overflow-hidden rounded-md border edge bg-[var(--color-tile)]">
+                      <img src={url} alt="" className="h-full w-full object-cover object-top" />
+                      {i === 0 && (
+                        <span className="absolute left-1.5 top-1.5 rounded bg-ink px-1.5 py-0.5 text-[9px] tracking-wider text-white">
+                          {t("editor.cover")}
+                        </span>
+                      )}
+                      <div className="absolute right-1 top-1 flex flex-col gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                        {i > 0 && (
+                          <button
+                            onClick={() => setImages((prev) => { const a = [...prev]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; return a; })}
+                            className="flex h-5 w-5 items-center justify-center rounded bg-black/60 text-white hover:bg-black/80"
+                          ><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 15l-6-6-6 6" /></svg></button>
+                        )}
+                        {i < images.length - 1 && (
+                          <button
+                            onClick={() => setImages((prev) => { const a = [...prev]; [a[i], a[i + 1]] = [a[i + 1], a[i]]; return a; })}
+                            className="flex h-5 w-5 items-center justify-center rounded bg-black/60 text-white hover:bg-black/80"
+                          ><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg></button>
+                        )}
+                        <button
+                          onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                          className="flex h-5 w-5 items-center justify-center rounded bg-black/60 text-white hover:bg-red-600"
+                        ><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {images.length === 0 && (
+                <p className="mb-4 text-center text-[11px] text-ink-soft">{t("editor.no_images")}</p>
+              )}
+
+              {/* URL input */}
+              <div className="flex gap-2">
+                <input
+                  value={imageInput}
+                  onChange={(e) => setImageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && imageInput.trim()) {
+                      setImages((p) => [...p, imageInput.trim()]);
+                      setImageInput("");
+                    }
+                  }}
+                  placeholder={t("editor.image_url_ph")}
+                  className="input flex-1 text-xs"
+                />
+                <Btn
+                  onClick={() => { if (imageInput.trim()) { setImages((p) => [...p, imageInput.trim()]); setImageInput(""); } }}
+                  disabled={!imageInput.trim()}
+                >
+                  {t("editor.add")}
+                </Btn>
+              </div>
+
+              {/* Library picker */}
+              <button
+                onClick={() => setLibraryOpen((v) => !v)}
+                className="mt-3 flex items-center gap-1.5 text-[11px] text-ink-soft link-underline"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                {t("editor.browse_library")}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform ${libraryOpen ? "rotate-180" : ""}`}><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+
+              {libraryOpen && (
+                <div className="mt-2 grid grid-cols-4 gap-1.5">
+                  {PRODUCT_LIBRARY.map((url) => {
+                    const already = images.includes(url);
+                    return (
+                      <button
+                        key={url}
+                        onClick={() => { if (!already) setImages((p) => [...p, url]); }}
+                        disabled={already}
+                        className={`group relative aspect-square overflow-hidden rounded border transition-colors ${already ? "border-ink opacity-40" : "edge hover:border-ink"}`}
+                      >
+                        <img src={url} alt="" className="h-full w-full object-cover object-top" />
+                        {already && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <p className="mt-3 text-[10px] text-ink-soft">{t("editor.images_hint")}</p>
             </div>
           </Card>
 

@@ -197,6 +197,13 @@ const en = {
     return_rate: "Return rate",
     views_label: "views",
     returns_label: "returns",
+    images: "Photos",
+    cover: "Cover",
+    no_images: "No photos yet — add a URL or pick from library.",
+    image_url_ph: "Paste a URL or /product-image-demo/…",
+    add: "Add",
+    browse_library: "Browse library",
+    images_hint: "First photo is the cover shown in the product list. Hover a photo to reorder or remove.",
   },
 
   coll: {
@@ -602,6 +609,13 @@ const vi: typeof en = {
     return_rate: "Tỷ lệ trả hàng",
     views_label: "lượt xem",
     returns_label: "lần trả",
+    images: "Hình ảnh",
+    cover: "Ảnh bìa",
+    no_images: "Chưa có ảnh — thêm URL hoặc chọn từ thư viện.",
+    image_url_ph: "Dán URL hoặc /product-image-demo/…",
+    add: "Thêm",
+    browse_library: "Chọn từ thư viện",
+    images_hint: "Ảnh đầu tiên là ảnh bìa hiển thị trong danh sách sản phẩm. Hover để sắp xếp hoặc xoá.",
   },
 
   coll: {
