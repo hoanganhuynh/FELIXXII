@@ -286,7 +286,7 @@ export default function Home() {
       </section>
 
       {/* ══ THIS WEEK TOP 20 ══════════════════════════════════════════ */}
-      <section className="border-t border-[var(--color-edge)] px-6 py-10 md:px-8 lg:px-10">
+      <section className="px-6 py-10 md:px-8 lg:px-10">
         {/* Section header */}
         <div className="mb-6 flex items-end justify-between">
           <div>
