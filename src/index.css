@@ -9,7 +9,7 @@
   --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
 
   /* atelier palette — warm ivory canvas, deep bordeaux accent */
-  --color-bg: #f6f2ea; /* warm ivory */
+  --color-bg: #FFFAF6;
   --color-tile: #efe9dd; /* product thumbnail field */
   --color-tile-deep: #e6dece;
   --color-ink: #1c1917; /* warm near-black */
