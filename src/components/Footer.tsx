@@ -11,13 +11,13 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-[var(--color-edge)]">
+    <footer className="border-t border-[var(--color-line)]">
       {/* Email signup */}
       <div className="flex flex-col items-center px-6 py-12 text-center">
         <p className="font-serif text-2xl md:text-3xl">Join our atelier</p>
         <form
           onSubmit={(e) => e.preventDefault()}
-          className="mt-6 flex w-full max-w-lg items-center border-b border-[var(--color-edge)] pb-2"
+          className="mt-6 flex w-full max-w-lg items-center border-b border-[var(--color-line)] pb-2"
         >
           <input
             type="email"
@@ -35,7 +35,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-[var(--color-edge)] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 md:px-8">
+      <div className="border-t border-[var(--color-line)] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 md:px-8">
         <nav className="flex flex-wrap gap-x-6 gap-y-2">
           {links.map((l) => (
             <a

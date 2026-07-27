@@ -18,25 +18,11 @@ interface HeroBanner {
 
 const FALLBACK_BANNERS: HeroBanner[] = [
   {
-    id: "f1", image_url: "/hero-banner/743731509_27507563182261413_5527702538560351911_n.jpg",
+    id: "f1", image_url: "/hero-banner/592347093_1190008066643058_5631399014138437439_n.jpg",
     collection_tag: "FW 2025", heading: "Lụa Đêm",
     subheading: "",
     cta1_label: "Same collection", cta1_url: "/shop?collection=thu-dong-2025",
     cta2_label: "View details", cta2_url: "/san-pham/lua-dem",
-  },
-  {
-    id: "f2", image_url: "/hero-banner/742997904_27507562938928104_6898779848099059021_n.jpg",
-    collection_tag: "SS 2026", heading: "Sương Mai",
-    subheading: "",
-    cta1_label: "Same collection", cta1_url: "/shop?collection=xuan-he-2026",
-    cta2_label: "View details", cta2_url: "/san-pham/suong-mai",
-  },
-  {
-    id: "f3", image_url: "/hero-banner/741258369_27507561415594923_8209792968027323554_n.jpg",
-    collection_tag: "Bridal", heading: "Nguyệt",
-    subheading: "",
-    cta1_label: "Same collection", cta1_url: "/shop?cat=dam-da-hoi",
-    cta2_label: "View details", cta2_url: "/san-pham/nguyet",
   },
 ];
 
