@@ -18,8 +18,32 @@ interface HeroBanner {
   cta2_url: string;
 }
 
+const FALLBACK_BANNERS: HeroBanner[] = [
+  {
+    id: "f1", image_url: "/hero-banner/743731509_27507563182261413_5527702538560351911_n.jpg",
+    collection_tag: "FW 2025", heading: "Fall — Winter 2025",
+    subheading: "Đầm dạ hội & bridal may đo theo số đo cá nhân.",
+    cta1_label: "Shop Now", cta1_url: "/shop",
+    cta2_label: "View Collection", cta2_url: "/shop?collection=thu-dong-2025",
+  },
+  {
+    id: "f2", image_url: "/hero-banner/742997904_27507562938928104_6898779848099059021_n.jpg",
+    collection_tag: "SS 2026", heading: "Spring — Summer 2026",
+    subheading: "Chiffon nhẹ, pastel, buông rũ tự nhiên.",
+    cta1_label: "Shop Now", cta1_url: "/shop",
+    cta2_label: "View Collection", cta2_url: "/shop?collection=xuan-he-2026",
+  },
+  {
+    id: "f3", image_url: "/hero-banner/741258369_27507561415594923_8209792968027323554_n.jpg",
+    collection_tag: "Bridal", heading: "Bridal Couture",
+    subheading: "May đo riêng — hồ sơ số đo lưu suốt vòng đời.",
+    cta1_label: "Shop Bridal", cta1_url: "/shop?cat=dam-bridal",
+    cta2_label: "Book Fitting", cta2_url: "/about",
+  },
+];
+
 function HeroCarousel() {
-  const [banners, setBanners] = useState<HeroBanner[]>([]);
+  const [banners, setBanners] = useState<HeroBanner[]>(FALLBACK_BANNERS);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -44,14 +68,6 @@ function HeroCarousel() {
     setTimeout(() => setPaused(false), 8000);
   };
   const goTo = (i: number) => { setIdx(i); setPaused(true); setTimeout(() => setPaused(false), 8000); };
-
-  if (!banners.length) {
-    return (
-      <section className="relative h-[78vh] min-h-[480px] w-full overflow-hidden bg-neutral-900">
-        <div className="absolute inset-0 animate-pulse bg-neutral-800/60" />
-      </section>
-    );
-  }
 
   return (
     <section
