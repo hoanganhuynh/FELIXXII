@@ -73,23 +73,23 @@ function HeroCarousel() {
             className="absolute inset-0 h-full w-full object-cover object-[center_30%]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/20" />
-          <div className="relative flex h-full flex-col justify-end px-5 pb-14 md:px-10 text-white">
-            {b.collection_tag && <p className="label text-white/80">{b.collection_tag}</p>}
-            <h1 className="mt-4 max-w-2xl font-serif text-5xl leading-[1.02] md:text-7xl">
+          <div className="relative flex h-full flex-col items-center justify-end px-5 pb-16 md:px-10 text-white text-center">
+            {b.collection_tag && <p className="label tracking-[0.18em] text-white/70">{b.collection_tag}</p>}
+            <h1 className="mt-3 font-serif text-4xl leading-[1.02] md:text-6xl lg:text-7xl">
               {b.heading}
             </h1>
             {b.subheading && (
-              <p className="mt-3 max-w-lg text-[17px] text-white/75 leading-relaxed">{b.subheading}</p>
+              <p className="mt-3 max-w-md text-[15px] text-white/65 leading-relaxed">{b.subheading}</p>
             )}
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
               {b.cta1_label && (
-                <Link to={b.cta1_url} className="group rounded-full bg-white px-7 py-3.5 transition-opacity hover:opacity-90">
-                  <span className="label text-ink">{b.cta1_label}</span>
+                <Link to={b.cta1_url} className="rounded-full border border-white/80 px-7 py-3 text-[13px] tracking-wider text-white transition-colors hover:bg-white hover:text-ink">
+                  {b.cta1_label}
                 </Link>
               )}
               {b.cta2_label && (
-                <Link to={b.cta2_url} className="group rounded-full border border-white px-7 py-3.5 transition-colors hover:bg-white">
-                  <span className="label text-white group-hover:text-ink">{b.cta2_label}</span>
+                <Link to={b.cta2_url} className="rounded-full border border-white/40 px-7 py-3 text-[13px] tracking-wider text-white/80 transition-colors hover:border-white/80 hover:text-white">
+                  {b.cta2_label}
                 </Link>
               )}
             </div>
@@ -141,6 +141,7 @@ export default function Home() {
   const openBody = useBodyProfile((s) => s.setModal);
   const hasProfile = useBodyProfile((s) => !!s.measurements);
   const best = [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99)).slice(0, 4);
+  const [viewMode, setViewMode] = useState<"model" | "product">("model");
 
   return (
     <div ref={reveal} className="pt-[62px]">
@@ -203,8 +204,24 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-4 md:gap-x-6">
           {best.map((p, i) => (
             <div key={p.id} className="reveal" style={{ transitionDelay: `${i * 60}ms` }}>
-              <ProductCard item={p} index={i} />
+              <ProductCard item={p} index={viewMode === "product" ? (p.images && p.images.length > 1 ? p.images.length - 1 : 0) : 0} />
             </div>
+          ))}
+        </div>
+        {/* View mode toggle */}
+        <div className="mt-10 flex items-center justify-center gap-1 border-t edge pt-6">
+          {(["model", "product"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setViewMode(m)}
+              className={`px-5 py-2 text-[11px] tracking-[0.15em] uppercase transition-colors ${
+                viewMode === m
+                  ? "bg-ink text-[var(--color-bg)]"
+                  : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {m === "model" ? "Model View" : "Product View"}
+            </button>
           ))}
         </div>
       </section>
