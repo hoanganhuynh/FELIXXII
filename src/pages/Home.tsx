@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { products, COLLECTIONS, SHOP_CATEGORIES, IMG_BASE } from "../data/catalog";
+import { products } from "../data/catalog";
 import ProductCard from "../components/ProductCard";
 import { useBodyProfile } from "../store/bodyProfile";
 import { useReveal } from "../hooks/useReveal";
@@ -163,52 +163,6 @@ export default function Home() {
       {/* ---- HERO CAROUSEL ---- */}
       <HeroCarousel />
 
-      {/* ---- TWO ENTRY POINTS (feature 1) ---- */}
-      <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
-        <div className="reveal grid gap-10 lg:grid-cols-2">
-          {/* by collection — narrative */}
-          <div>
-            <p className="label text-ink-soft">By Narrative</p>
-            <h2 className="mt-1 font-serif text-2xl">Collections</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {COLLECTIONS.map((c) => (
-                <Link key={c.id} to={`/shop?collection=${c.id}`} className="group block overflow-hidden rounded-sm border edge">
-                  <div className="relative aspect-[4/5] sm:aspect-square md:aspect-[4/5] overflow-hidden bg-[var(--color-tile)]">
-                    {c.image && (
-                      <img src={IMG_BASE + c.image} alt={c.label} className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 flex items-end p-5 text-white">
-                      <div>
-                        <p className="font-serif text-2xl">{c.label}</p>
-                        <p className="mt-1 text-xs text-white/80">{c.note}</p>
-                      </div>
-                    </div>
-                    <span className="absolute right-4 top-4 text-[10px] tracking-wide text-white/90">{c.season}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* by category — utilitarian */}
-          <div className="flex h-full flex-col">
-            <p className="label text-ink-soft">By Category</p>
-            <h2 className="mt-1 font-serif text-2xl">Categories ({SHOP_CATEGORIES.length})</h2>
-            <div className="mt-5 flex-1 grid grid-cols-2 gap-3 auto-rows-fr">
-              {SHOP_CATEGORIES.map((cat) => (
-                <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex flex-col justify-between rounded-sm border edge p-5 transition-colors hover:bg-[var(--color-tile)]">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm">{cat.label}</span>
-                    <img src={cat.icon} alt="" className="h-12 w-12 shrink-0 opacity-60" />
-                  </div>
-                  <span className="text-xs underline underline-offset-2 transition-transform group-hover:translate-x-1">View →</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ---- BESTSELLERS ---- */}
       <section className="mx-auto max-w-[1800px] px-5 py-8 md:px-8">
