@@ -185,7 +185,7 @@ export default function Home() {
 
   const sorted = [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99));
   const featured = sorted.slice(0, 3);
-  const top20 = sorted;
+  const top20 = sorted.slice(0, 4);
 
   // Collect up to 5 thumbnail images from featured products
   const thumbImgs: { src: string; productId: string }[] = [];
