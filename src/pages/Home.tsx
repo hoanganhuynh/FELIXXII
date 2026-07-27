@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { products, COLLECTIONS, SHOP_CATEGORIES, IMG_BASE } from "../data/catalog";
-import ProductCard from "../components/ProductCard";
-import { useBodyProfile } from "../store/bodyProfile";
-import { useReveal } from "../hooks/useReveal";
+import { products, IMG_BASE, type Product } from "../data/catalog";
+import { vnd } from "../components/ProductCard";
 import { supabase } from "../lib/supabase";
 
 interface HeroBanner {
@@ -47,7 +45,7 @@ function HeroCarousel() {
 
   if (!banners.length) {
     return (
-      <section className="relative h-[78vh] min-h-[480px] w-full overflow-hidden bg-neutral-900">
+      <section className="relative h-screen w-full overflow-hidden bg-neutral-900">
         <div className="absolute inset-0 animate-pulse bg-neutral-800/60" />
       </section>
     );
@@ -55,7 +53,7 @@ function HeroCarousel() {
 
   return (
     <section
-      className="relative h-[78vh] min-h-[480px] w-full overflow-hidden"
+      className="relative h-screen w-full overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -70,25 +68,35 @@ function HeroCarousel() {
           <img
             src={b.image_url}
             alt={b.heading}
-            className="absolute inset-0 h-full w-full object-cover object-[center_30%]"
+            className="absolute inset-0 h-full w-full object-cover object-[center_25%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/20" />
-          <div className="relative flex h-full flex-col items-center justify-end px-5 pb-16 md:px-10 text-white text-center">
-            {b.collection_tag && <p className="label tracking-[0.18em] text-white/70">{b.collection_tag}</p>}
-            <h1 className="mt-3 font-serif text-4xl leading-[1.02] md:text-6xl lg:text-7xl">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+          {/* Center-bottom text block — Gentle Monster style */}
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center pb-20 text-center text-white">
+            {b.collection_tag && (
+              <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">{b.collection_tag}</p>
+            )}
+            <h1 className="mt-3 font-serif text-3xl leading-tight tracking-wide md:text-5xl lg:text-6xl">
               {b.heading}
             </h1>
             {b.subheading && (
-              <p className="mt-3 max-w-md text-[15px] text-white/65 leading-relaxed">{b.subheading}</p>
+              <p className="mt-2 max-w-sm text-[14px] text-white/60 leading-relaxed">{b.subheading}</p>
             )}
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               {b.cta1_label && (
-                <Link to={b.cta1_url} className="rounded-full border border-white/80 px-7 py-3 text-[13px] tracking-wider text-white transition-colors hover:bg-white hover:text-ink">
+                <Link
+                  to={b.cta1_url}
+                  className="rounded-full border border-white/70 px-8 py-2.5 text-[12px] tracking-[0.15em] uppercase text-white transition-colors hover:bg-white hover:text-black"
+                >
                   {b.cta1_label}
                 </Link>
               )}
               {b.cta2_label && (
-                <Link to={b.cta2_url} className="rounded-full border border-white/40 px-7 py-3 text-[13px] tracking-wider text-white/80 transition-colors hover:border-white/80 hover:text-white">
+                <Link
+                  to={b.cta2_url}
+                  className="rounded-full border border-white/30 px-8 py-2.5 text-[12px] tracking-[0.15em] uppercase text-white/70 transition-colors hover:border-white/70 hover:text-white"
+                >
                   {b.cta2_label}
                 </Link>
               )}
@@ -97,36 +105,28 @@ function HeroCarousel() {
         </div>
       ))}
 
-      {/* prev / next */}
+      {/* Prev / Next */}
       {banners.length > 1 && (
         <>
-          <button
-            onClick={() => go(-1)}
-            aria-label="Previous"
-            className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+          <button onClick={() => go(-1)} aria-label="Previous" className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center text-white/60 transition-colors hover:text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6" /></svg>
           </button>
-          <button
-            onClick={() => go(1)}
-            aria-label="Next"
-            className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+          <button onClick={() => go(1)} aria-label="Next" className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center text-white/60 transition-colors hover:text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
           </button>
         </>
       )}
 
-      {/* dots */}
+      {/* Dots */}
       {banners.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-1.5">
           {banners.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
               aria-label={`Banner ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === idx ? "w-6 bg-white" : "w-1.5 bg-white/45 hover:bg-white/75"
+              className={`h-px rounded-none transition-all duration-300 bg-white ${
+                i === idx ? "w-8 opacity-100" : "w-4 opacity-40"
               }`}
             />
           ))}
@@ -136,111 +136,159 @@ function HeroCarousel() {
   );
 }
 
+function getImg(p: Product, idx: number, mode: "model" | "product"): string | null {
+  const imgs = p.images ?? [];
+  if (!imgs.length) return null;
+  if (mode === "product") return IMG_BASE + imgs[imgs.length - 1];
+  return IMG_BASE + imgs[Math.min(idx, imgs.length - 1)];
+}
+
 export default function Home() {
-  const reveal = useReveal<HTMLDivElement>();
-  const openBody = useBodyProfile((s) => s.setModal);
-  const hasProfile = useBodyProfile((s) => !!s.measurements);
-  const best = [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99)).slice(0, 4);
   const [viewMode, setViewMode] = useState<"model" | "product">("model");
+  const [modelIdx, setModelIdx] = useState(0);
+
+  const sorted = [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99));
+  const featured = sorted.slice(0, 3);
+  const topProducts = sorted;
+
+  // Use product with most images for the thumbnail strip
+  const thumbProduct = featured.reduce((max, p) =>
+    (p.images?.length ?? 0) > (max.images?.length ?? 0) ? p : max
+  );
+  const thumbImgs = thumbProduct.images ?? [];
 
   return (
-    <div ref={reveal} className="pt-[62px]">
-      {/* ---- HERO CAROUSEL ---- */}
+    <div className="pt-[62px]">
+
+      {/* ══ 1. HERO ══════════════════════════════════════════════════ */}
       <HeroCarousel />
 
-      {/* ---- TWO ENTRY POINTS (feature 1) ---- */}
-      <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
-        <div className="reveal grid gap-10 lg:grid-cols-2">
-          {/* by collection — narrative */}
+      {/* ══ 2. FEATURED PRODUCTS — 2 MODES ══════════════════════════ */}
+      <section className="w-full border-t border-[var(--color-edge)]">
+        {/* Section label */}
+        <div className="flex items-center justify-between px-5 py-3 md:px-8">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-ink-soft">New Collection</p>
+          <Link to="/shop" className="text-[10px] tracking-[0.15em] uppercase text-ink-soft hover:text-ink transition-colors">View All →</Link>
+        </div>
+
+        {/* 3-column grid — edge to edge */}
+        <div className="grid grid-cols-3 divide-x divide-[var(--color-edge)] border-t border-[var(--color-edge)]">
+          {featured.map((p) => {
+            const src = getImg(p, modelIdx, viewMode);
+            return (
+              <Link key={p.id} to={`/san-pham/${p.id}`} className="group block">
+                <div className="aspect-[3/4] overflow-hidden bg-[var(--color-tile)]">
+                  {src ? (
+                    <img
+                      src={src}
+                      alt={p.name}
+                      className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-[var(--color-tile)]" />
+                  )}
+                </div>
+                <div className="border-t border-[var(--color-edge)] px-4 py-4 md:px-5">
+                  <p className="text-sm">{p.name}</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">{vnd(p.price)}</p>
+                  <button
+                    className="mt-2 text-[10px] tracking-[0.1em] uppercase text-ink-soft underline-offset-2 hover:underline transition-colors"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    Add to Wishlist
+                  </button>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Control bar: thumbnails left · toggle right */}
+        <div className="flex items-center justify-between border-t border-[var(--color-edge)] px-4 py-3 md:px-5">
+          {/* Thumbnail strip */}
+          <div className="flex items-center gap-2">
+            {thumbImgs.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => { setModelIdx(i); setViewMode("model"); }}
+                title={`Look ${i + 1}`}
+                className={`h-9 w-9 overflow-hidden rounded-full transition-all duration-200 ${
+                  viewMode === "model" && modelIdx === i
+                    ? "ring-2 ring-ink ring-offset-1"
+                    : "opacity-50 hover:opacity-80"
+                }`}
+              >
+                <img src={IMG_BASE + img} alt="" className="h-full w-full object-cover object-top" />
+              </button>
+            ))}
+          </div>
+
+          {/* View mode toggle */}
+          <div className="flex items-center gap-0">
+            {(["model", "product"] as const).map((m, i) => (
+              <span key={m} className="flex items-center">
+                {i > 0 && <span className="mx-2 text-ink-soft/30 text-xs select-none">|</span>}
+                <button
+                  onClick={() => setViewMode(m)}
+                  className={`text-[10px] tracking-[0.15em] uppercase transition-colors ${
+                    viewMode === m ? "text-ink font-medium" : "text-ink-soft hover:text-ink"
+                  }`}
+                >
+                  {m === "model" ? "Model View" : "Product View"}
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 3. BEST: THIS WEEK ══════════════════════════════════════ */}
+      <section className="border-t border-[var(--color-edge)]">
+        {/* Heading row */}
+        <div className="flex items-end justify-between px-5 py-8 md:px-8">
           <div>
-            <p className="label text-ink-soft">By Narrative</p>
-            <h2 className="mt-1 font-serif text-2xl">Collections</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {COLLECTIONS.map((c) => (
-                <Link key={c.id} to={`/shop?collection=${c.id}`} className="group block overflow-hidden rounded-sm border edge">
-                  <div className="relative aspect-[4/5] sm:aspect-square md:aspect-[4/5] overflow-hidden bg-[var(--color-tile)]">
-                    {c.image && (
-                      <img src={IMG_BASE + c.image} alt={c.label} className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 flex items-end p-5 text-white">
-                      <div>
-                        <p className="font-serif text-2xl">{c.label}</p>
-                        <p className="mt-1 text-xs text-white/80">{c.note}</p>
-                      </div>
-                    </div>
-                    <span className="absolute right-4 top-4 text-[10px] tracking-wide text-white/90">{c.season}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <p className="font-serif text-4xl leading-none tracking-tight md:text-5xl">BEST:</p>
+            <p className="mt-1 text-[10px] tracking-[0.25em] uppercase text-ink-soft">
+              This Week · Top {topProducts.length}
+            </p>
           </div>
+          <Link to="/shop" className="text-[11px] underline underline-offset-2 text-ink-soft hover:text-ink transition-colors">
+            View all
+          </Link>
+        </div>
 
-          {/* by category — utilitarian */}
-          <div className="flex h-full flex-col">
-            <p className="label text-ink-soft">By Category</p>
-            <h2 className="mt-1 font-serif text-2xl">Categories ({SHOP_CATEGORIES.length})</h2>
-            <div className="mt-5 flex-1 grid grid-cols-2 gap-3 auto-rows-fr">
-              {SHOP_CATEGORIES.map((cat) => (
-                <Link key={cat.id} to={`/shop?cat=${cat.id}`} className="group flex flex-col justify-between rounded-sm border edge p-5 transition-colors hover:bg-[var(--color-tile)]">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm">{cat.label}</span>
-                    <img src={cat.icon} alt="" className="h-12 w-12 shrink-0 opacity-60" />
-                  </div>
-                  <span className="text-xs underline underline-offset-2 transition-transform group-hover:translate-x-1">View →</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---- BESTSELLERS ---- */}
-      <section className="mx-auto max-w-[1800px] px-5 py-8 md:px-8">
-        <div className="reveal mb-8 flex items-end justify-between">
-          <h2 className="font-serif text-3xl">Season Bestsellers</h2>
-          <Link to="/shop" className="text-xs underline underline-offset-2">View all</Link>
-        </div>
-        <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-4 md:gap-x-6">
-          {best.map((p, i) => (
-            <div key={p.id} className="reveal" style={{ transitionDelay: `${i * 60}ms` }}>
-              <ProductCard item={p} index={viewMode === "product" ? (p.images && p.images.length > 1 ? p.images.length - 1 : 0) : 0} />
-            </div>
-          ))}
-        </div>
-        {/* View mode toggle */}
-        <div className="mt-10 flex items-center justify-center gap-1 border-t edge pt-6">
-          {(["model", "product"] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setViewMode(m)}
-              className={`px-5 py-2 text-[11px] tracking-[0.15em] uppercase transition-colors ${
-                viewMode === m
-                  ? "bg-ink text-[var(--color-bg)]"
-                  : "text-ink-soft hover:text-ink"
-              }`}
+        {/* Ranked grid */}
+        <div className="grid grid-cols-2 border-t border-[var(--color-edge)] divide-y divide-[var(--color-edge)] md:grid-cols-4 md:divide-y-0 md:divide-x lg:grid-cols-5">
+          {topProducts.map((p, i) => (
+            <Link
+              key={p.id}
+              to={`/san-pham/${p.id}`}
+              className="group block border-[var(--color-edge)] md:border-t-0 [&:nth-child(odd)]:border-r [&:nth-child(odd)]:md:border-r-0"
             >
-              {m === "model" ? "Model View" : "Product View"}
-            </button>
+              <div className="relative aspect-[3/4] overflow-hidden bg-[var(--color-tile)]">
+                {p.images?.[0] ? (
+                  <img
+                    src={IMG_BASE + p.images[0]}
+                    alt={p.name}
+                    className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                ) : (
+                  <div className="h-full w-full" />
+                )}
+                {/* Rank number */}
+                <span className="absolute left-3 top-3 font-serif text-4xl leading-none text-white/50 md:text-5xl">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <div className="border-t border-[var(--color-edge)] px-4 py-3">
+                <p className="text-sm">{p.name}</p>
+                <p className="mt-0.5 text-xs text-ink-soft">{vnd(p.price)}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* ---- BODY PROFILE CTA (feature 4) ---- */}
-      <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
-        <div className="reveal flex flex-col items-center gap-4 rounded-lg bg-ink px-6 py-16 text-center text-[var(--color-bg)]">
-          <p className="label text-[var(--color-bg)]/70">Personalization</p>
-          <h2 className="max-w-xl font-serif text-3xl md:text-4xl">
-            Save measurements once — find the perfect size every time.
-          </h2>
-          <p className="max-w-md text-sm text-[var(--color-bg)]/70">
-            Enter 5 basic measurements, and our system will recommend the best fit for every product.
-          </p>
-          <button onClick={() => openBody(true)} className="mt-2 rounded-full bg-[var(--color-bg)] px-7 py-3.5 text-ink transition-transform hover:scale-105">
-            <span className="label">{hasProfile ? "Update Body Profile" : "Create Body Profile"}</span>
-          </button>
-        </div>
-      </section>
     </div>
   );
 }
