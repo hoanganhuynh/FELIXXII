@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart, cartTotal, cartCount } from "../store/cart";
 import { useWishlist } from "../store/wishlist";
+import { useAuth } from "../store/auth";
 import { products, productById } from "../data/catalog";
 import ProductCard, { vnd } from "./ProductCard";
 import ProductImage from "./ProductImage";
 
 export default function CartDrawer() {
-  const { lines, open, setOpen, remove, setQty } = useCart();
+  const { lines, open, setOpen, remove, setQty, setSize } = useCart();
   const { ids: wishlistIds, remove: removeWishlist } = useWishlist();
+  const { user, setLoginOpen } = useAuth();
   const [tab, setTab] = useState<"cart" | "wishlist">("cart");
   const total = cartTotal(lines);
   const count = cartCount(lines);
@@ -98,10 +100,22 @@ export default function CartDrawer() {
                           <WishlistBtn id={l.id} />
                         </div>
 
-                        {/* Size row — display only */}
+                        {/* Size row — selectable */}
                         <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
                           <span className="text-sm text-ink-soft">Size</span>
-                          <span className="text-sm">{l.size ?? "—"}</span>
+                          <div className="relative flex items-center gap-1 text-sm">
+                            <span className="pointer-events-none">{l.size ?? "—"}</span>
+                            <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
+                            <select
+                              value={l.size ?? ""}
+                              onChange={(e) => setSize(l.key, e.target.value)}
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                            >
+                              {(src?.sizes ?? [l.size ?? ""]).map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
 
                         {/* Quantity row — native select overlaid on display */}
@@ -153,7 +167,10 @@ export default function CartDrawer() {
 
                 {/* CTAs */}
                 <div className="mt-8 space-y-3">
-                  <button className="flex h-[52px] w-full items-center justify-center gap-3 rounded bg-ink text-white transition-opacity hover:opacity-85">
+                  <button
+                    onClick={() => { if (!user) { setLoginOpen(true); } }}
+                    className="flex h-[52px] w-full items-center justify-center gap-3 rounded bg-ink text-white transition-opacity hover:opacity-85"
+                  >
                     <span className="text-[15px] tracking-[0.03em]">CHECKOUT</span>
                     <span className="h-1 w-1 rounded-full bg-white" />
                     <span className="text-[15px] tracking-[0.03em]">{vnd(total)}</span>
@@ -247,10 +264,15 @@ export default function CartDrawer() {
 
 function WishlistBtn({ id }: { id: string }) {
   const { toggle, has } = useWishlist();
+  const { user, setLoginOpen } = useAuth();
   const saved = has(id);
+  const handleClick = () => {
+    if (!user) { setLoginOpen(true); return; }
+    toggle(id);
+  };
   return (
     <button
-      onClick={() => toggle(id)}
+      onClick={handleClick}
       aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
       className="mt-0.5 shrink-0 transition-colors"
     >

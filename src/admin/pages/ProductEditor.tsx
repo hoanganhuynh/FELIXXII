@@ -339,9 +339,9 @@ export default function ProductEditor() {
           <Card title={t("editor.colors")}>
             <div className="flex flex-wrap gap-2.5 p-5">
               {Object.values(PALETTE).map((c) => {
-                const on = colorNames.includes(c.name);
+                const on = colorNames[0] === c.name;
                 return (
-                  <button key={c.name} onClick={() => toggle(colorNames, c.name, setColorNames)}
+                  <button key={c.name} onClick={() => setColorNames([c.name])}
                     className={`flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3 text-xs transition-colors ${on ? "border-ink bg-[var(--color-tile)]" : "edge"}`}>
                     <Dot hex={c.hex} /> {c.name}
                   </button>

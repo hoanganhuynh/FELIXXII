@@ -18,6 +18,7 @@ interface CartState {
   add: (line: Omit<CartLine, "qty" | "key">) => void;
   remove: (key: string) => void;
   setQty: (key: string, qty: number) => void;
+  setSize: (key: string, size: string) => void;
   setOpen: (open: boolean) => void;
   clear: () => void;
 }
@@ -43,6 +44,22 @@ export const useCart = create<CartState>()(
         set((s) => ({
           lines: s.lines.map((l) => (l.key === key ? { ...l, qty: Math.max(1, qty) } : l)),
         })),
+      setSize: (key, size) =>
+        set((s) => {
+          const line = s.lines.find((l) => l.key === key);
+          if (!line) return s;
+          const newKey = keyOf({ ...line, size });
+          const exists = s.lines.find((l) => l.key === newKey);
+          if (exists) {
+            // merge qty into existing line and remove this one
+            return {
+              lines: s.lines
+                .map((l) => l.key === newKey ? { ...l, qty: l.qty + line.qty } : l)
+                .filter((l) => l.key !== key),
+            };
+          }
+          return { lines: s.lines.map((l) => l.key === key ? { ...l, size, key: newKey } : l) };
+        }),
       setOpen: (open) => set({ open }),
       clear: () => set({ lines: [] }),
     }),

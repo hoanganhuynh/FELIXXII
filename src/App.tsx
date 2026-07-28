@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./store/auth";
+import { useWishlist } from "./store/wishlist";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
@@ -34,9 +35,20 @@ function ScrollToTop() {
   return null;
 }
 
+function WishlistSync() {
+  const user = useAuth((s) => s.user);
+  const { init, clear } = useWishlist();
+  useEffect(() => {
+    if (user) init(user.id);
+    else clear();
+  }, [user?.id]);
+  return null;
+}
+
 function Storefront() {
   return (
     <>
+      <WishlistSync />
       <Header />
       <CartDrawer />
       <LoginDrawer />

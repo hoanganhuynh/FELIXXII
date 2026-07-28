@@ -2,13 +2,20 @@ import { Link } from "react-router-dom";
 import ProductImage from "./ProductImage";
 import type { Product } from "../data/catalog";
 import { useWishlist } from "../store/wishlist";
+import { useAuth } from "../store/auth";
 
 export const vnd = (n: number) => `${n.toLocaleString("vi-VN")}₫`;
 
 export default function ProductCard({ item, index = 0 }: { item: Product; index?: number }) {
   const tag = item.bestseller && item.bestseller <= 3 ? "Bestseller" : item.createdAt >= 20260101 ? "New" : null;
   const { toggle, has } = useWishlist();
+  const { user, setLoginOpen } = useAuth();
   const saved = has(item.id);
+
+  const handleWishlist = () => {
+    if (!user) { setLoginOpen(true); return; }
+    toggle(item.id);
+  };
 
   return (
     <article className="group">
@@ -34,7 +41,7 @@ export default function ProductCard({ item, index = 0 }: { item: Product; index?
         </Link>
         <p className="text-sm tabular-nums text-ink-soft">{vnd(item.price)}</p>
         <button
-          onClick={() => toggle(item.id)}
+          onClick={handleWishlist}
           className="link-underline pt-1 text-[11px] tracking-[0.08em] text-ink transition-opacity hover:opacity-60"
         >
           {saved ? "SAVED TO WISHLIST ✓" : "ADD TO WISHLIST"}
