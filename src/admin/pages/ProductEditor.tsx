@@ -15,7 +15,7 @@ import { skuCode, styleCode, barcode, CATEGORY_CODE } from "../data/sku";
 import { PALETTE, SILHOUETTES, type CategoryId, type Silhouette } from "../../data/catalog";
 import type { StyleStatus, BodyType } from "../api/products";
 
-const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "Custom"];
+const SIZES = ["XS", "S", "M", "L", "XL", "2XL"];
 
 const PRODUCT_LIBRARY = [
   "/product-image-demo/600332183_1201900768787121_2051984339437065533_n.jpg",

@@ -116,7 +116,7 @@ const LAST = ["Nguyễn", "Trần", "Lê", "Phạm", "Huỳnh", "Hoàng", "Vũ",
 const BODY_TYPES: BodyType[] = ["hourglass", "pear", "apple", "rectangle", "inverted-triangle"];
 
 const COLOR_KEYS = Object.keys(PALETTE);
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "Custom"];
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL"];
 
 /* real seed photos — spread the 10 real designs across a handful of styles */
 const REAL_IMAGE_SETS = seedProducts.filter((p) => p.images?.length).map((p) => p.images!.map(img => `/product-image-demo/${img}`));
@@ -160,7 +160,7 @@ export function generateDataset(seed = 20260716) {
     let sizes = pickSome(rand, ["XS", "S", "M", "L", "XL", "2XL"], 3, 6).sort(
       (a, b) => ALL_SIZES.indexOf(a) - ALL_SIZES.indexOf(b)
     );
-    if (category === "dam-bridal" && rand() > 0.4) sizes = [...sizes, "Custom"];
+    // Custom size removed
 
     const basePrice =
       category === "dam-bridal"

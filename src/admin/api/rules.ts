@@ -5,7 +5,7 @@ export type BodyType = Database["public"]["Enums"]["body_type"];
 export type SizeRuleRow = Database["public"]["Tables"]["size_rules"]["Row"];
 export type RuleMetaRow = Database["public"]["Tables"]["body_rule_meta"]["Row"];
 
-const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "Custom"];
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL"];
 
 export interface BodyRule extends RuleMetaRow {
   chart: SizeRuleRow[];

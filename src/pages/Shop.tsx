@@ -16,7 +16,7 @@ import {
 import ProductCard from "../components/ProductCard";
 import { useReveal } from "../hooks/useReveal";
 
-const SIZES = ["S", "M", "L", "XL", "Custom"];
+const SIZES = ["S", "M", "L", "XL"];
 const PRICE_BUCKETS = [
   { id: "u2", label: "Under 2 mil", test: (p: number) => p < 2_000_000 },
   { id: "2-4", label: "2 – 4 mil", test: (p: number) => p >= 2_000_000 && p < 4_000_000 },

@@ -43,7 +43,6 @@ export const SIZE_CODE: Record<string, string> = {
   L: "L",
   XL: "XL",
   "2XL": "2X",
-  Custom: "CU",
 };
 
 export const pad4 = (n: number) => String(n).padStart(4, "0");
