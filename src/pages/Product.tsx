@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { productById, products, categoryLabel, collectionLabel } from "../data/catalog";
 import { SIZE_CHART } from "../data/sizing";
@@ -109,6 +109,8 @@ export default function Product() {
   const [size, setSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const galleryRef = useRef<HTMLDivElement>(null);
 
   if (!product) return <NotFound />;
 
@@ -132,16 +134,43 @@ export default function Product() {
 
       <div className="mx-auto grid max-w-[1800px] overflow-hidden lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
         {/* gallery — horizontal snap carousel on mobile, vertical stack on desktop */}
-        <div className="flex min-w-0 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:overflow-visible">
-          {(product.images?.length ? product.images.map((_, i) => i) : [0, 3, 6]).map((idx, n) => (
-            <div
-              key={n}
-              className="aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[var(--color-tile)] lg:w-auto"
-            >
-              <ProductImage item={product} index={idx} className="h-full w-full" />
+        {(() => {
+          const slides = product.images?.length ? product.images.map((_, i) => i) : [0, 3, 6];
+          return (
+            <div className="relative min-w-0">
+              <div
+                ref={galleryRef}
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  const idx = Math.round(el.scrollLeft / el.offsetWidth);
+                  setSlideIndex(idx);
+                }}
+                className="flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:overflow-visible"
+              >
+                {slides.map((idx, n) => (
+                  <div
+                    key={n}
+                    className="aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[var(--color-tile)] lg:w-auto"
+                  >
+                    <ProductImage item={product} index={idx} className="h-full w-full" />
+                  </div>
+                ))}
+              </div>
+              {/* Dot indicators — mobile only */}
+              {slides.length > 1 && (
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 lg:hidden">
+                  {slides.map((_, n) => (
+                    <button
+                      key={n}
+                      onClick={() => galleryRef.current?.scrollTo({ left: n * galleryRef.current.offsetWidth, behavior: "smooth" })}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${n === slideIndex ? "w-5 bg-white" : "w-1.5 bg-white/50"}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         {/* info (sticky) */}
         <div className="lg:sticky lg:top-[62px] lg:h-fit">
