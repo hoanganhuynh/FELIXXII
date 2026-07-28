@@ -107,6 +107,7 @@ export default function Product() {
   const chart = useSizeChart();
 
   const [size, setSize] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
@@ -123,6 +124,7 @@ export default function Product() {
       name: product.name,
       price: product.price,
       size: size ?? product.sizes[0],
+      qty,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -198,11 +200,10 @@ export default function Product() {
             <p className="mt-2 font-serif text-lg">{vnd(product.price)}</p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
 
-            {/* size */}
+            {/* size & qty */}
             {product && (
               <div className="mt-7">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-ink-soft">Size</p>
+                <div className="flex items-center justify-end mb-2">
                   <button
                     onClick={() => setSizeGuideOpen(true)}
                     className="text-[11px] tracking-[0.1em] uppercase underline underline-offset-2 text-ink-soft hover:text-ink transition-colors"
@@ -210,22 +211,44 @@ export default function Product() {
                     Size Guide
                   </button>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSize(s)}
-                      className={`min-w-11 rounded border px-3 py-2 text-sm transition-colors ${
-                        size === s ? "border-ink bg-ink text-white" : "edge hover:border-ink"
-                      }`}
+                
+                <div className="flex h-14 items-stretch border-y border-[var(--color-line)]">
+                  {/* Size */}
+                  <div className="relative flex flex-1 items-center justify-between pr-6">
+                    <span className="text-sm text-ink-soft">Size</span>
+                    <select
+                      value={size ?? product.sizes[0]}
+                      onChange={(e) => setSize(e.target.value)}
+                      className="cursor-pointer appearance-none bg-transparent pr-4 text-sm font-medium focus:outline-none"
                     >
-                      {s}
-                    </button>
-                  ))}
+                      {product.sizes.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-soft" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="my-3 w-px bg-[var(--color-line)]" />
+
+                  {/* Qty */}
+                  <div className="relative flex flex-1 items-center justify-between pl-6 pr-2">
+                    <span className="text-sm text-ink-soft">Qty</span>
+                    <select
+                      value={qty}
+                      onChange={(e) => setQty(Number(e.target.value))}
+                      className="cursor-pointer appearance-none bg-transparent pr-4 text-sm font-medium focus:outline-none"
+                    >
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                    <svg className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-ink-soft" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
+                  </div>
                 </div>
 
                 {selectedMeasurements && (
-                  <div className="mt-3 flex gap-4 rounded-lg bg-[var(--color-tile)] px-4 py-3 text-xs text-ink-soft">
+                  <div className="mt-4 flex gap-4 rounded-lg bg-[var(--color-tile)] px-4 py-3 text-xs text-ink-soft">
                     <span>Bust <b className="text-ink">{selectedMeasurements.bust_min}–{selectedMeasurements.bust_max}</b></span>
                     <span>Waist <b className="text-ink">{selectedMeasurements.waist_min}–{selectedMeasurements.waist_max}</b></span>
                     <span>Hips <b className="text-ink">{selectedMeasurements.hip_min}–{selectedMeasurements.hip_max}</b></span>
