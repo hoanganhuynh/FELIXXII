@@ -26,11 +26,11 @@ function useSizeChart() {
   const [rows, setRows] = useState<SizeChartRow[]>([]);
   useEffect(() => {
     supabase
-      .from("size_chart")
+      .from("size_chart" as any)
       .select("*")
       .order("sort_order")
       .then(({ data }) => {
-        if (data?.length) setRows(data as SizeChartRow[]);
+        if (data?.length) setRows(data as unknown as SizeChartRow[]);
       });
   }, []);
   // fallback to hardcoded if Supabase not yet populated

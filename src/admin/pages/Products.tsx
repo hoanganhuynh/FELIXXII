@@ -7,7 +7,7 @@ import {
   type BulkPatch, type StyleRow,
 } from "../api/products";
 import { useAsync, useDebounced } from "../lib/useAsync";
-import { Badge, Dot, Btn } from "../components/ui";
+import { Dot, Btn } from "../components/ui";
 import { vnd, compact } from "../lib/format";
 import ImportPanel from "./Import";
 

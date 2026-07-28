@@ -14,17 +14,17 @@ export interface SizeChartRow {
 
 export async function listSizeChart(): Promise<SizeChartRow[]> {
   const { data, error } = await supabase
-    .from("size_chart")
+    .from("size_chart" as any)
     .select("id, size, bust_min, bust_max, waist_min, waist_max, hip_min, hip_max, sort_order")
     .order("sort_order");
   if (error) throw error;
-  return (data ?? []) as SizeChartRow[];
+  return (data ?? []) as unknown as SizeChartRow[];
 }
 
 export async function updateSizeChartRow(
   id: string,
   patch: Partial<Omit<SizeChartRow, "id" | "sort_order">>,
 ): Promise<void> {
-  const { error } = await supabase.from("size_chart").update(patch).eq("id", id);
+  const { error } = await supabase.from("size_chart" as any).update(patch as any).eq("id", id);
   if (error) throw error;
 }
