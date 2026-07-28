@@ -100,37 +100,38 @@ export default function CartDrawer() {
                           <WishlistBtn id={l.id} />
                         </div>
 
-                        {/* Size row */}
-                        <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
-                          <span className="text-sm text-ink-soft">Size</span>
-                          <div className="relative flex items-center gap-1 text-sm">
-                            <span className="pointer-events-none">{l.size ?? "—"}</span>
-                            <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
-                            <select
-                              value={l.size ?? ""}
-                              onChange={(e) => setSize(l.key, e.target.value)}
-                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                            >
-                              {(src?.sizes ?? [l.size ?? ""]).map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
-                            </select>
+                        {/* Size & Quantity — same row */}
+                        <div className="flex items-center gap-6 border-b border-[var(--color-line)] pb-3">
+                          <div className="flex flex-1 items-center justify-between">
+                            <span className="text-sm text-ink-soft">Size</span>
+                            <div className="relative flex items-center gap-1 text-sm">
+                              <span className="pointer-events-none">{l.size ?? "—"}</span>
+                              <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
+                              <select
+                                value={l.size ?? ""}
+                                onChange={(e) => setSize(l.key, e.target.value)}
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                              >
+                                {(src?.sizes ?? [l.size ?? ""]).map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
-                        </div>
-
-                        {/* Quantity row */}
-                        <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
-                          <span className="text-sm text-ink-soft">Quantity</span>
-                          <div className="relative flex items-center gap-1 text-sm">
-                            <span className="pointer-events-none">{l.qty}</span>
-                            <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
-                            <select
-                              value={l.qty}
-                              onChange={(e) => setQty(l.key, parseInt(e.target.value))}
-                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                            >
-                              {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
-                            </select>
+                          <div className="w-px self-stretch bg-[var(--color-line)]" />
+                          <div className="flex flex-1 items-center justify-between">
+                            <span className="text-sm text-ink-soft">Qty</span>
+                            <div className="relative flex items-center gap-1 text-sm">
+                              <span className="pointer-events-none">{l.qty}</span>
+                              <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
+                              <select
+                                value={l.qty}
+                                onChange={(e) => setQty(l.key, parseInt(e.target.value))}
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                              >
+                                {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </div>
                           </div>
                         </div>
 
