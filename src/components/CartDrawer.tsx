@@ -98,27 +98,25 @@ export default function CartDrawer() {
                           <WishlistBtn id={l.id} />
                         </div>
 
-                        {/* Size row */}
+                        {/* Size row — display only */}
                         <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
                           <span className="text-sm text-ink-soft">Size</span>
-                          <div className="flex items-center gap-1.5 text-sm">
-                            <span>{l.size ?? "—"}</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
-                          </div>
+                          <span className="text-sm">{l.size ?? "—"}</span>
                         </div>
 
-                        {/* Quantity row */}
+                        {/* Quantity row — native select overlaid on display */}
                         <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
                           <span className="text-sm text-ink-soft">Quantity</span>
-                          <div className="flex items-center gap-1.5 text-sm">
+                          <div className="relative flex items-center gap-1 text-sm">
+                            <span className="pointer-events-none">{l.qty}</span>
+                            <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
                             <select
                               value={l.qty}
                               onChange={(e) => setQty(l.key, parseInt(e.target.value))}
-                              className="appearance-none bg-transparent text-sm cursor-pointer focus:outline-none"
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                             >
                               {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
                             </select>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
                           </div>
                         </div>
 
