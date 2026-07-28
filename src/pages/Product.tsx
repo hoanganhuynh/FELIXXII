@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { productById, products, categoryLabel, collectionLabel } from "../data/catalog";
 import { SIZE_CHART, recommendSize } from "../data/sizing";
@@ -6,8 +6,107 @@ import { useCart } from "../store/cart";
 import { useBodyProfile } from "../store/bodyProfile";
 import ProductImage from "../components/ProductImage";
 import ProductCard, { vnd } from "../components/ProductCard";
-import BestFitWith from "../components/BestFitWith";
 import NotFound from "./NotFound";
+import { supabase } from "../lib/supabase";
+
+interface SizeChartRow {
+  id: string;
+  size: string;
+  bust_min: number;
+  bust_max: number;
+  waist_min: number;
+  waist_max: number;
+  hip_min: number;
+  hip_max: number;
+  sort_order: number;
+}
+
+function useSizeChart() {
+  const [rows, setRows] = useState<SizeChartRow[]>([]);
+  useEffect(() => {
+    supabase
+      .from("size_chart")
+      .select("*")
+      .order("sort_order")
+      .then(({ data }) => {
+        if (data?.length) setRows(data as SizeChartRow[]);
+      });
+  }, []);
+  // fallback to hardcoded if Supabase not yet populated
+  if (rows.length) return rows;
+  return SIZE_CHART.map((r, i) => ({
+    id: r.size,
+    size: r.size,
+    bust_min: r.bust[0], bust_max: r.bust[1],
+    waist_min: r.waist[0], waist_max: r.waist[1],
+    hip_min: r.hip[0], hip_max: r.hip[1],
+    sort_order: i,
+  }));
+}
+
+function SizeGuideModal({ open, onClose, recSize }: { open: boolean; onClose: () => void; recSize?: string }) {
+  const chart = useSizeChart();
+
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-5 top-5 text-ink-soft hover:text-ink transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        <h2 className="font-serif text-2xl">Size guide</h2>
+        <p className="mt-1.5 text-sm text-ink-soft">
+          Save once — get automatic size recommendations for every product.
+        </p>
+
+        <div className="mt-5 border-t border-[var(--color-line)]" />
+
+        <table className="mt-4 w-full text-sm">
+          <thead>
+            <tr className="text-left text-ink-soft">
+              <th className="py-3 font-normal">Size</th>
+              <th className="py-3 font-normal">Bust (cm)</th>
+              <th className="py-3 font-normal">Waist (cm)</th>
+              <th className="py-3 font-normal">Hips (cm)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chart.map((r) => {
+              const isRec = recSize === r.size;
+              return (
+                <tr
+                  key={r.id}
+                  className={`border-t border-[var(--color-line)] ${isRec ? "font-medium" : ""}`}
+                >
+                  <td className="py-3">
+                    {r.size}
+                    {isRec && <span className="ml-1.5 text-[11px] text-[var(--color-accent)]">• you</span>}
+                  </td>
+                  <td className="py-3">{r.bust_min}–{r.bust_max}</td>
+                  <td className="py-3">{r.waist_min}–{r.waist_max}</td>
+                  <td className="py-3">{r.hip_min}–{r.hip_max}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function Product() {
   const { id } = useParams();
@@ -17,9 +116,9 @@ export default function Product() {
   const measurements = useBodyProfile((s) => s.measurements);
   const openBody = useBodyProfile((s) => s.setModal);
 
-  const [colorIdx, setColorIdx] = useState(0);
   const [size, setSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
   const stdSizes = useMemo(() => (product ? product.sizes.filter((s) => s !== "Custom") : []), [product]);
   const rec = useMemo(
@@ -28,19 +127,14 @@ export default function Product() {
   );
 
   if (!product) return <NotFound />;
-  const color = product.colors[colorIdx] ?? product.colors[0];
 
   const handleAdd = () => {
-    if (!size) {
-      setSize(rec?.size ?? product.sizes[0]);
-    }
+    if (!size) setSize(rec?.size ?? product.sizes[0]);
     add({
       id: product.id,
       name: product.name,
       price: product.price,
       size: size ?? rec?.size ?? product.sizes[0],
-      colorName: color?.name,
-      colorHex: color?.hex,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -48,15 +142,15 @@ export default function Product() {
 
   return (
     <div className="pt-[62px]">
+      <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} recSize={rec?.size} />
+
       <div className="mx-auto grid max-w-[1800px] lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
         {/* gallery */}
-        <div className="grid grid-cols-1 sm:grid-cols-2">
+        <div className="grid grid-cols-1">
           {(product.images?.length ? product.images.map((_, i) => i) : [0, 3, 6]).map((idx, n) => (
             <div
               key={n}
-              className={`overflow-hidden bg-[var(--color-tile)] ${
-                n === 0 ? "aspect-[4/5] sm:col-span-2" : "aspect-[3/4]"
-              }`}
+              className="aspect-[3/4] overflow-hidden bg-[var(--color-tile)]"
             >
               <ProductImage item={product} index={idx} className="h-full w-full" />
             </div>
@@ -78,36 +172,28 @@ export default function Product() {
             <p className="mt-2 font-serif text-lg">{vnd(product.price)}</p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
 
-            {/* colour */}
-            <div className="mt-7">
-              <p className="text-xs text-ink-soft">Color: <span className="text-ink">{color?.name}</span></p>
-              <div className="mt-2 flex gap-2.5">
-                {product.colors.map((c, i) => (
-                  <button
-                    key={c.name}
-                    aria-label={c.name}
-                    onClick={() => setColorIdx(i)}
-                    className={`h-8 w-8 rounded-full ring-1 transition-transform ${i === colorIdx ? "ring-2 ring-ink scale-110" : "ring-black/10"}`}
-                    style={{ background: c.hex }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* size + recommendation (feature 4) */}
+            {/* size + recommendation */}
             {product && (
               <div className="mt-7">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-ink-soft">Size</p>
-                  {rec ? (
-                    <span className="text-xs text-[var(--color-accent)]">
-                      Your profile ⭢ best fit <b>size {rec.size}</b>
-                    </span>
-                  ) : (
-                    <button onClick={() => openBody(true)} className="text-xs text-ink-soft underline underline-offset-2">
-                      Enter measurements for size recommendation
+                  <div className="flex items-center gap-3">
+                    {rec ? (
+                      <span className="text-xs text-[var(--color-accent)]">
+                        Your profile ⭢ best fit <b>size {rec.size}</b>
+                      </span>
+                    ) : (
+                      <button onClick={() => openBody(true)} className="text-xs text-ink-soft underline underline-offset-2">
+                        Enter measurements
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSizeGuideOpen(true)}
+                      className="text-[11px] tracking-[0.1em] uppercase underline underline-offset-2 text-ink-soft hover:text-ink transition-colors"
+                    >
+                      Size Guide
                     </button>
-                  )}
+                  </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {product.sizes.map((s) => {
@@ -141,8 +227,11 @@ export default function Product() {
             {/* actions */}
             <button
               onClick={handleAdd}
-              className="mt-8 h-12 w-full max-w-[380px] rounded-lg bg-ink text-white transition-opacity hover:opacity-85"
+              className="mt-8 flex h-12 w-full max-w-[380px] items-center justify-center gap-2 rounded-lg bg-ink text-white transition-opacity hover:opacity-85"
             >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" />
+              </svg>
               <span className="label text-white">{added ? "ADDED TO CART ✓" : "ADD TO CART"}</span>
             </button>
             {product?.customizable && (
@@ -151,10 +240,12 @@ export default function Product() {
               </button>
             )}
 
-            {/* body-type compatibility (feature 3) */}
+            {/* body-type compatibility */}
             {product && (
               <div className="mt-8 flex gap-3 rounded-md bg-[var(--color-tile)] px-4 py-3">
-                <span aria-hidden className="text-lg">👗</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="mt-0.5 shrink-0 text-ink-soft">
+                  <path d="M12 2C9 2 7 5 7 8s1 4 2 5l-4 9h14l-4-9c1-1 2-3 2-5s-2-6-5-6z" />
+                </svg>
                 <div>
                   <p className="text-xs font-medium">Body Type Compatibility</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{product.bodyType}</p>
@@ -172,18 +263,10 @@ export default function Product() {
                   </ul>
                 </Accordion>
               )}
-              {product && (
-                <Accordion title="Size Guide">
-                  <SizeChart recSize={rec?.size} sizes={stdSizes} />
-                </Accordion>
-              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* ---- BEST FIT WITH (feature 3) ---- */}
-      {product.look && <BestFitWith look={product.look} />}
 
       {/* similar */}
       <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
@@ -195,34 +278,6 @@ export default function Product() {
         </div>
       </section>
     </div>
-  );
-}
-
-function SizeChart({ recSize, sizes }: { recSize?: string; sizes: string[] }) {
-  return (
-    <table className="w-full text-xs tabular-nums">
-      <thead>
-        <tr className="text-left text-ink-soft">
-          <th className="py-1.5 font-normal">Size</th>
-          <th className="py-1.5 font-normal">Bust (cm)</th>
-          <th className="py-1.5 font-normal">Waist (cm)</th>
-          <th className="py-1.5 font-normal">Hips (cm)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {SIZE_CHART.filter((r) => sizes.includes(r.size)).map((r) => {
-          const isRec = recSize === r.size;
-          return (
-            <tr key={r.size} className={`border-t edge ${isRec ? "bg-[var(--color-accent-soft)] font-medium" : ""}`}>
-              <td className="py-1.5">{r.size}{isRec && <span className="ml-1 text-[var(--color-accent)]">• you</span>}</td>
-              <td className="py-1.5">{r.bust[0]}–{r.bust[1]}</td>
-              <td className="py-1.5">{r.waist[0]}–{r.waist[1]}</td>
-              <td className="py-1.5">{r.hip[0]}–{r.hip[1]}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
   );
 }
 
