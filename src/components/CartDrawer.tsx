@@ -160,9 +160,9 @@ export default function CartDrawer() {
                           <WishlistBtn id={l.id} />
                         </div>
 
-                        {/* Size & Quantity — same row */}
-                        <div className="flex items-center gap-6 border-b border-[var(--color-line)] pb-3">
-                          <div className="flex flex-1 items-center justify-between">
+                        {/* Size & Quantity */}
+                        <div className="flex flex-col gap-3 border-b border-[var(--color-line)] pb-3">
+                          <div className="flex items-center justify-between">
                             <span className="text-sm text-ink-soft">Size</span>
                             <Dropdown
                               value={l.size ?? ""}
@@ -171,8 +171,7 @@ export default function CartDrawer() {
                               onChange={(v) => setSize(l.key, v)}
                             />
                           </div>
-                          <div className="w-px self-stretch bg-[var(--color-line)]" />
-                          <div className="flex flex-1 items-center justify-between">
+                          <div className="flex items-center justify-between">
                             <span className="text-sm text-ink-soft">Qty</span>
                             <Dropdown
                               value={l.qty}
