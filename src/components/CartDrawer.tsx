@@ -75,24 +75,23 @@ export default function CartDrawer() {
                 {lines.map((l) => {
                   const src = productById(l.id);
                   return (
-                    <div key={l.key} className="flex gap-6 border-b border-[var(--color-line)] pb-6">
-                      {/* Product image */}
+                    <div key={l.key} className="flex gap-8 border-b border-[var(--color-line)] pb-8">
+                      {/* Product image — large portrait */}
                       <Link
                         to={`/san-pham/${l.id}`}
                         onClick={() => setOpen(false)}
-                        className="aspect-[3/4] w-[120px] shrink-0 overflow-hidden bg-[var(--color-tile)] md:w-[160px]"
+                        className="aspect-[3/4] w-[200px] shrink-0 overflow-hidden bg-[var(--color-tile)] md:w-[280px]"
                       >
                         {src && <ProductImage item={src} className="h-full w-full object-cover object-top" />}
                       </Link>
 
                       {/* Item info */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-5">
+                      <div className="flex min-w-0 flex-1 flex-col gap-4 py-1">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             <p className="font-serif text-xl leading-tight">{l.name}</p>
-                            <p className="text-base text-ink-soft">{vnd(l.price)}</p>
+                            <p className="text-sm text-ink-soft">{vnd(l.price)}</p>
                           </div>
-                          {/* Bookmark */}
                           <button aria-label="Save to wishlist" className="mt-0.5 shrink-0 text-ink-soft hover:text-ink transition-colors">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
                               <path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" />
@@ -101,35 +100,36 @@ export default function CartDrawer() {
                         </div>
 
                         {/* Size row */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-[#888]">Size</span>
-                          <div className="flex items-center gap-2 text-[15px]">
+                        <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
+                          <span className="text-sm text-ink-soft">Size</span>
+                          <div className="flex items-center gap-1.5 text-sm">
                             <span>{l.size ?? "—"}</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <path d="M6 9l6 6 6-6" />
-                            </svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
                           </div>
                         </div>
 
                         {/* Quantity row */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-[#888]">Quantity</span>
-                          <div className="flex items-center gap-3 text-[15px]">
-                            <button onClick={() => setQty(l.key, l.qty - 1)} disabled={l.qty <= 1} aria-label="Decrease" className="w-6 text-center text-ink-soft hover:text-ink disabled:opacity-30 transition-colors">–</button>
-                            <span className="w-4 text-center tabular-nums">{l.qty}</span>
-                            <button onClick={() => setQty(l.key, l.qty + 1)} aria-label="Increase" className="w-6 text-center text-ink-soft hover:text-ink transition-colors">+</button>
+                        <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
+                          <span className="text-sm text-ink-soft">Quantity</span>
+                          <div className="flex items-center gap-1.5 text-sm">
+                            <select
+                              value={l.qty}
+                              onChange={(e) => setQty(l.key, parseInt(e.target.value))}
+                              className="appearance-none bg-transparent text-sm cursor-pointer focus:outline-none"
+                            >
+                              {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
                           </div>
                         </div>
 
                         {/* Remove button */}
-                        <div>
-                          <button
-                            onClick={() => remove(l.key)}
-                            className="rounded border border-[#d5d5d5] px-4 py-2.5 text-[13px] text-ink hover:border-ink transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => remove(l.key)}
+                          className="self-start rounded border border-[var(--color-line)] px-5 py-2 text-[13px] text-ink hover:border-ink transition-colors"
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
                   );

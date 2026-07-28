@@ -100,12 +100,15 @@ export default function Product() {
   const product = id ? productById(id) : undefined;
 
   const add = useCart((s) => s.add);
+  const chart = useSizeChart();
 
   const [size, setSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
   if (!product) return <NotFound />;
+
+  const selectedMeasurements = size ? chart.find((r) => r.size === size) : null;
 
   const handleAdd = () => {
     if (!size) setSize(product.sizes[0]);
@@ -176,6 +179,15 @@ export default function Product() {
                     </button>
                   ))}
                 </div>
+
+                {selectedMeasurements && (
+                  <div className="mt-3 flex gap-4 rounded-lg bg-[var(--color-tile)] px-4 py-3 text-xs text-ink-soft">
+                    <span>Bust <b className="text-ink">{selectedMeasurements.bust_min}–{selectedMeasurements.bust_max}</b></span>
+                    <span>Waist <b className="text-ink">{selectedMeasurements.waist_min}–{selectedMeasurements.waist_max}</b></span>
+                    <span>Hips <b className="text-ink">{selectedMeasurements.hip_min}–{selectedMeasurements.hip_max}</b></span>
+                    <span className="ml-auto text-[10px] text-ink-soft/60">cm</span>
+                  </div>
+                )}
               </div>
             )}
 
