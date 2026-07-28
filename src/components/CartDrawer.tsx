@@ -114,25 +114,10 @@ export default function CartDrawer() {
                         {/* Quantity row */}
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-[#888]">Quantity</span>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-3 text-[15px]">
-                              <button
-                                onClick={() => setQty(l.key, l.qty - 1)}
-                                disabled={l.qty <= 1}
-                                className="text-ink-soft hover:text-ink disabled:opacity-30 transition-colors"
-                                aria-label="Decrease"
-                              >
-                                –
-                              </button>
-                              <span className="w-4 text-center tabular-nums">{l.qty}</span>
-                              <button
-                                onClick={() => setQty(l.key, l.qty + 1)}
-                                className="text-ink-soft hover:text-ink transition-colors"
-                                aria-label="Increase"
-                              >
-                                +
-                              </button>
-                            </div>
+                          <div className="flex items-center gap-3 text-[15px]">
+                            <button onClick={() => setQty(l.key, l.qty - 1)} disabled={l.qty <= 1} aria-label="Decrease" className="w-6 text-center text-ink-soft hover:text-ink disabled:opacity-30 transition-colors">–</button>
+                            <span className="w-4 text-center tabular-nums">{l.qty}</span>
+                            <button onClick={() => setQty(l.key, l.qty + 1)} aria-label="Increase" className="w-6 text-center text-ink-soft hover:text-ink transition-colors">+</button>
                           </div>
                         </div>
 

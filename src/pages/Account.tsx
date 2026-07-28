@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
-import { useBodyProfile } from "../store/bodyProfile";
 import { products } from "../data/catalog";
 import ProductImage from "../components/ProductImage";
 import { vnd } from "../components/ProductCard";
@@ -153,7 +152,6 @@ function WishlistCard({ productId }: { productId: string }) {
 
 export default function Account() {
   const { user, profile, ready, logout, updateProfile, setLoginOpen } = useAuth();
-  const { measurements, setModal: openBodyProfile } = useBodyProfile();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("account");
   const [editing, setEditing] = useState(false);
@@ -366,20 +364,6 @@ export default function Account() {
               </form>
             )}
 
-            <div className="mt-12 border-t edge pt-8">
-              <p className="text-[11px] tracking-[0.1em]">BODY PROFILE</p>
-              <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-                {measurements
-                  ? "Your measurements are saved. Size recommendations are active on all products."
-                  : "Save your measurements once — get automatic size recommendations for every product."}
-              </p>
-              <button
-                onClick={() => openBodyProfile(true)}
-                className="mt-4 h-10 border edge px-8 text-[11px] tracking-[0.1em] transition-colors hover:bg-ink hover:text-white"
-              >
-                {measurements ? "UPDATE MEASUREMENTS" : "ADD MEASUREMENTS"}
-              </button>
-            </div>
           </div>
         )}
       </div>

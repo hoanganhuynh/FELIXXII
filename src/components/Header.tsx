@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart, cartCount } from "../store/cart";
-import { useBodyProfile } from "../store/bodyProfile";
 import { useAuth } from "../store/auth";
 import { useSearch } from "../store/search";
 import { SHOP_CATEGORIES, COLLECTIONS } from "../data/catalog";
@@ -11,7 +10,6 @@ export default function Header() {
   const [colOpen, setColOpen] = useState(false);
   const count = useCart((s) => cartCount(s.lines));
   const openCart = useCart((s) => s.setOpen);
-  const hasProfile = useBodyProfile((s) => !!s.measurements);
   const { user, setLoginOpen } = useAuth();
   const openSearch = useSearch((s) => s.setOpen);
   const navigate = useNavigate();
@@ -85,7 +83,7 @@ export default function Header() {
             className="relative text-ink transition-opacity hover:opacity-50"
           >
             <Icon><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19.5a6.5 6.5 0 0113 0" /></Icon>
-            {(user || hasProfile) && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--color-accent)]" />}
+            {user && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--color-accent)]" />}
           </button>
           <button onClick={() => openCart(true)} aria-label="Cart" className="relative flex items-center gap-1.5 text-ink transition-opacity hover:opacity-50">
             <Icon><path d="M6 8h12l-1 12H7L6 8z" /><path d="M9 8V6a3 3 0 016 0v2" /></Icon>

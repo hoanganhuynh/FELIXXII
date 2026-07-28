@@ -25,13 +25,14 @@ export default function ProductCard({ item, index = 0 }: { item: Product; index?
         </div>
       </Link>
 
-      <div className="mt-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <Link to={`/san-pham/${item.id}`} className="font-serif text-[15px] leading-none link-underline">
-            {item.name}
-          </Link>
-          <span className="text-xs tabular-nums text-ink-soft">{vnd(item.price)}</span>
-        </div>
+      <div className="mt-3 space-y-1">
+        <Link to={`/san-pham/${item.id}`} className="block font-serif text-[15px] leading-snug">
+          {item.name}
+        </Link>
+        <p className="text-sm tabular-nums text-ink-soft">{vnd(item.price)}</p>
+        <button className="link-underline pt-1 text-[11px] tracking-[0.08em] text-ink">
+          ADD TO WISHLIST
+        </button>
       </div>
     </article>
   );

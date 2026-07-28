@@ -4,7 +4,6 @@ import { useAuth } from "./store/auth";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
-import BodyProfileModal from "./components/BodyProfileModal";
 import LoginDrawer from "./components/LoginDrawer";
 import SearchOverlay from "./components/SearchOverlay";
 import Home from "./pages/Home";
@@ -40,7 +39,6 @@ function Storefront() {
     <>
       <Header />
       <CartDrawer />
-      <BodyProfileModal />
       <LoginDrawer />
       <SearchOverlay />
       <main>

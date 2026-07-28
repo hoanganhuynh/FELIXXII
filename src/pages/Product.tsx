@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { productById, products, categoryLabel, collectionLabel } from "../data/catalog";
-import { SIZE_CHART, recommendSize } from "../data/sizing";
+import { SIZE_CHART } from "../data/sizing";
 import { useCart } from "../store/cart";
-import { useBodyProfile } from "../store/bodyProfile";
 import ProductImage from "../components/ProductImage";
 import ProductCard, { vnd } from "../components/ProductCard";
 import NotFound from "./NotFound";
@@ -44,7 +43,7 @@ function useSizeChart() {
   }));
 }
 
-function SizeGuideModal({ open, onClose, recSize }: { open: boolean; onClose: () => void; recSize?: string }) {
+function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const chart = useSizeChart();
 
   if (!open) return null;
@@ -68,9 +67,6 @@ function SizeGuideModal({ open, onClose, recSize }: { open: boolean; onClose: ()
         </button>
 
         <h2 className="font-serif text-2xl">Size guide</h2>
-        <p className="mt-1.5 text-sm text-ink-soft">
-          Save once — get automatic size recommendations for every product.
-        </p>
 
         <div className="mt-5 border-t border-[var(--color-line)]" />
 
@@ -84,23 +80,14 @@ function SizeGuideModal({ open, onClose, recSize }: { open: boolean; onClose: ()
             </tr>
           </thead>
           <tbody>
-            {chart.map((r) => {
-              const isRec = recSize === r.size;
-              return (
-                <tr
-                  key={r.id}
-                  className={`border-t border-[var(--color-line)] ${isRec ? "font-medium" : ""}`}
-                >
-                  <td className="py-3">
-                    {r.size}
-                    {isRec && <span className="ml-1.5 text-[11px] text-[var(--color-accent)]">• you</span>}
-                  </td>
-                  <td className="py-3">{r.bust_min}–{r.bust_max}</td>
-                  <td className="py-3">{r.waist_min}–{r.waist_max}</td>
-                  <td className="py-3">{r.hip_min}–{r.hip_max}</td>
-                </tr>
-              );
-            })}
+            {chart.map((r) => (
+              <tr key={r.id} className="border-t border-[var(--color-line)]">
+                <td className="py-3">{r.size}</td>
+                <td className="py-3">{r.bust_min}–{r.bust_max}</td>
+                <td className="py-3">{r.waist_min}–{r.waist_max}</td>
+                <td className="py-3">{r.hip_min}–{r.hip_max}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -113,28 +100,20 @@ export default function Product() {
   const product = id ? productById(id) : undefined;
 
   const add = useCart((s) => s.add);
-  const measurements = useBodyProfile((s) => s.measurements);
-  const openBody = useBodyProfile((s) => s.setModal);
 
   const [size, setSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
-  const stdSizes = useMemo(() => (product ? product.sizes.filter((s) => s !== "Custom") : []), [product]);
-  const rec = useMemo(
-    () => (product && measurements ? recommendSize(measurements, stdSizes) : null),
-    [product, measurements, stdSizes],
-  );
-
   if (!product) return <NotFound />;
 
   const handleAdd = () => {
-    if (!size) setSize(rec?.size ?? product.sizes[0]);
+    if (!size) setSize(product.sizes[0]);
     add({
       id: product.id,
       name: product.name,
       price: product.price,
-      size: size ?? rec?.size ?? product.sizes[0],
+      size: size ?? product.sizes[0],
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -142,7 +121,7 @@ export default function Product() {
 
   return (
     <div className="pt-[62px]">
-      <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} recSize={rec?.size} />
+      <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
 
       <div className="mx-auto grid max-w-[1800px] lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
         {/* gallery */}
@@ -172,55 +151,31 @@ export default function Product() {
             <p className="mt-2 font-serif text-lg">{vnd(product.price)}</p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
 
-            {/* size + recommendation */}
+            {/* size */}
             {product && (
               <div className="mt-7">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-ink-soft">Size</p>
-                  <div className="flex items-center gap-3">
-                    {rec ? (
-                      <span className="text-xs text-[var(--color-accent)]">
-                        Your profile ⭢ best fit <b>size {rec.size}</b>
-                      </span>
-                    ) : (
-                      <button onClick={() => openBody(true)} className="text-xs text-ink-soft underline underline-offset-2">
-                        Enter measurements
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setSizeGuideOpen(true)}
-                      className="text-[11px] tracking-[0.1em] uppercase underline underline-offset-2 text-ink-soft hover:text-ink transition-colors"
-                    >
-                      Size Guide
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setSizeGuideOpen(true)}
+                    className="text-[11px] tracking-[0.1em] uppercase underline underline-offset-2 text-ink-soft hover:text-ink transition-colors"
+                  >
+                    Size Guide
+                  </button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {product.sizes.map((s) => {
-                    const isRec = rec?.size === s;
-                    const on = size === s;
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => setSize(s)}
-                        className={`relative min-w-11 rounded border px-3 py-2 text-sm transition-colors ${
-                          on ? "border-ink bg-ink text-white" : "edge hover:border-ink"
-                        }`}
-                      >
-                        {s}
-                        {isRec && !on && (
-                          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--color-accent)]" />
-                        )}
-                      </button>
-                    );
-                  })}
+                  {product.sizes.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSize(s)}
+                      className={`min-w-11 rounded border px-3 py-2 text-sm transition-colors ${
+                        size === s ? "border-ink bg-ink text-white" : "edge hover:border-ink"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
-                {rec && (
-                  <p className="mt-2 rounded bg-[var(--color-tile)] px-3 py-2 text-xs text-ink-soft">
-                    Recommendation based on your profile · fit {rec.confidence}
-                    {rec.notes.length > 0 && <> — {rec.notes.join("; ")}.</>}
-                  </p>
-                )}
               </div>
             )}
 
