@@ -131,12 +131,12 @@ export default function Product() {
       <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
 
       <div className="mx-auto grid max-w-[1800px] overflow-hidden lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
-        {/* gallery */}
-        <div className="grid min-w-0 grid-cols-1">
+        {/* gallery — horizontal snap carousel on mobile, vertical stack on desktop */}
+        <div className="flex min-w-0 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:overflow-visible">
           {(product.images?.length ? product.images.map((_, i) => i) : [0, 3, 6]).map((idx, n) => (
             <div
               key={n}
-              className="aspect-[3/4] overflow-hidden bg-[var(--color-tile)]"
+              className="aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[var(--color-tile)] lg:w-auto"
             >
               <ProductImage item={product} index={idx} className="h-full w-full" />
             </div>
