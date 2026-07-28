@@ -3,13 +3,8 @@
    Or set the vars in .env.local and run: npm run db:users                    */
 
 import { createClient } from "@supabase/supabase-js";
-import { config } from "dotenv";
-import { resolve } from "node:path";
 
-// Load .env.local so the script can be run without exporting vars manually
-config({ path: resolve(process.cwd(), ".env.local") });
-
-const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+const url = process.env.SUPABASE_URL ?? "https://zlhgiqzvfeegqmokmfhb.supabase.co";
 const serviceKey = process.env.SUPABASE_SERVICE_KEY ?? "";
 
 if (!url || !serviceKey) {

@@ -80,18 +80,18 @@ export default function CartDrawer() {
                 {lines.map((l) => {
                   const src = productById(l.id);
                   return (
-                    <div key={l.key} className="flex items-start gap-8 border-b border-[var(--color-line)] pb-8">
+                    <div key={l.key} className="flex items-center gap-8 pb-8">
                       {/* Product image — large portrait */}
                       <Link
                         to={`/san-pham/${l.id}`}
                         onClick={() => setOpen(false)}
-                        className="aspect-[3/4] w-[200px] shrink-0 overflow-hidden bg-[var(--color-tile)] md:w-[280px]"
+                        className="aspect-[3/4] w-[260px] shrink-0 overflow-hidden bg-[var(--color-tile)] md:w-[364px]"
                       >
                         {src && <ProductImage item={src} className="h-full w-full object-cover object-top" />}
                       </Link>
 
                       {/* Item info */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-4 py-1">
+                      <div className="flex w-[35%] shrink-0 flex-col gap-4 py-1">
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-1">
                             <p className="font-serif text-xl leading-tight">{l.name}</p>
@@ -148,7 +148,7 @@ export default function CartDrawer() {
               </div>
 
               {/* Order summary */}
-              <aside className="lg:sticky lg:top-24 lg:h-fit">
+              <aside className="pt-36 lg:sticky lg:top-24 lg:h-fit">
                 {/* Pricing rows */}
                 <div className="space-y-3 text-[14px]">
                   <div className="flex items-center justify-between">

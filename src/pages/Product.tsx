@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { productById, products, categoryLabel, collectionLabel } from "../data/catalog";
 import { SIZE_CHART } from "../data/sizing";
 import { useCart } from "../store/cart";
+import { useWishlist } from "../store/wishlist";
+import { useAuth } from "../store/auth";
 import ProductImage from "../components/ProductImage";
 import ProductCard, { vnd } from "../components/ProductCard";
 import NotFound from "./NotFound";
@@ -100,6 +102,8 @@ export default function Product() {
   const product = id ? productById(id) : undefined;
 
   const add = useCart((s) => s.add);
+  const { toggle: toggleWishlist, has: inWishlist } = useWishlist();
+  const { user, setLoginOpen } = useAuth();
   const chart = useSizeChart();
 
   const [size, setSize] = useState<string | null>(null);
@@ -126,9 +130,9 @@ export default function Product() {
     <div className="pt-[62px]">
       <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
 
-      <div className="mx-auto grid max-w-[1800px] lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
+      <div className="mx-auto grid max-w-[1800px] overflow-hidden lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
         {/* gallery */}
-        <div className="grid grid-cols-1">
+        <div className="grid min-w-0 grid-cols-1">
           {(product.images?.length ? product.images.map((_, i) => i) : [0, 3, 6]).map((idx, n) => (
             <div
               key={n}
@@ -150,7 +154,18 @@ export default function Product() {
               {collectionLabel(product.collection)}
             </p>
 
-            <h1 className="mt-3 font-serif text-3xl">{product.name}</h1>
+            <div className="mt-3 flex items-start justify-between gap-4">
+              <h1 className="font-serif text-3xl">{product.name}</h1>
+              <button
+                onClick={() => { if (!user) { setLoginOpen(true); return; } toggleWishlist(product.id); }}
+                aria-label={inWishlist(product.id) ? "Remove from wishlist" : "Save to wishlist"}
+                className="mt-1 shrink-0 transition-colors"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill={inWishlist(product.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.4" className={inWishlist(product.id) ? "text-ink" : "text-ink-soft hover:text-ink"}>
+                  <path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" />
+                </svg>
+              </button>
+            </div>
             <p className="mt-2 font-serif text-lg">{vnd(product.price)}</p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
 
