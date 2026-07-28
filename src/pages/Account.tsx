@@ -146,11 +146,6 @@ function WishlistCard({ productId }: { productId: string }) {
           </Link>
           <span className="text-xs tabular-nums text-ink-soft">{vnd(prod.price)}</span>
         </div>
-        <div className="mt-2 flex items-center gap-1.5">
-          {prod.colors.map((c) => (
-            <span key={c.name} title={c.name} className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10" style={{ background: c.hex }} />
-          ))}
-        </div>
       </div>
     </div>
   );

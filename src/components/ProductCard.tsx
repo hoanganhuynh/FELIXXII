@@ -32,16 +32,6 @@ export default function ProductCard({ item, index = 0 }: { item: Product; index?
           </Link>
           <span className="text-xs tabular-nums text-ink-soft">{vnd(item.price)}</span>
         </div>
-        <div className="mt-2 flex items-center gap-1.5">
-          {item.colors.map((c) => (
-            <span
-              key={c.name}
-              title={c.name}
-              className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
-              style={{ background: c.hex }}
-            />
-          ))}
-        </div>
       </div>
     </article>
   );
