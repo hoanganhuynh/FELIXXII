@@ -15,7 +15,7 @@ export interface CartLine {
 interface CartState {
   lines: CartLine[];
   open: boolean;
-  add: (line: Omit<CartLine, "qty" | "key"> & { qty?: number }) => void;
+  add: (line: Omit<CartLine, "qty" | "key">) => void;
   remove: (key: string) => void;
   setQty: (key: string, qty: number) => void;
   setSize: (key: string, size: string) => void;
@@ -33,11 +33,10 @@ export const useCart = create<CartState>()(
       add: (line) =>
         set((s) => {
           const key = keyOf(line);
-          const qtyToAdd = line.qty ?? 1;
           const existing = s.lines.find((l) => l.key === key);
           const lines = existing
-            ? s.lines.map((l) => (l.key === key ? { ...l, qty: l.qty + qtyToAdd } : l))
-            : [...s.lines, { ...line, key, qty: qtyToAdd }];
+            ? s.lines.map((l) => (l.key === key ? { ...l, qty: l.qty + 1 } : l))
+            : [...s.lines, { ...line, key, qty: 1 }];
           return { lines, open: true };
         }),
       remove: (key) => set((s) => ({ lines: s.lines.filter((l) => l.key !== key) })),
