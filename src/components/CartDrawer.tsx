@@ -75,7 +75,7 @@ export default function CartDrawer() {
                 {lines.map((l) => {
                   const src = productById(l.id);
                   return (
-                    <div key={l.key} className="flex gap-8 border-b border-[var(--color-line)] pb-8">
+                    <div key={l.key} className="flex items-start gap-8 border-b border-[var(--color-line)] pb-8">
                       {/* Product image — large portrait */}
                       <Link
                         to={`/san-pham/${l.id}`}
