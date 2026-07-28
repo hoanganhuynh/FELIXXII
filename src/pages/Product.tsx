@@ -212,32 +212,29 @@ export default function Product() {
                   </button>
                 </div>
                 
-                <div className="flex h-14 items-stretch border-y border-[var(--color-line)]">
+                <div className="border-t border-[var(--color-line)]">
                   {/* Size */}
-                  <div className="relative flex flex-1 items-center justify-between pr-6">
+                  <div className="relative flex h-14 items-center justify-between border-b border-[var(--color-line)] pr-2">
                     <span className="text-sm text-ink-soft">Size</span>
                     <select
                       value={size ?? product.sizes[0]}
                       onChange={(e) => setSize(e.target.value)}
-                      className="cursor-pointer appearance-none bg-transparent pr-4 text-sm font-medium focus:outline-none"
+                      className="cursor-pointer appearance-none bg-transparent py-4 pl-4 pr-6 text-sm font-medium focus:outline-none"
                     >
                       {product.sizes.map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
-                    <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-soft" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
+                    <svg className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-ink-soft" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
                   </div>
 
-                  {/* Divider */}
-                  <div className="my-3 w-px bg-[var(--color-line)]" />
-
                   {/* Qty */}
-                  <div className="relative flex flex-1 items-center justify-between pl-6 pr-2">
+                  <div className="relative flex h-14 items-center justify-between border-b border-[var(--color-line)] pr-2">
                     <span className="text-sm text-ink-soft">Qty</span>
                     <select
                       value={qty}
                       onChange={(e) => setQty(Number(e.target.value))}
-                      className="cursor-pointer appearance-none bg-transparent pr-4 text-sm font-medium focus:outline-none"
+                      className="cursor-pointer appearance-none bg-transparent py-4 pl-4 pr-6 text-sm font-medium focus:outline-none"
                     >
                       {[1, 2, 3, 4, 5].map((n) => (
                         <option key={n} value={n}>{n}</option>
