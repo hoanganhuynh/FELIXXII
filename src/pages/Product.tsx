@@ -132,7 +132,7 @@ export default function Product() {
     <div className="pt-[62px]">
       <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
 
-      <div className="mx-auto grid max-w-[1800px] overflow-hidden lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
+      <div className="mx-auto grid max-w-[1800px] overflow-hidden lg:overflow-visible lg:grid-cols-[1fr_500px] xl:grid-cols-[1fr_560px]">
         {/* gallery — horizontal snap carousel on mobile, vertical stack on desktop */}
         {(() => {
           const slides = product.images?.length ? product.images.map((_, i) => i) : [0, 3, 6];
