@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
+import { useWishlist } from "../store/wishlist";
 import { products } from "../data/catalog";
 import ProductImage from "../components/ProductImage";
 import { vnd } from "../components/ProductCard";
@@ -56,7 +57,6 @@ const DUMMY_ORDERS: Order[] = [
   },
 ];
 
-const WISHLIST_IDS = ["to-vang", "moc-lan", "thanh-tan"];
 
 const STATUS_STYLE: Record<Order["status"], string> = {
   Delivered: "bg-[var(--color-tile)] text-ink-soft",
@@ -152,6 +152,7 @@ function WishlistCard({ productId }: { productId: string }) {
 
 export default function Account() {
   const { user, profile, ready, logout, updateProfile, setLoginOpen } = useAuth();
+  const { ids: wishlistIds } = useWishlist();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("account");
   const [editing, setEditing] = useState(false);
@@ -191,7 +192,7 @@ export default function Account() {
     navigate("/");
   };
 
-  const wishlistCount = WISHLIST_IDS.length;
+  const wishlistCount = wishlistIds.length;
   const recentOrder = DUMMY_ORDERS[0];
 
   return (
@@ -250,7 +251,7 @@ export default function Account() {
                 </button>
               </div>
               <div className="mt-5 grid grid-cols-3 gap-4">
-                {WISHLIST_IDS.map((id) => <WishlistCard key={id} productId={id} />)}
+                {wishlistIds.map((id) => <WishlistCard key={id} productId={id} />)}
               </div>
             </section>
 
@@ -293,7 +294,7 @@ export default function Account() {
               WISHLIST<sup className="ml-1 text-base">{wishlistCount}</sup>
             </p>
             <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3">
-              {WISHLIST_IDS.map((id) => <WishlistCard key={id} productId={id} />)}
+              {wishlistIds.map((id) => <WishlistCard key={id} productId={id} />)}
             </div>
           </div>
         )}

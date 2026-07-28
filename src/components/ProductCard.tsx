@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import ProductImage from "./ProductImage";
 import type { Product } from "../data/catalog";
+import { useWishlist } from "../store/wishlist";
 
 export const vnd = (n: number) => `${n.toLocaleString("vi-VN")}₫`;
 
 export default function ProductCard({ item, index = 0 }: { item: Product; index?: number }) {
   const tag = item.bestseller && item.bestseller <= 3 ? "Bestseller" : item.createdAt >= 20260101 ? "New" : null;
+  const { toggle, has } = useWishlist();
+  const saved = has(item.id);
 
   return (
     <article className="group">
@@ -30,8 +33,11 @@ export default function ProductCard({ item, index = 0 }: { item: Product; index?
           {item.name}
         </Link>
         <p className="text-sm tabular-nums text-ink-soft">{vnd(item.price)}</p>
-        <button className="link-underline pt-1 text-[11px] tracking-[0.08em] text-ink">
-          ADD TO WISHLIST
+        <button
+          onClick={() => toggle(item.id)}
+          className="link-underline pt-1 text-[11px] tracking-[0.08em] text-ink transition-opacity hover:opacity-60"
+        >
+          {saved ? "SAVED TO WISHLIST ✓" : "ADD TO WISHLIST"}
         </button>
       </div>
     </article>

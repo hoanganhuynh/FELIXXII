@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart, cartTotal, cartCount } from "../store/cart";
+import { useWishlist } from "../store/wishlist";
 import { products, productById } from "../data/catalog";
 import ProductCard, { vnd } from "./ProductCard";
 import ProductImage from "./ProductImage";
 
 export default function CartDrawer() {
   const { lines, open, setOpen, remove, setQty } = useCart();
+  const { ids: wishlistIds, remove: removeWishlist } = useWishlist();
   const [tab, setTab] = useState<"cart" | "wishlist">("cart");
   const total = cartTotal(lines);
   const count = cartCount(lines);
+  const wishlistProducts = wishlistIds.map((id) => productById(id)).filter(Boolean);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -45,7 +48,7 @@ export default function CartDrawer() {
             }`}
           >
             WISHLIST
-            <span className="text-[11px]">(0)</span>
+            <span className="text-[11px]">({wishlistProducts.length})</span>
           </button>
           <button
             onClick={() => setOpen(false)}
@@ -92,11 +95,7 @@ export default function CartDrawer() {
                             <p className="font-serif text-xl leading-tight">{l.name}</p>
                             <p className="text-sm text-ink-soft">{vnd(l.price)}</p>
                           </div>
-                          <button aria-label="Save to wishlist" className="mt-0.5 shrink-0 text-ink-soft hover:text-ink transition-colors">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-                              <path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" />
-                            </svg>
-                          </button>
+                          <WishlistBtn id={l.id} />
                         </div>
 
                         {/* Size row */}
@@ -216,14 +215,51 @@ export default function CartDrawer() {
       )}
 
       {tab === "wishlist" && (
-        <div className="flex flex-col items-center gap-5 py-32 text-center">
-          <p className="font-serif text-2xl">Your wishlist is empty.</p>
-          <button onClick={() => setOpen(false)} className="link-underline text-sm">
-            Continue shopping →
-          </button>
+        <div className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 md:px-8">
+          {wishlistProducts.length === 0 ? (
+            <div className="flex flex-col items-center gap-5 py-32 text-center">
+              <p className="font-serif text-2xl">Your wishlist is empty.</p>
+              <button onClick={() => setOpen(false)} className="link-underline text-sm">
+                Continue shopping →
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4 md:gap-x-6">
+              {wishlistProducts.map((p, i) => p && (
+                <div key={p.id} className="relative" onClick={() => setOpen(false)}>
+                  <ProductCard item={p} index={i} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeWishlist(p.id); }}
+                    aria-label="Remove from wishlist"
+                    className="absolute right-0 top-0 p-2 text-ink-soft hover:text-ink transition-colors"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+function WishlistBtn({ id }: { id: string }) {
+  const { toggle, has } = useWishlist();
+  const saved = has(id);
+  return (
+    <button
+      onClick={() => toggle(id)}
+      aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
+      className="mt-0.5 shrink-0 transition-colors"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.4" className={saved ? "text-ink" : "text-ink-soft hover:text-ink"}>
+        <path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" />
+      </svg>
+    </button>
   );
 }
 
