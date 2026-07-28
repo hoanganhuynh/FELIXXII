@@ -80,18 +80,18 @@ export default function CartDrawer() {
                 {lines.map((l) => {
                   const src = productById(l.id);
                   return (
-                    <div key={l.key} className="flex items-center gap-8 pb-8">
-                      {/* Product image — large portrait */}
+                    <div key={l.key} className="flex flex-col gap-4 pb-10 md:flex-row md:items-center md:gap-8 md:pb-8">
+                      {/* Product image */}
                       <Link
                         to={`/san-pham/${l.id}`}
                         onClick={() => setOpen(false)}
-                        className="aspect-[3/4] w-[260px] shrink-0 overflow-hidden bg-[var(--color-tile)] md:w-[364px]"
+                        className="aspect-[3/4] w-full shrink-0 overflow-hidden bg-[var(--color-tile)] md:w-[260px] lg:w-[364px]"
                       >
                         {src && <ProductImage item={src} className="h-full w-full object-cover object-top" />}
                       </Link>
 
                       {/* Item info */}
-                      <div className="flex w-[35%] shrink-0 flex-col gap-4 py-1">
+                      <div className="flex flex-col gap-4 md:w-[35%] md:shrink-0">
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-1">
                             <p className="font-serif text-xl leading-tight">{l.name}</p>
@@ -100,7 +100,7 @@ export default function CartDrawer() {
                           <WishlistBtn id={l.id} />
                         </div>
 
-                        {/* Size row — selectable */}
+                        {/* Size row */}
                         <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
                           <span className="text-sm text-ink-soft">Size</span>
                           <div className="relative flex items-center gap-1 text-sm">
@@ -118,7 +118,7 @@ export default function CartDrawer() {
                           </div>
                         </div>
 
-                        {/* Quantity row — native select overlaid on display */}
+                        {/* Quantity row */}
                         <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
                           <span className="text-sm text-ink-soft">Quantity</span>
                           <div className="relative flex items-center gap-1 text-sm">
@@ -148,7 +148,7 @@ export default function CartDrawer() {
               </div>
 
               {/* Order summary */}
-              <aside className="pt-36 lg:sticky lg:top-24 lg:h-fit">
+              <aside className="lg:sticky lg:top-24 lg:h-fit lg:pt-36">
                 {/* Pricing rows */}
                 <div className="space-y-3 text-[14px]">
                   <div className="flex items-center justify-between">
