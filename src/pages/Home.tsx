@@ -209,7 +209,7 @@ export default function Home() {
         </div>
 
         {/* Mobile: horizontal snap scroll 1.1 cards; Desktop: 3-col grid */}
-        <div className="-mx-6 flex snap-x snap-mandatory overflow-x-auto px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0">
+        <div className="-mx-6 flex snap-x snap-mandatory overflow-x-auto pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pl-0">
           {featured.map((p) => (
             <div key={p.id} className="w-[88vw] shrink-0 snap-start pr-4 md:w-auto md:pr-0">
               <ArticleCard product={p} imgIndex={getImgIndex(p)} />

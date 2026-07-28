@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart, cartTotal, cartCount } from "../store/cart";
 import { useWishlist } from "../store/wishlist";
@@ -6,6 +6,66 @@ import { useAuth } from "../store/auth";
 import { products, productById } from "../data/catalog";
 import ProductCard, { vnd } from "./ProductCard";
 import ProductImage from "./ProductImage";
+
+function Dropdown<T extends string | number>({
+  value,
+  options,
+  label,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  label: (v: T) => string;
+  onChange: (v: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 text-sm"
+      >
+        <span>{label(value)}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute bottom-full right-0 z-50 mb-2 min-w-[80px] overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] shadow-lg">
+          {options.map((opt) => (
+            <button
+              key={String(opt.value)}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`flex w-full items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-[var(--color-tile)] ${
+                opt.value === value ? "text-ink" : "text-ink-soft"
+              }`}
+            >
+              <span>{opt.label}</span>
+              {opt.value === value && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CartDrawer() {
   const { lines, open, setOpen, remove, setQty, setSize } = useCart();
@@ -104,34 +164,22 @@ export default function CartDrawer() {
                         <div className="flex items-center gap-6 border-b border-[var(--color-line)] pb-3">
                           <div className="flex flex-1 items-center justify-between">
                             <span className="text-sm text-ink-soft">Size</span>
-                            <div className="relative flex items-center gap-1 text-sm">
-                              <span className="pointer-events-none">{l.size ?? "—"}</span>
-                              <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
-                              <select
-                                value={l.size ?? ""}
-                                onChange={(e) => setSize(l.key, e.target.value)}
-                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                              >
-                                {(src?.sizes ?? [l.size ?? ""]).map((s) => (
-                                  <option key={s} value={s}>{s}</option>
-                                ))}
-                              </select>
-                            </div>
+                            <Dropdown
+                              value={l.size ?? ""}
+                              options={(src?.sizes ?? [l.size ?? ""]).map((s) => ({ value: s, label: s }))}
+                              label={(v) => v || "—"}
+                              onChange={(v) => setSize(l.key, v)}
+                            />
                           </div>
                           <div className="w-px self-stretch bg-[var(--color-line)]" />
                           <div className="flex flex-1 items-center justify-between">
                             <span className="text-sm text-ink-soft">Qty</span>
-                            <div className="relative flex items-center gap-1 text-sm">
-                              <span className="pointer-events-none">{l.qty}</span>
-                              <svg className="pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6" /></svg>
-                              <select
-                                value={l.qty}
-                                onChange={(e) => setQty(l.key, parseInt(e.target.value))}
-                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                              >
-                                {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
-                              </select>
-                            </div>
+                            <Dropdown
+                              value={l.qty}
+                              options={[1,2,3,4,5,6,7,8].map((n) => ({ value: n, label: String(n) }))}
+                              label={(v) => String(v)}
+                              onChange={(v) => setQty(l.key, v)}
+                            />
                           </div>
                         </div>
 
