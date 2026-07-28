@@ -55,7 +55,7 @@ function HeroCarousel() {
 
   return (
     <section
-      className="relative aspect-[3/4] w-full overflow-hidden"
+      className="relative aspect-[3/4] md:aspect-video w-full overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
