@@ -128,11 +128,6 @@ function CustomerDrawer({ c, onClose }: { c: CustomerRow; onClose: () => void })
           <div><p className="text-[12px] tracking-[0.1em] text-ink-soft">{t("cust.aov")}</p><p className="mt-1 font-serif text-lg tabular-nums">{compactVnd(c.orders_count ? c.ltv / c.orders_count : 0)}</p></div>
         </div>
 
-        <p className="mt-5 text-[12px] tracking-[0.12em] text-ink-soft">{t("cust.body_profile")}</p>
-        <p className="mt-1 text-sm">{c.body_type ? t(`body.${c.body_type}`) : "—"}</p>
-        {c.bust && <p className="mt-1 text-xs text-ink-soft">{c.bust} / {c.waist} / {c.hip} cm</p>}
-        <p className="mt-1 text-xs text-ink-soft">{t("cust.body_note")}</p>
-
         <p className="mt-6 text-[12px] tracking-[0.12em] text-ink-soft">{t("cust.recent")}</p>
         <ul className="mt-2 divide-y divide-[var(--color-line)] border-y edge">
           {orders.data.map((o) => (
