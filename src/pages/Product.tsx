@@ -227,7 +227,7 @@ export default function Product() {
             {/* actions */}
             <button
               onClick={handleAdd}
-              className="mt-8 flex h-12 w-full max-w-[380px] items-center justify-center gap-2 rounded-lg bg-ink text-white transition-opacity hover:opacity-85"
+              className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-ink text-white transition-opacity hover:opacity-85"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" />
