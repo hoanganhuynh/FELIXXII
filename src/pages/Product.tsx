@@ -245,11 +245,7 @@ export default function Product() {
               </svg>
               <span className="label text-white">{added ? "ADDED TO CART ✓" : "ADD TO CART"}</span>
             </button>
-            {product?.customizable && (
-              <button className="mt-3 block text-xs text-[var(--color-accent)] underline underline-offset-2">
-                Request custom sizing based on my profile →
-              </button>
-            )}
+
 
             {/* body-type compatibility */}
             {product && (
