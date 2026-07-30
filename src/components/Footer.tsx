@@ -53,13 +53,24 @@ export default function Footer() {
             ))}
           </nav>
         </div>
-        <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
-          <img
-            src="/thongbao-bocongthuong"
-            alt="Registered with Vietnam Ministry of Industry and Trade"
-            className="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
-          />
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
+            <img
+              src="/thongbao-bocongthuong"
+              alt="Registered with Vietnam Ministry of Industry and Trade"
+              className="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
+            />
+          </a>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Back to top"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--color-line)] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 19V5M6 11l6-6 6 6" />
+            </svg>
+          </button>
+        </div>
       </div>
     </footer>
   );
