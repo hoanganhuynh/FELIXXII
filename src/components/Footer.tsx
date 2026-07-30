@@ -56,7 +56,7 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
             <img
-              src="/thongbao-bocongthuong"
+              src="/thongbao-bocongthuong.png"
               alt="Registered with Vietnam Ministry of Industry and Trade"
               className="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
             />
