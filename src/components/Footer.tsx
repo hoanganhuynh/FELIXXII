@@ -39,27 +39,27 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-[var(--color-line)] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 md:px-8">
-        <nav className="flex flex-wrap gap-x-6 gap-y-2">
-          {links.map((l) => (
-            <Link
-              key={l.label}
-              to={l.href}
-              className="text-[12px] text-ink-soft hover:text-ink transition-colors"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-4">
-          <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
-            <img
-              src="/thongbao-bocongthuong"
-              alt="Registered with Vietnam Ministry of Industry and Trade"
-              className="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
-            />
-          </a>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+            {links.map((l) => (
+              <Link
+                key={l.label}
+                to={l.href}
+                className="text-[12px] text-ink-soft hover:text-ink transition-colors"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
           <p className="text-[12px] text-ink-soft">© {year} FELIXXII ATELIER</p>
         </div>
+        <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
+          <img
+            src="/thongbao-bocongthuong"
+            alt="Registered with Vietnam Ministry of Industry and Trade"
+            className="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
+          />
+        </a>
       </div>
     </footer>
   );
