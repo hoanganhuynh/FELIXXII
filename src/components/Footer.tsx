@@ -118,7 +118,16 @@ export default function Footer() {
             </Link>
           ))}
         </nav>
-        <p className="text-[12px] text-ink-soft">© {year} FELIXXII ATELIER</p>
+        <div className="flex items-center gap-4">
+          <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
+            <img
+              src="/thongbao-bocongthuong"
+              alt="Đã thông báo Bộ Công Thương"
+              className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+            />
+          </a>
+          <p className="text-[12px] text-ink-soft">© {year} FELIXXII ATELIER</p>
+        </div>
       </div>
     </footer>
   );
