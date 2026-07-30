@@ -3,7 +3,17 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart, cartCount } from "../store/cart";
 import { useAuth } from "../store/auth";
 import { useSearch } from "../store/search";
-import { SHOP_CATEGORIES, COLLECTIONS } from "../data/catalog";
+import { SHOP_CATEGORIES, COLLECTIONS, products } from "../data/catalog";
+
+function useRotatingPlaceholder(items: string[], intervalMs = 2000) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (items.length <= 1) return;
+    const timer = setInterval(() => setIdx((i) => (i + 1) % items.length), intervalMs);
+    return () => clearInterval(timer);
+  }, [items.length, intervalMs]);
+  return items[idx];
+}
 
 export default function Header() {
   const [menu, setMenu] = useState(false);
@@ -14,6 +24,7 @@ export default function Header() {
   const openSearch = useSearch((s) => s.setOpen);
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
+  const searchHint = useRotatingPlaceholder(products.map((p) => p.name));
 
   useEffect(() => {
     setMenu(false);
@@ -69,8 +80,11 @@ export default function Header() {
 
         {/* right */}
         <div className="flex items-center justify-end gap-4 md:gap-5">
-          <button aria-label="Search" onClick={() => openSearch(true)} className="text-ink transition-opacity hover:opacity-50">
+          <button aria-label="Search" onClick={() => openSearch(true)} className="flex items-center gap-2 text-ink transition-opacity hover:opacity-50">
             <Icon><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></Icon>
+            <span key={searchHint} className="hidden animate-[fade_0.4s_ease] text-[12px] text-ink-soft md:inline">
+              {searchHint}
+            </span>
           </button>
           <button
             aria-label={user ? "My Account" : "Sign In"}

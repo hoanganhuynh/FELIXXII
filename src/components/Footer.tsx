@@ -39,7 +39,8 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-[var(--color-line)] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 md:px-8">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex flex-col gap-2">
+          <p className="text-[12px] text-ink-soft">© {year} FELIXXII ATELIER</p>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {links.map((l) => (
               <Link
@@ -51,7 +52,6 @@ export default function Footer() {
               </Link>
             ))}
           </nav>
-          <p className="text-[12px] text-ink-soft">© {year} FELIXXII ATELIER</p>
         </div>
         <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
           <img
