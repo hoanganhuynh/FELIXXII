@@ -48,7 +48,7 @@ export default function Header() {
             )}
           </div>
           {/* Categories (utilitarian) */}
-          {SHOP_CATEGORIES.slice(0, 3).map((cat) => (
+          {SHOP_CATEGORIES.map((cat) => (
             <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="nav-link">
               {cat.label}
             </NavLink>
@@ -69,11 +69,6 @@ export default function Header() {
 
         {/* right */}
         <div className="flex items-center justify-end gap-4 md:gap-5">
-          {SHOP_CATEGORIES.slice(3).map((cat) => (
-            <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="nav-link hidden xl:block">
-              {cat.label}
-            </NavLink>
-          ))}
           <button aria-label="Search" onClick={() => openSearch(true)} className="text-ink transition-opacity hover:opacity-50">
             <Icon><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></Icon>
           </button>
