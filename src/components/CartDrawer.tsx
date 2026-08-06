@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart, cartTotal, cartCount } from "../store/cart";
 import { useWishlist } from "../store/wishlist";
 import { useAuth } from "../store/auth";
-import { products, productById } from "../data/catalog";
+import { useProducts, productById } from "../store/products";
+import { useCampaigns } from "../store/campaigns";
+import { computeCartDiscount } from "../lib/discount";
 import ProductCard, { vnd } from "./ProductCard";
 import ProductImage from "./ProductImage";
 
@@ -68,6 +70,9 @@ function Dropdown<T extends string | number>({
 }
 
 export default function CartDrawer() {
+  const products = useProducts((s) => s.products);
+  const campaigns = useCampaigns((s) => s.campaigns);
+  const fetchCampaigns = useCampaigns((s) => s.fetch);
   const { lines, open, setOpen, remove, setQty, setSize } = useCart();
   const { ids: wishlistIds, remove: removeWishlist } = useWishlist();
   const { user, setLoginOpen } = useAuth();
@@ -75,6 +80,14 @@ export default function CartDrawer() {
   const total = cartTotal(lines);
   const count = cartCount(lines);
   const wishlistProducts = wishlistIds.map((id) => productById(id)).filter(Boolean);
+
+  useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
+  const productsById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const { amount: discount, notes: discountNotes } = useMemo(
+    () => computeCartDiscount(lines, campaigns, productsById),
+    [lines, campaigns, productsById],
+  );
+  const grandTotal = total - discount;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -109,7 +122,7 @@ export default function CartDrawer() {
               tab === "wishlist" ? "bg-[var(--color-tile-deep)] text-ink" : "text-ink-soft"
             }`}
           >
-            WISHLIST
+            SAVED LIST
             <span className="text-[11px]">({wishlistProducts.length})</span>
           </button>
           <button
@@ -203,6 +216,12 @@ export default function CartDrawer() {
                     <span className="text-[#666]">Subtotal</span>
                     <span>{vnd(total)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex items-center justify-between text-[var(--color-accent)]">
+                      <span>Discount</span>
+                      <span>−{vnd(discount)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-[#666]">Shipping</span>
                     <span>FREE</span>
@@ -212,6 +231,13 @@ export default function CartDrawer() {
                     <span className="text-right text-xs text-ink-soft">CALCULATED AT CHECKOUT</span>
                   </div>
                 </div>
+                {discountNotes.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {discountNotes.map((n, i) => (
+                      <p key={i} className="text-[12px] text-[var(--color-accent)]">{n}</p>
+                    ))}
+                  </div>
+                )}
 
                 {/* CTAs */}
                 <div className="mt-8 space-y-3">
@@ -221,7 +247,7 @@ export default function CartDrawer() {
                   >
                     <span className="text-[15px] tracking-[0.03em]">CHECKOUT</span>
                     <span className="h-1 w-1 rounded-full bg-white" />
-                    <span className="text-[15px] tracking-[0.03em]">{vnd(total)}</span>
+                    <span className="text-[15px] tracking-[0.03em]">{vnd(grandTotal)}</span>
                   </button>
                   <button
                     onClick={() => setOpen(false)}
@@ -281,7 +307,7 @@ export default function CartDrawer() {
         <div className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 md:px-8">
           {wishlistProducts.length === 0 ? (
             <div className="flex flex-col items-center gap-5 py-32 text-center">
-              <p className="font-serif text-2xl">Your wishlist is empty.</p>
+              <p className="font-serif text-2xl">Your saved list is empty.</p>
               <button onClick={() => setOpen(false)} className="link-underline text-sm">
                 Continue shopping →
               </button>

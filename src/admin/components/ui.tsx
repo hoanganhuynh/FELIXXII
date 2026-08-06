@@ -67,11 +67,16 @@ export function Btn({ children, onClick, variant = "solid", type = "button", dis
 }
 
 /* ---- KPI tile ---- */
-export function Stat({ label, value, delta, hint }: { label: string; value: string; delta?: number; hint?: string }) {
+export function Stat({ label, value, delta, hint, icon }: { label: string; value: string; delta?: number; hint?: string; icon?: ReactNode }) {
   return (
-    <div className="rounded-lg border edge bg-white/40 px-5 py-4">
-      <p className="text-[12px] tracking-[0.12em] text-ink-soft">{label.toUpperCase()}</p>
-      <p className="mt-2 font-serif text-2xl tabular-nums leading-none">{value}</p>
+    <div className="rounded-lg border edge bg-white/40 px-5 py-4 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between">
+          <p className="text-[12px] tracking-[0.12em] text-ink-soft">{label.toUpperCase()}</p>
+          {icon && <span className="text-ink-soft/50">{icon}</span>}
+        </div>
+        <p className="mt-2 font-serif text-2xl tabular-nums leading-none">{value}</p>
+      </div>
       <div className="mt-2 flex items-center gap-2">
         {delta !== undefined && (
           <span

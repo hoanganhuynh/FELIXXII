@@ -9,6 +9,9 @@ export interface DashboardStats {
   conversion: number;
   by_category: { id: string; label: string; value: number }[];
   by_collection: { id: string; label: string; value: number }[];
+  by_source: { id: string; label: string; value: number }[];
+  clicks: { web_visits: number; product_clicks: number; source_clicks: number; collection_clicks: number; campaign_clicks: number };
+  wishlist_pie: { id: string; label: string; value: number }[];
   top: { id: string; name: string; style_code: string; images: string[]; revenue: number; units_sold: number }[];
   top_returned: { id: string; name: string; style_code: string; images: string[]; returned_qty: number }[];
   stock_outs: {
@@ -48,7 +51,9 @@ export interface DashboardStats {
 
 export const EMPTY_STATS: DashboardStats = {
   revenue: 0, orders: 0, aov: 0, units: 0, return_rate: 0, conversion: 0,
-  by_category: [], by_collection: [], top: [], top_returned: [], stock_outs: [],
+  by_category: [], by_collection: [], by_source: [], top: [], top_returned: [], stock_outs: [],
+  clicks: { web_visits: 0, product_clicks: 0, source_clicks: 0, collection_clicks: 0, campaign_clicks: 0 },
+  wishlist_pie: [],
   oos_skus: 0, vip_count: 0, vip_ltv: 0, total_ltv: 0,
   avg_ltv: 0, repeat_rate_by_year: [], return_reasons: [],
   dead_stock: [], reorder_urgency: [], rpv_by_category: [],
@@ -57,10 +62,12 @@ export const EMPTY_STATS: DashboardStats = {
 
 
 /** Every dashboard tile in ONE round trip — all aggregation happens in Postgres. */
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const { data, error } = await supabase.rpc("dashboard_stats");
+export async function getDashboardStats(timeFilter = 'all', sourceFilter = 'all'): Promise<DashboardStats> {
+  const { data, error } = await supabase.rpc("dashboard_stats_v2", {
+    time_filter: timeFilter, source_filter: sourceFilter
+  });
   if (error) throw error;
-  return data as unknown as DashboardStats;
+  return { ...EMPTY_STATS, ...(data as any) } as DashboardStats;
 }
 
 export type Granularity = "day" | "month" | "quarter" | "year";

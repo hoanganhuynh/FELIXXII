@@ -44,7 +44,7 @@ export default function ProductCard({ item, index = 0 }: { item: Product; index?
           onClick={handleWishlist}
           className="link-underline pt-1 text-[11px] tracking-[0.08em] text-ink transition-opacity hover:opacity-60"
         >
-          {saved ? "SAVED TO WISHLIST ✓" : "ADD TO WISHLIST"}
+          {saved ? "SAVED LIST ✓" : "ADD TO SAVED LIST"}
         </button>
       </div>
     </article>

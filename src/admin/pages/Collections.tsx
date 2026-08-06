@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {
-  collectionStats, categoryStats, upsertCollection, deleteCollection,
+  collectionStats, upsertCollection, deleteCollection,
   type CollectionStats,
 } from "../api/rules";
 import { useAsync } from "../lib/useAsync";
@@ -16,9 +16,16 @@ export default function AdminCollections() {
   const { t } = useTranslation();
   const { isAdmin, ready } = useAuth();
   const cols = useAsync(() => collectionStats(), [], []);
-  const cats = useAsync(() => categoryStats(), [], []);
   const [editing, setEditing] = useState<Draft | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (id: string) =>
+    setExpanded((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   const save = async (d: Draft) => {
     setErr(null);
@@ -51,6 +58,8 @@ export default function AdminCollections() {
     }
   };
 
+
+
   return (
     <div>
       <div className="mb-5 flex items-end justify-between">
@@ -76,52 +85,56 @@ export default function AdminCollections() {
       <div className="grid gap-4 lg:grid-cols-2">
         {cols.data.map((c) => (
           <Card key={c.id} title={c.season} action={
-            <div className="flex gap-2">
-              <button disabled={ready && !isAdmin} onClick={() => setEditing({ id: c.id, label: c.label, season: c.season, note: c.note ?? "", isNew: false })} className="text-[12px] text-ink-soft link-underline disabled:opacity-40">{t("common.edit")}</button>
-              <button disabled={ready && !isAdmin} onClick={() => remove(c)} className="text-[12px] text-[var(--color-accent)] link-underline disabled:opacity-40">{t("common.delete")}</button>
+            <div className="flex shrink-0 gap-4">
+              <button disabled={ready && !isAdmin} onClick={() => setEditing({ id: c.id, label: c.label, season: c.season, note: c.note ?? "", isNew: false })} className="inline-flex items-center gap-1.5 text-[12px] text-ink-soft hover:text-ink transition-colors disabled:opacity-40">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                {t("common.edit")}
+              </button>
+              <button disabled={ready && !isAdmin} onClick={() => remove(c)} className="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-accent)] hover:opacity-70 transition-colors disabled:opacity-40">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                {t("common.delete")}
+              </button>
             </div>
           }>
             <div className="p-5">
               <p className="font-serif text-xl">{c.label}</p>
               <p className="mt-1 text-xs text-ink-soft">{c.note}</p>
-              <div className="mt-4 grid grid-cols-4 gap-3 border-t edge pt-4 text-center">
-                <Cell k={t("coll.styles")} v={String(c.styles)} />
-                <Cell k={t("coll.skus")} v={c.skus.toLocaleString()} />
+
+              <div className="mt-4 grid grid-cols-4 gap-3 border-t edge pt-4">
+                <Cell k={t("coll.styles")} v={compact(c.styles)} />
+                <Cell k={t("coll.skus")} v={compact(c.skus)} />
                 <Cell k={t("coll.units")} v={compact(c.units)} />
                 <Cell k={t("coll.revenue")} v={compactVnd(c.revenue)} />
               </div>
-              <Link to={`/admin/products?collection=${c.id}`} className="mt-4 inline-block text-[12px] text-ink-soft link-underline">{t("coll.view_styles")}</Link>
+
+              <button
+                onClick={() => toggleExpanded(c.id)}
+                className="mt-4 text-[12px] link-underline text-ink-soft hover:text-ink"
+              >
+                {expanded.has(c.id) ? t("coll.hide_styles") : t("coll.view_styles")}
+              </button>
+
+              {expanded.has(c.id) && (
+                <div className="mt-3 space-y-1.5 border-t edge pt-3">
+                  {c.products.length === 0 && (
+                    <p className="text-xs text-ink-soft">{t("coll.no_products")}</p>
+                  )}
+                  {c.products.map((p) => (
+                    <Link
+                      key={p.id}
+                      to={`/admin/products/${p.id}`}
+                      className="block truncate text-[13px] text-ink link-underline hover:text-ink"
+                    >
+                      {p.name || p.id}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
         ))}
         {cols.loading && <p className="py-8 text-center text-xs text-ink-soft">{t("common.loading")}</p>}
       </div>
-
-      <h2 className="mb-3 mt-8 font-serif text-xl">{t("coll.categories")}</h2>
-      <div className="overflow-hidden rounded-lg border edge bg-white/40">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b edge text-left text-[12px] tracking-[0.1em] text-ink-soft">
-              <th className="px-4 py-2.5">{t("coll.col_category")}</th><th className="px-2 py-2.5">{t("coll.col_prefix")}</th>
-              <th className="px-2 py-2.5 text-right">{t("coll.col_styles")}</th><th className="px-2 py-2.5 text-right">{t("coll.col_skus")}</th><th className="px-2 py-2.5 text-right">{t("coll.col_revenue")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cats.data.map((c) => (
-              <tr key={c.id} className="border-b edge last:border-0 hover:bg-[var(--color-tile)]/50">
-                <td className="px-4 py-2.5 font-serif text-[15px]">{c.label}</td>
-                <td className="px-2 py-2.5"><Badge>{`FX-${c.sku_prefix}`}</Badge></td>
-                <td className="px-2 py-2.5 text-right text-xs tabular-nums">{c.styles}</td>
-                <td className="px-2 py-2.5 text-right text-xs tabular-nums">{c.skus.toLocaleString()}</td>
-                <td className="px-2 py-2.5 text-right text-xs tabular-nums">{compactVnd(c.revenue)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-2 text-[12px] text-ink-soft">
-        {t("coll.tax_note")}
-      </p>
 
       {editing && <EditModal d={editing} onClose={() => setEditing(null)} onSave={save} />}
     </div>
@@ -156,3 +169,4 @@ function EditModal({ d, onClose, onSave }: { d: Draft; onClose: () => void; onSa
     </div>
   );
 }
+

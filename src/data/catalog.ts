@@ -3,8 +3,10 @@
    Fashion model: Category (loại SP) × Collection (câu chuyện mùa)
    ============================================================ */
 
-export type CategoryId = "dam-da-hoi" | "dam-bridal" | "ao" | "set";
-export type CollectionId = "thu-dong-2025" | "xuan-he-2026";
+/** Loose string type — categories/collections are admin-editable in Supabase,
+ *  so new ids beyond the static demo set below are expected at runtime. */
+export type CategoryId = string;
+export type CollectionId = string;
 export type Silhouette = "a-line" | "mermaid" | "wrap" | "slip" | "ball-gown" | "shift";
 export type Occasion = "event" | "daily" | "bridal";
 export type AccessoryType = "necklace" | "earrings" | "bracelet" | "bag" | "shoes";
@@ -24,8 +26,8 @@ export const CATEGORIES: { id: CategoryId; label: string; icon: string }[] = [
 export const SHOP_CATEGORIES = [...CATEGORIES];
 
 export const COLLECTIONS: { id: CollectionId; label: string; season: string; note: string; image: string }[] = [
-  { id: "thu-dong-2025", label: "Fall — Winter 2025", season: "FW25", note: "Velvet, draped silk, warm dark tones.", image: "607653555_1212322397744958_1993799492838073038_n.jpg" },
-  { id: "xuan-he-2026", label: "Spring — Summer 2026", season: "SS26", note: "Lightweight chiffon, pastel, flowy fit.", image: "604770326_1209992451311286_3317825646691052207_n.jpg" },
+  { id: "thu-dong-2025", label: "Fall — Winter 2025", season: "FW25", note: "Velvet, draped silk, warm dark tones.", image: "model-1.jpg" },
+  { id: "xuan-he-2026", label: "Spring — Summer 2026", season: "SS26", note: "Lightweight chiffon, pastel, flowy fit.", image: "model-2.jpg" },
 ];
 
 export const SILHOUETTES: { id: Silhouette; label: string }[] = [
@@ -69,12 +71,24 @@ export interface LookGroup {
 }
 
 export interface Product {
+  /** `${styleId}::${hexWithoutHash}` when the style has colour variants,
+   *  else the bare style id (see `productStyleId`/`store/products.ts`). */
   id: string;
+  /** underlying style id, with no colour suffix — use for "same style" checks
+   *  (grouping, "you might also like" de-dup, campaign `scope: "style"` match) */
+  styleId: string;
   name: string;
   category: CategoryId;
   collection: CollectionId;
+  garmentTypeId?: string;
+  sourceId?: string;
   price: number; // VND
+  /** every colour this style comes in (for the colour switcher) */
   colors: ColorSwatch[];
+  /** the one colour this specific card/product instance represents —
+   *  undefined only for legacy/no-variant data */
+  color?: ColorSwatch;
+  /** sizes available in `color` specifically (not the whole style) */
   sizes: string[];
   silhouette?: Silhouette;
   occasion: Occasion;
@@ -83,6 +97,10 @@ export interface Product {
   material: string;
   customizable?: boolean; // bridal / đầm chỉnh size
   bestseller?: number; // rank (nhỏ = bán chạy hơn)
+  /** Homepage New Arrival ranking: newest active styles, ordered by units
+   *  sold in the last 7 days. Smaller = higher rank. */
+  newArrivalRank?: number;
+  weeklyUnitsSold?: number;
   createdAt: number; // để sort "mới nhất"
   blurb: string;
   /** real product photos in /public/product-image-demo (fallback = generated art) */
@@ -93,6 +111,19 @@ export interface Product {
 
 /** folder holding the real demo product photos */
 export const IMG_BASE = "/product-image-demo/";
+
+/** Resolve a stored image string to a renderable URL.
+ *  Legacy demo entries store a bare filename (needs IMG_BASE prefix);
+ *  admin-managed products store a full URL or an absolute path already. */
+export function resolveImageUrl(img: string): string {
+  return img.startsWith("http") || img.startsWith("/") ? img : IMG_BASE + img;
+}
+
+/** A storefront `Product.id` is `${styleId}::${hex}` once split by colour —
+ *  strip the colour suffix to recover the underlying style id. */
+export function productStyleId(id: string): string {
+  return id.split("::")[0];
+}
 
 export interface Accessory {
   id: string;
@@ -105,7 +136,7 @@ export interface Accessory {
 
 const c = (...keys: string[]): ColorSwatch[] => keys.map((k) => PALETTE[k]);
 
-export const products: Product[] = [
+const rawProducts: Omit<Product, "styleId">[] = [
   {
     id: "lua-dem",
     name: "Lụa Đêm",
@@ -123,7 +154,7 @@ export const products: Product[] = [
     createdAt: 20250910,
     blurb: "Phom mermaid cổ đổ, chất satin lụa đổ bóng — chiếc đầm dạ hội bán chạy nhất mùa.",
     images: [
-      "607653555_1212322397744958_1993799492838073038_n.jpg",
+      "model-1.jpg",
       "605854033_1212322447744953_8385914445294101481_n.jpg",
     ],
     look: {
@@ -151,7 +182,7 @@ export const products: Product[] = [
     createdAt: 20260115,
     blurb: "Đầm cưới cape lụa ngà, viền đính ngọc trai thủ công — có thể chỉnh may theo số đo.",
     images: [
-      "604770326_1209992451311286_3317825646691052207_n.jpg",
+      "model-2.jpg",
       "606038369_1209992494644615_3834472852269240134_n.jpg",
       "605744430_1209992551311276_4297429810533013933_n.jpg",
     ],
@@ -178,7 +209,7 @@ export const products: Product[] = [
     createdAt: 20250920,
     blurb: "Đầm cổ đổ sắc navy ánh kim, thân bias buông rũ — sang trọng, kín đáo mà cuốn hút.",
     images: [
-      "667453997_1300228645620999_7198445231715406264_n.jpg",
+      "model-3.jpg",
       "667405324_1300229082287622_3951756945889064705_n.jpg",
       "668139748_1300226622287868_3536109004282702876_n.jpg",
     ],
@@ -204,7 +235,7 @@ export const products: Product[] = [
     bestseller: 2,
     createdAt: 20260210,
     blurb: "Halter neck slip dress, baby pink satin — perfect for casual wear or light parties.",
-    images: ["602970875_1205145441795987_18715939281272587_n.jpg"],
+    images: ["product-1.png"],
     look: {
       necklace: { directorChoice: "chain-kim", options: [{ accessoryId: "chain-kim", demoVotePct: 60 }, { accessoryId: "day-ngoc", demoVotePct: 40 }] },
       earrings: { directorChoice: "huggie-vang", options: [{ accessoryId: "huggie-vang", demoVotePct: 60 }, { accessoryId: "bong-giot", demoVotePct: 40 }] },
@@ -322,7 +353,7 @@ export const products: Product[] = [
     createdAt: 20260118,
     blurb: "Champagne satin wedding dress, plunging V-neck, soft bias-cut body — gentle for garden ceremonies.",
     images: [
-      "604302658_1207684788208719_2584822847566233407_n.jpg",
+      "product-2.png",
       "605730417_1207684818208716_3284772005674759256_n.jpg",
     ],
     look: {
@@ -349,7 +380,7 @@ export const products: Product[] = [
     createdAt: 20251008,
     blurb: "Ivory mermaid wedding dress, hand-pleated ruched body, flared fishtail skirt — glamorous for evening parties.",
     images: [
-      "608051236_1212295184414346_1759387043234619556_n.jpg",
+      "product-3.png",
       "606001228_1212295194414345_7959480619862527801_n.jpg",
       "608511618_1212295214414343_8768514877154959894_n.jpg",
     ],
@@ -360,6 +391,8 @@ export const products: Product[] = [
     },
   },
 ];
+
+export const products: Product[] = rawProducts.map((p) => ({ ...p, styleId: p.id }));
 
 export const accessories: Accessory[] = [
   { id: "day-ngoc", name: "Dây chuyền Ngọc", type: "necklace", collection: "thu-dong-2025", colors: c("gold", "bac"), detail: "Long pendant, pearl face" },

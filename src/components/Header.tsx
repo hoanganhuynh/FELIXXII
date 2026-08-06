@@ -3,7 +3,9 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart, cartCount } from "../store/cart";
 import { useAuth } from "../store/auth";
 import { useSearch } from "../store/search";
-import { SHOP_CATEGORIES, COLLECTIONS, products } from "../data/catalog";
+import { useProducts } from "../store/products";
+
+const GARMENT_TYPES = ["Top", "Jacket", "Out-wear", "Shirt", "Skirt", "Dress", "Pants", "Gown"];
 
 function useRotatingPlaceholder(items: string[], intervalMs = 2000) {
   const [idx, setIdx] = useState(0);
@@ -16,6 +18,7 @@ function useRotatingPlaceholder(items: string[], intervalMs = 2000) {
 }
 
 export default function Header() {
+  const products = useProducts((s) => s.products);
   const [menu, setMenu] = useState(false);
   const [colOpen, setColOpen] = useState(false);
   const count = useCart((s) => cartCount(s.lines));
@@ -34,36 +37,30 @@ export default function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b edge bg-[var(--color-bg)]/95 backdrop-blur-sm">
       <div className="mx-auto grid h-[62px] max-w-[1800px] grid-cols-[1fr_auto_1fr] items-center px-5 md:px-8">
-        {/* left nav — categories + collections entry */}
+        {/* left nav — garment types + collection + bridal */}
         <nav className="hidden items-center gap-6 lg:flex">
-          {/* Collections (narrative) dropdown */}
+          {/* Felixxii (garment types) dropdown */}
           <div className="relative" onMouseEnter={() => setColOpen(true)} onMouseLeave={() => setColOpen(false)}>
             <button className="nav-link flex items-center gap-1">
-              Collections
+              Felixxii
               <span className={`text-[9px] transition-transform ${colOpen ? "rotate-180" : ""}`}>▾</span>
             </button>
             {colOpen && (
-              <div className="absolute left-0 top-full w-72 border edge bg-[var(--color-bg)] p-2 shadow-xl">
-                {COLLECTIONS.map((c) => (
+              <div className="absolute left-0 top-full w-56 border edge bg-[var(--color-bg)] p-2 shadow-xl">
+                {GARMENT_TYPES.map((g) => (
                   <Link
-                    key={c.id}
-                    to={`/shop?collection=${c.id}`}
-                    className="block rounded-sm px-3 py-2.5 transition-colors hover:bg-[var(--color-tile)]"
+                    key={g}
+                    to="/shop"
+                    className="block rounded-sm px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-tile)]"
                   >
-                    <span className="font-serif text-base">{c.label}</span>
-                    <span className="ml-2 text-[10px] text-ink-soft">{c.season}</span>
-                    <p className="mt-0.5 text-xs text-ink-soft">{c.note}</p>
+                    {g}
                   </Link>
                 ))}
               </div>
             )}
           </div>
-          {/* Categories (utilitarian) */}
-          {SHOP_CATEGORIES.map((cat) => (
-            <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="nav-link">
-              {cat.label}
-            </NavLink>
-          ))}
+          <NavLink to="/shop" className="nav-link">Collection</NavLink>
+          <NavLink to="/shop?cat=dam-bridal" className="nav-link">Bridal</NavLink>
         </nav>
 
         {/* mobile menu btn */}
@@ -75,7 +72,7 @@ export default function Header() {
 
         {/* wordmark */}
         <Link to="/" className="flex items-center justify-center" aria-label="FELIXXII — home">
-          <img src="/logo.svg" alt="FELIXXII" className="h-6 md:h-7 w-auto" />
+          <img src="/logo-ngang.svg" alt="FELIXXII" className="h-6 md:h-7 w-auto" />
         </Link>
 
         {/* right */}
@@ -104,14 +101,12 @@ export default function Header() {
       {/* mobile menu */}
       <div className={`overflow-hidden border-t edge bg-[var(--color-bg)] lg:hidden ${menu ? "max-h-[32rem]" : "max-h-0"} transition-[max-height] duration-500 ease-[var(--ease-out-expo)]`}>
         <nav className="flex flex-col px-6 py-4">
-          <p className="label mt-2 text-ink-soft">Collections</p>
-          {COLLECTIONS.map((c) => (
-            <NavLink key={c.id} to={`/shop?collection=${c.id}`} className="py-2 font-serif text-lg">{c.label}</NavLink>
+          <p className="label mt-2 text-ink-soft">Felixxii</p>
+          {GARMENT_TYPES.map((g) => (
+            <NavLink key={g} to="/shop" className="py-2 text-sm">{g}</NavLink>
           ))}
-          <p className="label mt-4 text-ink-soft">Categories</p>
-          {SHOP_CATEGORIES.map((cat) => (
-            <NavLink key={cat.id} to={`/shop?cat=${cat.id}`} className="py-2 text-sm">{cat.label}</NavLink>
-          ))}
+          <NavLink to="/shop" className="py-2 font-serif text-lg mt-2">Collection</NavLink>
+          <NavLink to="/shop?cat=dam-bridal" className="py-2 font-serif text-lg">Bridal</NavLink>
         </nav>
       </div>
     </header>

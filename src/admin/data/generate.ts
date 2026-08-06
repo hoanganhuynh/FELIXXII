@@ -17,7 +17,8 @@ import {
   type Occasion,
   type ColorSwatch,
 } from "../../data/catalog";
-import { styleCode, skuCode, barcode } from "./sku";
+import { barcode } from "./sku";
+import { newStyleCode, newSkuCode } from "../lib/slug";
 
 /* ---------- seeded RNG (mulberry32) ---------- */
 function mulberry32(seed: number) {
@@ -43,6 +44,7 @@ export interface Variant {
   reserved: number;
   barcode: string;
   priceOverride?: number;
+  inStock: boolean;
 }
 
 export interface Style {
@@ -67,6 +69,12 @@ export interface Style {
   revenue: number;
   views: number;
   returns: number;
+  sourceId: string;
+  garmentTypeId: string;
+  description: string;
+  imageProductView: string | null;
+  imageModelView: string | null;
+  imagesDetail: string[];
 }
 
 export interface Order {
@@ -118,6 +126,22 @@ const BODY_TYPES: BodyType[] = ["hourglass", "pear", "apple", "rectangle", "inve
 const COLOR_KEYS = Object.keys(PALETTE);
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL"];
 
+/* Nguồn hàng — matches supabase/migrations/20260805000000_new_product_flow.sql seed rows */
+const SOURCE_IDS = ["bridal", "ready-to-wear", "custom-order", "import"];
+/* Phân loại — same */
+const GARMENT_TYPE_IDS_BY_CATEGORY: Record<CategoryId, string[]> = {
+  "dam-bridal": ["gown", "dress"],
+  "dam-da-hoi": ["dress", "gown"],
+  ao: ["top", "shirt", "jacket"],
+  set: ["skirt", "pants", "top"],
+};
+
+const DESCRIPTION_TEMPLATES = [
+  (n: string, m: string) => `${n} được may từ ${m.toLowerCase()}, tôn dáng và giữ form suốt buổi tiệc.`,
+  (n: string, m: string) => `Thiết kế ${n} kết hợp ${m.toLowerCase()} cùng đường cắt tinh tế, phù hợp dạ tiệc và sự kiện trang trọng.`,
+  (n: string, m: string) => `${n} — form dáng vừa vặn, chất liệu ${m.toLowerCase()}, dễ phối phụ kiện.`,
+];
+
 /* real seed photos — spread the 10 real designs across a handful of styles */
 const REAL_IMAGE_SETS = seedProducts.filter((p) => p.images?.length).map((p) => p.images!.map(img => `/product-image-demo/${img}`));
 
@@ -146,6 +170,7 @@ export function generateDataset(seed = 20260716) {
   const TARGET_SKUS = 7000;
   let skuCount = 0;
   let idx = 0;
+  const usedStyleCodes: string[] = [];
 
   while (skuCount < TARGET_SKUS) {
     const category = pick(rand, CATEGORIES).id;
@@ -172,6 +197,14 @@ export function generateDataset(seed = 20260716) {
 
     const name =
       pick(rand, BASE_NAMES) + pick(rand, SUFFIX) + (rand() > 0.6 ? ` ${String.fromCharCode(65 + (idx % 5))}${(serial % 90) + 10}` : "");
+    const material = pick(rand, MATERIALS);
+    const code = newStyleCode(name, usedStyleCodes);
+    usedStyleCodes.push(code);
+
+    const sourceId = category === "dam-bridal" ? "bridal" : pick(rand, SOURCE_IDS);
+    const garmentTypeId = pick(rand, GARMENT_TYPE_IDS_BY_CATEGORY[category]);
+    const description = pick(rand, DESCRIPTION_TEMPLATES)(name, material);
+    const images = pick(rand, REAL_IMAGE_SETS);
 
     // variants (colour × size)
     const variants: Variant[] = [];
@@ -179,7 +212,7 @@ export function generateDataset(seed = 20260716) {
       sizes.forEach((sz, si) => {
         const stock = Math.floor(rand() * 60);
         variants.push({
-          sku: skuCode(category, serial, col.name, sz),
+          sku: newSkuCode(code, col.name, sz),
           colorName: col.name,
           colorHex: col.hex,
           size: sz,
@@ -187,6 +220,7 @@ export function generateDataset(seed = 20260716) {
           reserved: Math.floor(rand() * Math.min(stock, 5)),
           barcode: barcode(category, serial, ci, si),
           priceOverride: rand() > 0.94 ? round(basePrice * (0.8 + rand() * 0.4), 50_000) : undefined,
+          inStock: stock > 0,
         });
       });
     });
@@ -200,7 +234,7 @@ export function generateDataset(seed = 20260716) {
 
     styles.push({
       id: `sty-${category}-${serial}`,
-      styleCode: styleCode(category, serial),
+      styleCode: code,
       serial,
       name,
       category,
@@ -208,18 +242,24 @@ export function generateDataset(seed = 20260716) {
       silhouette,
       occasion,
       price: basePrice,
-      material: pick(rand, MATERIALS),
+      material,
       bodyType: pick(rand, BODY_TYPES),
       status,
       colors,
       sizes,
       variants,
-      images: pick(rand, REAL_IMAGE_SETS),
+      images,
       createdAt: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
       unitsSold,
       revenue: unitsSold * basePrice,
       views: unitsSold * (8 + Math.floor(rand() * 40)) + Math.floor(rand() * 500),
       returns: Math.floor(unitsSold * rand() * 0.08),
+      sourceId,
+      garmentTypeId,
+      description,
+      imageProductView: images?.[0] ?? null,
+      imageModelView: images?.[1] ?? null,
+      imagesDetail: images?.slice(2) ?? [],
     });
     idx++;
   }

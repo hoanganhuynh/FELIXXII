@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { products, IMG_BASE, type Product } from "../data/catalog";
+import { useState, useEffect, useRef } from "react";
+import { resolveImageUrl, type Product } from "../data/catalog";
+import { useProducts } from "../store/products";
 import { vnd } from "../components/ProductCard";
+import ProductImage from "../components/ProductImage";
 import { supabase } from "../lib/supabase";
 
 interface HeroBanner {
@@ -135,21 +137,14 @@ function HeroCarousel() {
 }
 
 function ArticleCard({ product, imgIndex }: { product: Product; imgIndex: number }) {
-  const imgs = product.images ?? [];
-  const src = imgs.length ? IMG_BASE + imgs[Math.min(imgIndex, imgs.length - 1)] : null;
-
   return (
     <Link to={`/san-pham/${product.id}`} className="group block">
       <div className="aspect-[2/3] overflow-hidden bg-[var(--color-tile)]">
-        {src ? (
-          <img
-            src={src}
-            alt={product.name}
-            className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="h-full w-full" />
-        )}
+        <ProductImage
+          item={product}
+          index={imgIndex}
+          className="h-full w-full object-top transition-transform duration-700 group-hover:scale-[1.03]"
+        />
       </div>
       <div className="mt-3 space-y-0.5">
         <p className="text-sm">{product.name}</p>
@@ -165,12 +160,109 @@ function ArticleCard({ product, imgIndex }: { product: Product; imgIndex: number
   );
 }
 
+interface Promotion {
+  id: string;
+  image_url: string;
+  link_url: string;
+  title: string;
+}
+
+function PromoImage({ p, className }: { p: Promotion; className: string }) {
+  const img = <img src={p.image_url} alt={p.title} className={className} />;
+  return p.link_url ? <Link to={p.link_url}>{img}</Link> : img;
+}
+
+function PromotionCarousel({ promos }: { promos: Promotion[] }) {
+  const [idx, setIdx] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const goTo = (i: number) => {
+    trackRef.current?.scrollTo({ left: i * trackRef.current.offsetWidth, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative">
+      <div
+        ref={trackRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          setIdx(Math.round(el.scrollLeft / el.offsetWidth));
+        }}
+        className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {promos.map((p) => (
+          <div key={p.id} className="w-full shrink-0 snap-center">
+            <PromoImage p={p} className="h-auto w-full object-cover" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex justify-center gap-1.5">
+        {promos.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Slide ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? "w-5 bg-ink" : "w-1.5 bg-ink/25"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PromotionSection() {
+  const [promos, setPromos] = useState<Promotion[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("promotions")
+      .select("id, image_url, link_url, title")
+      .eq("active", true)
+      .order("sort_order")
+      .then(({ data }) => { if (data?.length) setPromos(data as Promotion[]); });
+  }, []);
+
+  if (!promos.length) return null;
+
+  return (
+    <section className="px-6 py-10 md:px-8 lg:px-10">
+      {promos.length === 1 && <PromoImage p={promos[0]} className="h-auto w-full object-cover" />}
+      {promos.length === 2 && (
+        <div className="grid grid-cols-2 gap-4 md:gap-6">
+          {promos.map((p) => (
+            <PromoImage key={p.id} p={p} className="aspect-[3/4] h-full w-full object-cover" />
+          ))}
+        </div>
+      )}
+      {promos.length > 2 && <PromotionCarousel promos={promos} />}
+    </section>
+  );
+}
+
 export default function Home() {
+  const products = useProducts((s) => s.products);
+  const loaded = useProducts((s) => s.loaded);
   const [viewMode, setViewMode] = useState<"model" | "product">("model");
   const [thumbIdx, setThumbIdx] = useState(0);
 
   const sorted = [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99));
-  const featured = sorted.slice(0, 3);
+  const newArrivalPool = [...products].sort((a, b) => {
+    const rankA = a.newArrivalRank ?? Number.POSITIVE_INFINITY;
+    const rankB = b.newArrivalRank ?? Number.POSITIVE_INFINITY;
+    if (rankA !== rankB) return rankA - rankB;
+    const weeklyA = a.weeklyUnitsSold ?? 0;
+    const weeklyB = b.weeklyUnitsSold ?? 0;
+    if (weeklyA !== weeklyB) return weeklyB - weeklyA;
+    return b.createdAt - a.createdAt;
+  });
+  const featured: Product[] = [];
+  const featuredStyleIds = new Set<string>();
+  for (const product of newArrivalPool) {
+    if (featuredStyleIds.has(product.styleId)) continue;
+    featured.push(product);
+    featuredStyleIds.add(product.styleId);
+    if (featured.length === 5) break;
+  }
   const top20 = sorted.slice(0, 4);
 
   // Collect up to 5 thumbnail images from featured products
@@ -178,7 +270,7 @@ export default function Home() {
   for (const p of featured) {
     for (const img of p.images ?? []) {
       if (thumbImgs.length >= 5) break;
-      thumbImgs.push({ src: IMG_BASE + img, productId: p.id });
+      thumbImgs.push({ src: resolveImageUrl(img), productId: p.id });
     }
     if (thumbImgs.length >= 5) break;
   }
@@ -208,8 +300,11 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Mobile: horizontal snap scroll 1.1 cards; Desktop: 3-col grid */}
-        <div className="-mx-6 flex snap-x snap-mandatory overflow-x-auto pl-6 scroll-pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pl-0 md:scroll-pl-0">
+        {!loaded && <p className="py-8 text-center text-xs text-ink-soft">Đang tải sản phẩm…</p>}
+        {loaded && !featured.length && <p className="py-8 text-center text-xs text-ink-soft">Chưa có sản phẩm.</p>}
+
+        {/* Mobile: horizontal snap scroll 1.1 cards; Desktop: top 5 grid */}
+        <div className="-mx-6 flex snap-x snap-mandatory overflow-x-auto pl-6 scroll-pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pl-0 md:scroll-pl-0 lg:grid-cols-5">
           {featured.map((p) => (
             <div key={p.id} className="w-[88vw] shrink-0 snap-start pr-4 md:w-auto md:pr-0">
               <ArticleCard product={p} imgIndex={getImgIndex(p)} />
@@ -273,6 +368,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══ PROMOTION BANNER ══════════════════════════════════════════ */}
+      <PromotionSection />
+
       {/* ══ THIS WEEK TOP 20 ══════════════════════════════════════════ */}
       <section className="px-6 py-10 md:px-8 lg:px-10">
         {/* Section header */}
@@ -291,13 +389,10 @@ export default function Home() {
           {top20.map((p) => (
             <Link key={p.id} to={`/san-pham/${p.id}`} className="group block">
               <div className="relative aspect-[2/3] overflow-hidden bg-[var(--color-tile)]">
-                {p.images?.[0] && (
-                  <img
-                    src={IMG_BASE + p.images[0]}
-                    alt={p.name}
-                    className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
-                  />
-                )}
+                <ProductImage
+                  item={p}
+                  className="h-full w-full object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                />
               </div>
               <div className="mt-3 space-y-0.5">
                 <p className="text-sm">{p.name}</p>

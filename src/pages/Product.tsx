@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
-import { productById, products, categoryLabel, collectionLabel } from "../data/catalog";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { categoryLabel, collectionLabel } from "../data/catalog";
+import { useProducts, productById } from "../store/products";
 import { SIZE_CHART } from "../data/sizing";
 import { useCart } from "../store/cart";
 import { useWishlist } from "../store/wishlist";
@@ -99,6 +100,9 @@ function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void 
 
 export default function Product() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const allProducts = useProducts((s) => s.products);
+  const loaded = useProducts((s) => s.loaded);
   const product = id ? productById(id) : undefined;
 
   const add = useCart((s) => s.add);
@@ -112,6 +116,11 @@ export default function Product() {
   const [slideIndex, setSlideIndex] = useState(0);
   const galleryRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setSize(null);
+  }, [product?.id]);
+
+  if (!loaded) return <p className="py-32 text-center text-xs text-ink-soft">Đang tải…</p>;
   if (!product) return <NotFound />;
 
   const selectedMeasurements = size ? chart.find((r) => r.size === size) : null;
@@ -123,6 +132,8 @@ export default function Product() {
       name: product.name,
       price: product.price,
       size: size ?? product.sizes[0],
+      colorName: product.color?.name,
+      colorHex: product.color?.hex,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -198,6 +209,30 @@ export default function Product() {
             <p className="mt-2 font-serif text-lg">{vnd(product.price)}</p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
 
+            {/* color switcher — other colours of the same style */}
+            {product.colors.length > 1 && (
+              <div className="mt-6">
+                <p className="text-xs text-ink-soft">Màu: {product.color?.name ?? ""}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {product.colors.map((c) => {
+                    const active = c.hex === product.color?.hex;
+                    return (
+                      <button
+                        key={c.hex}
+                        onClick={() => navigate(`/san-pham/${product.styleId}::${c.hex.replace("#", "")}`)}
+                        aria-label={c.name}
+                        title={c.name}
+                        className={`h-8 w-8 rounded-full ring-1 ring-offset-2 ring-offset-[var(--color-bg)] transition-all ${
+                          active ? "ring-ink" : "ring-[var(--color-line)] hover:ring-ink"
+                        }`}
+                        style={{ background: c.hex }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* size */}
             {product && (
               <div className="mt-7">
@@ -247,27 +282,16 @@ export default function Product() {
             </button>
 
 
-            {/* body-type compatibility */}
-            {product && (
-              <div className="mt-8 flex gap-3 rounded-md bg-[var(--color-tile)] px-4 py-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="mt-0.5 shrink-0 text-ink-soft">
-                  <path d="M12 2C9 2 7 5 7 8s1 4 2 5l-4 9h14l-4-9c1-1 2-3 2-5s-2-6-5-6z" />
-                </svg>
-                <div>
-                  <p className="text-xs font-medium">Body Type Compatibility</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{product.bodyType}</p>
-                </div>
-              </div>
-            )}
-
             {/* accordions */}
             <div className="mt-8">
               {product && (
                 <Accordion title="Material & Care">
                   <p className="mb-2">Material: {product.material}</p>
-                  <ul className="list-disc space-y-1 pl-4">
-                    {product.care.map((c) => <li key={c}>{c}</li>)}
-                  </ul>
+                  {product.care.length > 0 && (
+                    <ul className="list-disc space-y-1 pl-4">
+                      {product.care.map((c) => <li key={c}>{c}</li>)}
+                    </ul>
+                  )}
                 </Accordion>
               )}
             </div>
@@ -279,7 +303,7 @@ export default function Product() {
       <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
         <h2 className="mb-8 font-serif text-2xl">You might also like</h2>
         <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-4 md:gap-x-6">
-          {products.filter((p) => p.id !== product.id).slice(0, 4).map((p, i) => (
+          {allProducts.filter((p) => p.styleId !== product.styleId).slice(0, 4).map((p, i) => (
             <ProductCard key={p.id} item={p} index={i} />
           ))}
         </div>

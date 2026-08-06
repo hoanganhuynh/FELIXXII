@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import { useWishlist } from "../store/wishlist";
-import { products } from "../data/catalog";
+import { useProducts } from "../store/products";
 import ProductImage from "../components/ProductImage";
 import { vnd } from "../components/ProductCard";
 
@@ -11,7 +11,7 @@ type Tab = "account" | "purchases" | "wishlist" | "profile";
 const TABS: { id: Tab; label: string }[] = [
   { id: "account", label: "Account" },
   { id: "purchases", label: "Purchases" },
-  { id: "wishlist", label: "Wishlist" },
+  { id: "wishlist", label: "Saved List" },
   { id: "profile", label: "Profile" },
 ];
 
@@ -65,6 +65,7 @@ const STATUS_STYLE: Record<Order["status"], string> = {
 };
 
 function OrderRow({ order }: { order: Order }) {
+  const products = useProducts((s) => s.products);
   const [open, setOpen] = useState(false);
   const prod = products.find((p) => p.id === order.items[0].productId);
 
@@ -125,6 +126,7 @@ function OrderRow({ order }: { order: Order }) {
 }
 
 function WishlistCard({ productId }: { productId: string }) {
+  const products = useProducts((s) => s.products);
   const prod = products.find((p) => p.id === productId);
   if (!prod) return null;
   return (
@@ -210,7 +212,7 @@ export default function Account() {
                 }`}
               >
                 {t.id === "wishlist"
-                  ? `WISHLIST (${wishlistCount})`
+                  ? `SAVED LIST (${wishlistCount})`
                   : t.label.toUpperCase()}
               </button>
             ))}
@@ -244,7 +246,7 @@ export default function Account() {
             <section className="mt-8 border-b edge pb-8">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] tracking-[0.1em]">
-                  WISHLIST<sup className="ml-px text-[9px]">{wishlistCount}</sup>
+                  SAVED LIST<sup className="ml-px text-[9px]">{wishlistCount}</sup>
                 </p>
                 <button onClick={() => setTab("wishlist")} className="text-[11px] tracking-[0.1em] text-ink-soft hover:text-ink">
                   MORE
@@ -291,7 +293,7 @@ export default function Account() {
         {tab === "wishlist" && (
           <div>
             <p className="font-serif text-2xl tracking-tight">
-              WISHLIST<sup className="ml-1 text-base">{wishlistCount}</sup>
+              SAVED LIST<sup className="ml-1 text-base">{wishlistCount}</sup>
             </p>
             <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3">
               {wishlistIds.map((id) => <WishlistCard key={id} productId={id} />)}

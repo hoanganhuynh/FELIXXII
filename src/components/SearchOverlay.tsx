@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { products } from "../data/catalog";
+import { useProducts } from "../store/products";
 import { useSearch } from "../store/search";
 import { normalizeVi } from "../lib/text";
 import { vnd } from "./ProductCard";
@@ -25,6 +25,7 @@ function highlightMatch(text: string, query: string) {
 }
 
 export default function SearchOverlay() {
+  const products = useProducts((s) => s.products);
   const { open, setOpen } = useSearch();
   const [query, setQuery] = useState("");
 
@@ -47,14 +48,14 @@ export default function SearchOverlay() {
 
   const bestsellers = useMemo(
     () => [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99)).slice(0, BESTSELLER_LIMIT),
-    [],
+    [products],
   );
 
   const results = useMemo(() => {
     const q = normalizeVi(query.trim());
     if (!q) return bestsellers;
     return products.filter((p) => normalizeVi(p.name).includes(q)).slice(0, RESULT_LIMIT);
-  }, [query, bestsellers]);
+  }, [query, products, bestsellers]);
 
   if (!open) return null;
 

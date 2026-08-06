@@ -51,11 +51,17 @@ export async function styleCountByBodyType(bodyType: BodyType): Promise<number> 
 /* ---- collections CRUD ---- */
 export type CollectionRow = Database["public"]["Tables"]["collections"]["Row"];
 
+export interface CollectionProduct {
+  id: string;
+  name: string;
+}
+
 export interface CollectionStats extends CollectionRow {
   styles: number;
   skus: number;
   revenue: number;
   units: number;
+  products: CollectionProduct[];
 }
 
 export async function collectionStats(): Promise<CollectionStats[]> {
@@ -65,7 +71,8 @@ export async function collectionStats(): Promise<CollectionStats[]> {
   // style_list already carries the per-style aggregates; roll them up per collection
   const { data: styles } = await supabase
     .from("style_list")
-    .select("collection_id, sku_count, revenue, units_sold");
+    .select("id, name, collection_id, sku_count, revenue, units_sold")
+    .order("name");
 
   return (cols ?? []).map((c) => {
     const mine = (styles ?? []).filter((s) => s.collection_id === c.id);
@@ -75,6 +82,7 @@ export async function collectionStats(): Promise<CollectionStats[]> {
       skus: mine.reduce((n, s) => n + (s.sku_count ?? 0), 0),
       revenue: mine.reduce((n, s) => n + (s.revenue ?? 0), 0),
       units: mine.reduce((n, s) => n + (s.units_sold ?? 0), 0),
+      products: mine.map((s) => ({ id: s.id!, name: s.name ?? "" })),
     };
   });
 }

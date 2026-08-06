@@ -1,5 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import type { Database } from "../../lib/database.types";
+import { newStyleCode } from "../lib/slug";
 
 export type StyleRow = Database["public"]["Views"]["style_list"]["Row"];
 export type VariantRow = Database["public"]["Tables"]["variants"]["Row"];
@@ -146,7 +147,7 @@ export async function duplicateStyle(id: string): Promise<void> {
   const src = await getStyle(id);
   const { data: variants } = await supabase.from("variants").select("*").eq("style_id", id);
 
-  // next free serial in this category
+  // next free serial in this category (kept for internal bookkeeping / legacy uniqueness)
   const { data: maxRow } = await supabase
     .from("styles")
     .select("serial")
@@ -155,8 +156,7 @@ export async function duplicateStyle(id: string): Promise<void> {
     .limit(1)
     .single();
   const serial = (maxRow?.serial ?? 0) + 1;
-  const prefix = src.style_code!.split("-").slice(0, 2).join("-");
-  const newCode = `${prefix}-${String(serial).padStart(4, "0")}`;
+  const newCode = await nextStyleCode(`${src.name} copy`);
 
   const { data: created, error } = await supabase
     .from("styles")
@@ -173,6 +173,12 @@ export async function duplicateStyle(id: string): Promise<void> {
       body_type: src.body_type,
       status: "draft",
       images: src.images ?? [],
+      source_id: src.source_id,
+      garment_type_id: src.garment_type_id,
+      description: src.description,
+      image_product_view: src.image_product_view,
+      image_model_view: src.image_model_view,
+      images_detail: src.images_detail ?? [],
     })
     .select("id")
     .single();
@@ -187,6 +193,7 @@ export async function duplicateStyle(id: string): Promise<void> {
       size: v.size,
       stock: 0,
       reserved: 0,
+      in_stock: false,
       barcode: null, // barcodes are unique — a copy must not reuse them
       price_override: v.price_override,
     }));
@@ -221,8 +228,218 @@ export async function listCategories() {
   if (error) throw error;
   return data ?? [];
 }
+
+export async function saveCategory(id: string, patch: { label: string; sku_prefix: string }) {
+  const { error } = await supabase.from("categories").update(patch).eq("id", id);
+  if (error) throw error;
+}
 export async function listCollections() {
   const { data, error } = await supabase.from("collections").select("*").order("sort");
   if (error) throw error;
   return data ?? [];
+}
+
+/* ============================================================
+   New Product flow — one SKU (Tên sản phẩm = style + colour + size)
+   at a time, instead of the old colour×size grid.
+   ============================================================ */
+
+export interface StyleNameHit {
+  id: string;
+  name: string;
+  style_code: string;
+  source_id: string | null;
+  garment_type_id: string | null;
+  category_id: string;
+  collection_id: string | null;
+  silhouette: string | null;
+  body_type: BodyType | null;
+  status: StyleStatus;
+  price: number;
+  material: string | null;
+  description: string | null;
+  image_product_view: string | null;
+  image_model_view: string | null;
+  images_detail: string[];
+  size_template_id?: string | null;
+}
+
+/** typeahead for the "Loại sản phẩm" combobox — search existing styles by name */
+export async function listStyleNames(q: string, limit = 15): Promise<StyleNameHit[]> {
+  let sel = supabase
+    .from("styles")
+    .select("id, name, style_code, source_id, garment_type_id, category_id, collection_id, silhouette, body_type, status, price, material, description, image_product_view, image_model_view, images_detail, size_template_id")
+    .order("name")
+    .limit(limit);
+  if (q.trim()) sel = sel.ilike("name", `%${q.trim()}%`);
+  const { data, error } = await sel;
+  if (error) throw error;
+  return (data ?? []) as StyleNameHit[];
+}
+
+/** collision-safe style code for a brand-new "Loại sản phẩm" name */
+export async function nextStyleCode(name: string): Promise<string> {
+  const base = newStyleCode(name, []).replace(/\d+$/, ""); // just the letters, for the prefix scan
+  const { data, error } = await supabase
+    .from("styles")
+    .select("style_code")
+    .ilike("style_code", `${base}%`);
+  if (error) throw error;
+  return newStyleCode(name, (data ?? []).map((r) => r.style_code));
+}
+
+export async function getStyleRaw(id: string): Promise<StyleNameHit & { serial: number }> {
+  const { data, error } = await supabase
+    .from("styles")
+    .select("id, name, style_code, serial, source_id, garment_type_id, category_id, collection_id, silhouette, body_type, status, price, material, description, image_product_view, image_model_view, images_detail, size_template_id")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return data as StyleNameHit & { serial: number };
+}
+
+export async function getVariantBySku(sku: string): Promise<VariantRow> {
+  const { data, error } = await supabase.from("variants").select("*").eq("sku", sku).single();
+  if (error) throw error;
+  return data;
+}
+
+/** insert ONE variant (a single SKU) — the new one-at-a-time flow, vs. replaceVariants' grid */
+export async function addVariant(row: VariantInsert): Promise<void> {
+  const { error } = await supabase.from("variants").insert(row);
+  if (error) throw error;
+}
+
+export type VariantUpdate = Database["public"]["Tables"]["variants"]["Update"];
+
+export async function updateVariant(sku: string, patch: VariantUpdate): Promise<void> {
+  const { data, error } = await supabase.from("variants").update(patch).eq("sku", sku).select("sku");
+  if (error) throw error;
+  if (!data?.length) throw new Error("Not permitted — admin role required.");
+}
+
+export async function deleteVariant(sku: string): Promise<void> {
+  const { data, error } = await supabase.from("variants").delete().eq("sku", sku).select("sku");
+  if (error) throw error;
+  if (!data?.length) throw new Error("Not Found / Permission Denied");
+}
+
+export async function bulkUpdateVariants(skus: string[], in_stock: boolean): Promise<number> {
+  const { data, error } = await supabase.from("variants").update({ in_stock, stock: in_stock ? 1 : 0 }).in("sku", skus).select("sku");
+  if (error) throw error;
+  return data?.length ?? 0;
+}
+
+export async function bulkDeleteVariants(skus: string[]): Promise<number> {
+  const { data, error } = await supabase.from("variants").delete().in("sku", skus).select("sku");
+  if (error) throw error;
+  return data?.length ?? 0;
+}
+
+export async function bulkUpdateStyleProperties(styleIds: string[], field: "collection_id" | "source_id" | "garment_type_id", value: string | null): Promise<number> {
+  const { data, error } = await supabase.from("styles").update({ [field]: value }).in("id", styleIds).select("id");
+  if (error) throw error;
+  return data?.length ?? 0;
+}
+
+/** the flat "1 product = 1 color = 1 SKU" list row */
+export interface ProductRow {
+  sku: string;
+  style_id: string;
+  style_name: string;
+  style_code: string;
+  color_name: string;
+  color_hex: string;
+  size: string;
+  price: number;
+  in_stock: boolean;
+  source_id: string | null;
+  garment_type_id: string | null;
+  status: StyleStatus;
+  image: string | null;
+}
+
+export interface ProductListParams {
+  q?: string;
+  source?: string;
+  garmentType?: string;
+  category?: string;
+  collection?: string;
+  status?: string;
+  stock?: "" | "in" | "out";
+  page?: number;
+  pageSize?: number;
+}
+
+/** Paginated, one-row-per-SKU product list — the "1 product = 1 color = 1 SKU" view. */
+export async function listProductRows(p: ProductListParams): Promise<{ rows: ProductRow[]; total: number }> {
+  const pageSize = p.pageSize ?? 25;
+  const page = p.page ?? 0;
+
+  if (p.q?.trim()) {
+    // reuse the existing trigram-ranked SKU search, then enrich + filter client-side
+    const hits = await searchSkus(p.q.trim(), 300);
+    const styleIds = [...new Set(hits.map((h) => h.style_id))];
+    const { data: styles } = await supabase
+      .from("styles")
+      .select("id, source_id, garment_type_id, status, images, image_product_view")
+      .in("id", styleIds.length ? styleIds : ["00000000-0000-0000-0000-000000000000"]);
+    const byId = new Map((styles ?? []).map((s) => [s.id, s]));
+
+    let rows: ProductRow[] = hits.map((h) => {
+      const s = byId.get(h.style_id);
+      return {
+        sku: h.sku, style_id: h.style_id, style_name: h.style_name, style_code: h.style_code,
+        color_name: h.color_name, color_hex: h.color_hex, size: h.size, price: h.price,
+        in_stock: h.stock > 0,
+        source_id: s?.source_id ?? null, garment_type_id: s?.garment_type_id ?? null,
+        status: (s?.status as StyleStatus) ?? "draft",
+        image: s?.image_product_view ?? (Array.isArray(s?.images) ? (s?.images[0] as string) : null) ?? null,
+      };
+    });
+    if (p.source) rows = rows.filter((r) => r.source_id === p.source);
+    if (p.garmentType) rows = rows.filter((r) => r.garment_type_id === p.garmentType);
+    if (p.status) rows = rows.filter((r) => r.status === p.status);
+    if (p.stock === "in") rows = rows.filter((r) => r.in_stock);
+    if (p.stock === "out") rows = rows.filter((r) => !r.in_stock);
+
+    const total = rows.length;
+    rows = rows.slice(page * pageSize, page * pageSize + pageSize);
+    return { rows, total };
+  }
+
+  let sel = supabase
+    .from("variants")
+    .select(
+      "sku, style_id, color_name, color_hex, size, price_override, in_stock, styles!inner(name, style_code, source_id, garment_type_id, category_id, collection_id, status, price, image_product_view, images, created_at)",
+      { count: "exact" }
+    );
+
+  if (p.source)      sel = sel.eq("styles.source_id", p.source);
+  if (p.garmentType) sel = sel.eq("styles.garment_type_id", p.garmentType);
+  if (p.category)    sel = sel.eq("styles.category_id", p.category);
+  if (p.collection)  sel = sel.eq("styles.collection_id", p.collection);
+  if (p.status)      sel = sel.eq("styles.status", p.status as StyleStatus);
+  if (p.stock === "in")  sel = sel.eq("in_stock", true);
+  if (p.stock === "out") sel = sel.eq("in_stock", false);
+
+  sel = sel.order("created_at", { referencedTable: "styles", ascending: false }).order("sku");
+
+  const { data, error, count } = await sel.range(page * pageSize, page * pageSize + pageSize - 1);
+  if (error) throw error;
+
+  const rows: ProductRow[] = (data ?? []).map((v) => {
+    const s = v.styles as unknown as {
+      name: string; style_code: string; source_id: string | null; garment_type_id: string | null;
+      status: StyleStatus; price: number; image_product_view: string | null; images: string[] | null;
+    };
+    return {
+      sku: v.sku, style_id: v.style_id, style_name: s.name, style_code: s.style_code,
+      color_name: v.color_name, color_hex: v.color_hex, size: v.size,
+      price: v.price_override ?? s.price, in_stock: v.in_stock,
+      source_id: s.source_id, garment_type_id: s.garment_type_id, status: s.status,
+      image: s.image_product_view ?? (Array.isArray(s.images) ? s.images[0] : null) ?? null,
+    };
+  });
+  return { rows, total: count ?? 0 };
 }

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./store/auth";
 import { useWishlist } from "./store/wishlist";
+import { useProducts } from "./store/products";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
@@ -19,11 +20,16 @@ import Dashboard from "./admin/pages/Dashboard";
 import AdminProducts from "./admin/pages/Products";
 import ProductEditor from "./admin/pages/ProductEditor";
 import AdminCollections from "./admin/pages/Collections";
+import AdminCategories from "./admin/pages/Categories";
+import AdminSources from "./admin/pages/Sources";
+import AdminGarmentTypes from "./admin/pages/GarmentTypes";
+import SizeTemplates from "./admin/pages/SizeTemplates";
+import AdminColors from "./admin/pages/Colors";
 import AdminOrders from "./admin/pages/Orders";
 import AdminCustomers from "./admin/pages/Customers";
-import SizeRules from "./admin/pages/SizeRules";
-import Reference from "./admin/pages/Reference";
 import Banners from "./admin/pages/Banners";
+import Promotions from "./admin/pages/Promotions";
+import Campaigns from "./admin/pages/Campaigns";
 import Settings from "./admin/pages/Settings";
 import Analytics from "./admin/pages/Analytics";
 
@@ -45,10 +51,17 @@ function WishlistSync() {
   return null;
 }
 
+function ProductsSync() {
+  const fetch = useProducts((s) => s.fetch);
+  useEffect(() => { fetch(); }, [fetch]);
+  return null;
+}
+
 function Storefront() {
   return (
     <>
       <WishlistSync />
+      <ProductsSync />
       <Header />
       <CartDrawer />
       <LoginDrawer />
@@ -82,15 +95,21 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="products/new" element={<ProductEditor />} />
+          <Route path="products/sku/:sku" element={<ProductEditor />} />
           <Route path="products/:id" element={<ProductEditor />} />
+          <Route path="colors" element={<AdminColors />} />
           <Route path="collections" element={<AdminCollections />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="sources" element={<AdminSources />} />
+          <Route path="garment-types" element={<AdminGarmentTypes />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="customers" element={<AdminCustomers />} />
-          <Route path="size-rules" element={<SizeRules />} />
+          <Route path="size-templates" element={<SizeTemplates />} />
           {/* Import folded into Products as a panel — keep the old path working */}
           <Route path="import" element={<Navigate to="/admin/products" replace />} />
           <Route path="banners" element={<Banners />} />
-          <Route path="reference" element={<Reference />} />
+          <Route path="promotions" element={<Promotions />} />
+          <Route path="campaigns" element={<Campaigns />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>

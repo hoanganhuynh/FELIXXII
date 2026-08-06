@@ -95,12 +95,16 @@ parts.push(
     "public.styles",
     ["id", "style_code", "serial", "name", "category_id", "collection_id", "silhouette",
      "occasion", "price", "material", "body_type", "status", "images",
-     "units_sold", "views", "returns", "created_at"],
+     "units_sold", "views", "returns", "created_at",
+     "source_id", "garment_type_id", "description",
+     "image_product_view", "image_model_view", "images_detail"],
     styles.map((s) => [
       `gen_random_uuid()`, q(s.styleCode), String(s.serial), q(s.name), q(s.category),
       q(s.collection), q(s.silhouette), q(s.occasion), String(s.price), q(s.material),
       `${q(s.bodyType)}::public.body_type`, `${q(s.status)}::public.style_status`, arr(s.images),
       String(s.unitsSold), String(s.views), String(s.returns), q(s.createdAt),
+      q(s.sourceId), q(s.garmentTypeId), q(s.description),
+      q(s.imageProductView), q(s.imageModelView), arr(s.imagesDetail),
     ])
   )
 );
@@ -109,7 +113,7 @@ parts.push(
 parts.push(
   batched(
     "public.variants",
-    ["sku", "style_id", "color_name", "color_hex", "size", "stock", "reserved", "barcode", "price_override"],
+    ["sku", "style_id", "color_name", "color_hex", "size", "stock", "reserved", "barcode", "price_override", "in_stock"],
     styles.flatMap((s) =>
       s.variants.map((v) => [
         q(v.sku),
@@ -117,6 +121,7 @@ parts.push(
         q(v.colorName), q(v.colorHex), q(v.size),
         String(v.stock), String(v.reserved), q(v.barcode),
         v.priceOverride ? String(v.priceOverride) : "NULL",
+        String(v.inStock),
       ])
     )
   )

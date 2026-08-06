@@ -34,19 +34,6 @@ export function RevenueTrend() {
 
   return (
     <div className="px-4 pb-6 pt-4">
-      <div className="mb-3 flex gap-1.5">
-        {GRANULARITIES.map((g) => (
-          <button
-            key={g}
-            onClick={() => { setGranularity(g); setDrill(null); }}
-            className={`h-7 rounded-md px-3 text-[12px] tracking-wide transition-colors ${
-              g === granularity ? "bg-[var(--color-accent)] text-white" : "bg-[var(--color-tile)] text-ink-soft hover:bg-[var(--color-tile-deep)]"
-            }`}
-          >
-            {t(`dash.duration_${g}`)}
-          </button>
-        ))}
-      </div>
 
       {loading ? (
         <p className="py-16 text-center text-xs text-ink-soft">{t("dash.trend_loading")}</p>

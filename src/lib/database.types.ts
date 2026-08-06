@@ -55,6 +55,90 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          active: boolean
+          buy_qty: number | null
+          created_at: string
+          description: string
+          discount_kind: Database["public"]["Enums"]["discount_kind"] | null
+          discount_value: number | null
+          end_date: string | null
+          end_time: string | null
+          exclude_promotional_items: boolean
+          get_qty: number | null
+          gift_style_id: string | null
+          id: string
+          min_subtotal: number | null
+          name: string
+          scope: Database["public"]["Enums"]["campaign_scope"]
+          start_date: string | null
+          start_time: string | null
+          target_ids: string[]
+          type: Database["public"]["Enums"]["campaign_type"]
+          valid_days: number[] | null
+        }
+        Insert: {
+          active?: boolean
+          buy_qty?: number | null
+          created_at?: string
+          description?: string
+          discount_kind?: Database["public"]["Enums"]["discount_kind"] | null
+          discount_value?: number | null
+          end_date?: string | null
+          end_time?: string | null
+          exclude_promotional_items?: boolean
+          get_qty?: number | null
+          gift_style_id?: string | null
+          id?: string
+          min_subtotal?: number | null
+          name: string
+          scope?: Database["public"]["Enums"]["campaign_scope"]
+          start_date?: string | null
+          start_time?: string | null
+          target_ids?: string[]
+          type: Database["public"]["Enums"]["campaign_type"]
+          valid_days?: number[] | null
+        }
+        Update: {
+          active?: boolean
+          buy_qty?: number | null
+          created_at?: string
+          description?: string
+          discount_kind?: Database["public"]["Enums"]["discount_kind"] | null
+          discount_value?: number | null
+          end_date?: string | null
+          end_time?: string | null
+          exclude_promotional_items?: boolean
+          get_qty?: number | null
+          gift_style_id?: string | null
+          id?: string
+          min_subtotal?: number | null
+          name?: string
+          scope?: Database["public"]["Enums"]["campaign_scope"]
+          start_date?: string | null
+          start_time?: string | null
+          target_ids?: string[]
+          type?: Database["public"]["Enums"]["campaign_type"]
+          valid_days?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_gift_style_id_fkey"
+            columns: ["gift_style_id"]
+            isOneToOne: false
+            referencedRelation: "style_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_gift_style_id_fkey"
+            columns: ["gift_style_id"]
+            isOneToOne: false
+            referencedRelation: "styles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           id: string
@@ -99,6 +183,27 @@ export type Database = {
           label?: string
           note?: string | null
           season?: string
+          sort?: number
+        }
+        Relationships: []
+      }
+      colors: {
+        Row: {
+          hex: string
+          id: string
+          name: string
+          sort: number
+        }
+        Insert: {
+          hex: string
+          id: string
+          name: string
+          sort?: number
+        }
+        Update: {
+          hex?: string
+          id?: string
+          name?: string
           sort?: number
         }
         Relationships: []
@@ -157,6 +262,24 @@ export type Database = {
           user_id?: string | null
           waist?: number | null
           weight?: number | null
+        }
+        Relationships: []
+      }
+      garment_types: {
+        Row: {
+          id: string
+          label: string
+          sort: number
+        }
+        Insert: {
+          id: string
+          label: string
+          sort?: number
+        }
+        Update: {
+          id?: string
+          label?: string
+          sort?: number
         }
         Relationships: []
       }
@@ -297,6 +420,75 @@ export type Database = {
           },
         ]
       }
+      promotions: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          image_url: string
+          link_url: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url: string
+          link_url?: string
+          sort_order?: number
+          title?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string
+          link_url?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      size_chart: {
+        Row: {
+          bust_max: number
+          bust_min: number
+          created_at: string | null
+          hip_max: number
+          hip_min: number
+          id: string
+          size: string
+          sort_order: number
+          waist_max: number
+          waist_min: number
+        }
+        Insert: {
+          bust_max: number
+          bust_min: number
+          created_at?: string | null
+          hip_max: number
+          hip_min: number
+          id?: string
+          size: string
+          sort_order?: number
+          waist_max: number
+          waist_min: number
+        }
+        Update: {
+          bust_max?: number
+          bust_min?: number
+          created_at?: string | null
+          hip_max?: number
+          hip_min?: number
+          id?: string
+          size?: string
+          sort_order?: number
+          waist_max?: number
+          waist_min?: number
+        }
+        Relationships: []
+      }
       size_rules: {
         Row: {
           body_type: Database["public"]["Enums"]["body_type"]
@@ -330,14 +522,61 @@ export type Database = {
         }
         Relationships: []
       }
+      size_templates: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          is_default: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          is_default?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          is_default?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      sources: {
+        Row: {
+          id: string
+          label: string
+          sort: number
+        }
+        Insert: {
+          id: string
+          label: string
+          sort?: number
+        }
+        Update: {
+          id?: string
+          label?: string
+          sort?: number
+        }
+        Relationships: []
+      }
       styles: {
         Row: {
           body_type: Database["public"]["Enums"]["body_type"] | null
           category_id: string
-          collection_id: string
+          collection_id: string | null
           created_at: string
+          description: string | null
+          garment_type_id: string | null
           id: string
+          image_model_view: string | null
+          image_product_view: string | null
           images: string[]
+          images_detail: string[]
           material: string | null
           name: string
           occasion: string | null
@@ -347,6 +586,8 @@ export type Database = {
           search_vector: unknown
           serial: number
           silhouette: string | null
+          size_template_id: string | null
+          source_id: string | null
           status: Database["public"]["Enums"]["style_status"]
           style_code: string
           units_sold: number
@@ -356,10 +597,15 @@ export type Database = {
         Insert: {
           body_type?: Database["public"]["Enums"]["body_type"] | null
           category_id: string
-          collection_id: string
+          collection_id?: string | null
           created_at?: string
+          description?: string | null
+          garment_type_id?: string | null
           id?: string
+          image_model_view?: string | null
+          image_product_view?: string | null
           images?: string[]
+          images_detail?: string[]
           material?: string | null
           name: string
           occasion?: string | null
@@ -369,6 +615,8 @@ export type Database = {
           search_vector?: unknown
           serial: number
           silhouette?: string | null
+          size_template_id?: string | null
+          source_id?: string | null
           status?: Database["public"]["Enums"]["style_status"]
           style_code: string
           units_sold?: number
@@ -378,10 +626,15 @@ export type Database = {
         Update: {
           body_type?: Database["public"]["Enums"]["body_type"] | null
           category_id?: string
-          collection_id?: string
+          collection_id?: string | null
           created_at?: string
+          description?: string | null
+          garment_type_id?: string | null
           id?: string
+          image_model_view?: string | null
+          image_product_view?: string | null
           images?: string[]
+          images_detail?: string[]
           material?: string | null
           name?: string
           occasion?: string | null
@@ -391,6 +644,8 @@ export type Database = {
           search_vector?: unknown
           serial?: number
           silhouette?: string | null
+          size_template_id?: string | null
+          source_id?: string | null
           status?: Database["public"]["Enums"]["style_status"]
           style_code?: string
           units_sold?: number
@@ -412,13 +667,56 @@ export type Database = {
             referencedRelation: "collections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "styles_garment_type_id_fkey"
+            columns: ["garment_type_id"]
+            isOneToOne: false
+            referencedRelation: "garment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "styles_size_template_id_fkey"
+            columns: ["size_template_id"]
+            isOneToOne: false
+            referencedRelation: "size_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "styles_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      tracking_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          object_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          object_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          object_id?: string | null
+        }
+        Relationships: []
       }
       variants: {
         Row: {
           barcode: string | null
           color_hex: string
           color_name: string
+          in_stock: boolean
           price_override: number | null
           reserved: number
           size: string
@@ -430,6 +728,7 @@ export type Database = {
           barcode?: string | null
           color_hex: string
           color_name: string
+          in_stock?: boolean
           price_override?: number | null
           reserved?: number
           size: string
@@ -441,6 +740,7 @@ export type Database = {
           barcode?: string | null
           color_hex?: string
           color_name?: string
+          in_stock?: boolean
           price_override?: number | null
           reserved?: number
           size?: string
@@ -465,6 +765,49 @@ export type Database = {
           },
         ]
       }
+      wishlist: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          id: string
+          style_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          style_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          style_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlist_style_id_fkey"
+            columns: ["style_id"]
+            isOneToOne: false
+            referencedRelation: "style_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlist_style_id_fkey"
+            columns: ["style_id"]
+            isOneToOne: false
+            referencedRelation: "styles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       style_list: {
@@ -473,9 +816,15 @@ export type Database = {
           category_id: string | null
           collection_id: string | null
           colors: Json | null
+          color_variants: Json | null
           created_at: string | null
+          description: string | null
+          garment_type_id: string | null
           id: string | null
+          image_model_view: string | null
+          image_product_view: string | null
           images: string[] | null
+          images_detail: string[] | null
           low_count: number | null
           material: string | null
           name: string | null
@@ -488,6 +837,7 @@ export type Database = {
           silhouette: string | null
           sizes: string[] | null
           sku_count: number | null
+          source_id: string | null
           status: Database["public"]["Enums"]["style_status"] | null
           style_code: string | null
           total_stock: number | null
@@ -509,6 +859,20 @@ export type Database = {
             referencedRelation: "collections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "styles_garment_type_id_fkey"
+            columns: ["garment_type_id"]
+            isOneToOne: false
+            referencedRelation: "garment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "styles_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -518,6 +882,10 @@ export type Database = {
         Returns: number
       }
       dashboard_stats: { Args: never; Returns: Json }
+      dashboard_stats_v2: {
+        Args: { source_filter?: string; time_filter?: string }
+        Returns: Json
+      }
       dashboard_trend: {
         Args: { granularity: string; range_end: string; range_start: string }
         Returns: Json
@@ -537,6 +905,14 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       me: { Args: never; Returns: Json }
+      storefront_new_arrivals: {
+        Args: { p_candidates?: number; p_limit?: number }
+        Returns: {
+          created_at: string
+          style_id: string
+          weekly_units: number
+        }[]
+      }
       search_customers: {
         Args: {
           p_page?: number
@@ -659,6 +1035,13 @@ export type Database = {
         | "apple"
         | "rectangle"
         | "inverted-triangle"
+      campaign_scope: "all" | "category" | "garment_type" | "source" | "style"
+      campaign_type:
+        | "invoice_discount"
+        | "item_discount"
+        | "buy_x_get_y"
+        | "free_gift"
+      discount_kind: "percent" | "amount" | "fixed_price"
       order_channel: "Web" | "Boutique" | "Instagram" | "Wholesale"
       order_status:
         | "Pending"
@@ -812,6 +1195,14 @@ export const Constants = {
         "rectangle",
         "inverted-triangle",
       ],
+      campaign_scope: ["all", "category", "garment_type", "source", "style"],
+      campaign_type: [
+        "invoice_discount",
+        "item_discount",
+        "buy_x_get_y",
+        "free_gift",
+      ],
+      discount_kind: ["percent", "amount", "fixed_price"],
       order_channel: ["Web", "Boutique", "Instagram", "Wholesale"],
       order_status: [
         "Pending",
@@ -833,4 +1224,3 @@ export const Constants = {
     },
   },
 } as const
-

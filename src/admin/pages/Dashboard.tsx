@@ -9,49 +9,27 @@ import { BarList, Donut, CHART_PALETTE } from "../components/charts";
 import { RevenueTrend } from "../components/RevenueTrend";
 import { compactVnd, compact } from "../lib/format";
 
-type CollInsight = { kind: "ok" | "warn" | "act"; tKey: string; vars: Record<string, string> };
 
-function parseCollSeason(label: string) {
-  const m = label.match(/^(SS|FW|AW|RS|PF)(\d{2})$/i);
-  return m ? { season: m[1].toUpperCase(), year: 2000 + parseInt(m[2], 10) } : null;
-}
-
-function buildCollInsights(sorted: { label: string; value: number }[], total: number): CollInsight[] {
-  if (!sorted.length || total === 0) return [];
-  const top = sorted[0];
-  const bottom = sorted[sorted.length - 1];
-  const topPct = (top.value / total) * 100;
-  const botPct = (bottom.value / total) * 100;
-  const ins: CollInsight[] = [];
-
-  ins.push(topPct > 67
-    ? { kind: "warn", tKey: "dash.coll_concentrated", vars: { top: top.label, pct: topPct.toFixed(0), bottom: bottom.label } }
-    : { kind: "ok",   tKey: "dash.coll_balanced",     vars: { top: top.label, pct: topPct.toFixed(0) } });
-
-  if (sorted.length >= 2) {
-    const tS = parseCollSeason(top.label);
-    const bS = parseCollSeason(bottom.label);
-    if (tS && bS && tS.year !== bS.year) {
-      ins.push(tS.year > bS.year
-        ? { kind: "ok",   tKey: "dash.coll_newer_leads", vars: { top: top.label } }
-        : { kind: "warn", tKey: "dash.coll_older_leads", vars: { top: top.label, bottom: bottom.label } });
-    }
-    ins.push({ kind: "act", tKey: "dash.coll_action", vars: { bottom: bottom.label, pct: botPct.toFixed(0) } });
-  }
-
-  return ins;
-}
-
-export default function Dashboard() {
-  const { t } = useTranslation();
-  const { isAdmin, ready, setLoginOpen } = useAuth();
+  import { listSources } from "../api/taxonomy";
+  import type { SourceRow } from "../api/taxonomy";
+  
+  export default function Dashboard() {
+    const { t } = useTranslation();
+    const { isAdmin, ready, setLoginOpen } = useAuth();
+    
+    const [timeFilter, setTimeFilter] = useState("all");
+    const [sourceFilter, setSourceFilter] = useState("all");
+    
+    const { data: sources } = useAsync(listSources, [], []);
+  
   const { data: m, loading, error, reload } = useAsync(
-    () => (isAdmin ? getDashboardStats() : Promise.resolve(EMPTY_STATS)),
-    [isAdmin],
+    () => (isAdmin ? getDashboardStats(timeFilter, sourceFilter) : Promise.resolve(EMPTY_STATS)),
+    [isAdmin, timeFilter, sourceFilter],
     EMPTY_STATS
   );
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [topReturnedOpen, setTopReturnedOpen] = useState(false);
+  const [visitsOpen, setVisitsOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !error) {
@@ -59,11 +37,7 @@ export default function Dashboard() {
     }
   }, [loading, error, m]);
 
-  const repeatYears = m.repeat_rate_by_year;
-  const latestRepeat = repeatYears.length ? Number(repeatYears[repeatYears.length - 1].rate) : 0;
-  const prevRepeat = repeatYears.length > 1 ? Number(repeatYears[repeatYears.length - 2].rate) : undefined;
-  const repeatDelta = prevRepeat !== undefined ? latestRepeat - prevRepeat : undefined;
-  const latestRepeatYear = repeatYears.length ? String(repeatYears[repeatYears.length - 1].year) : "";
+
 
   // Revenue, AOV and LTV are business data. Rather than render a dashboard of
   // zeros (which reads as broken), say plainly that it needs an admin session.
@@ -84,7 +58,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl">{t("dashboard")}</h1>
           <p className="mt-1 text-xs text-ink-soft">{loading ? t("dash.loading") : t("dash.subtitle")}</p>
@@ -107,70 +81,139 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: "all", label: "Toàn bộ" },
+            { value: "today", label: "Hôm nay" },
+            { value: "yesterday", label: "Hôm qua" },
+            { value: "7d", label: "7 ngày qua" },
+            { value: "month", label: "Tháng này" },
+            { value: "quarter", label: "Quý này" },
+            { value: "year", label: "Năm nay" },
+          ].map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setTimeFilter(opt.value)}
+              className={`rounded-full px-3 py-1.5 text-xs transition-colors border ${timeFilter === opt.value ? 'bg-ink text-[var(--color-bg)] border-ink' : 'bg-white/50 edge text-ink-soft hover:text-ink hover:bg-white/80'}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSourceFilter("all")}
+            className={`rounded-full px-3 py-1.5 text-xs transition-colors border ${sourceFilter === "all" ? 'bg-ink text-[var(--color-bg)] border-ink' : 'bg-white/50 edge text-ink-soft hover:text-ink hover:bg-white/80'}`}
+          >
+            Tất cả Nguồn hàng
+          </button>
+          {sources.map((s: SourceRow) => (
+            <button
+              key={s.id}
+              onClick={() => setSourceFilter(s.id)}
+              className={`rounded-full px-3 py-1.5 text-xs transition-colors border ${sourceFilter === s.id ? 'bg-ink text-[var(--color-bg)] border-ink' : 'bg-white/50 edge text-ink-soft hover:text-ink hover:bg-white/80'}`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error && (
         <p className="mb-4 rounded-md bg-[var(--color-accent-soft)] px-4 py-2.5 text-xs text-[var(--color-accent)]">{error}</p>
       )}
 
       <div className={loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat label={t("dash.revenue")} value={compactVnd(m.revenue)} delta={12.4} hint={t("dash.vs_last")} />
-          <Stat label={t("dash.orders")} value={compact(m.orders)} delta={8.1} />
-          <Stat label={t("dash.aov")} value={compactVnd(m.aov)} delta={3.9} />
-          <Stat label={t("dash.units")} value={compact(m.units)} delta={6.2} />
-          <Stat label={t("dash.conversion")} value={`${Number(m.conversion).toFixed(1)}%`} delta={-0.4} />
-          <Stat label={t("dash.return_rate")} value={`${Number(m.return_rate).toFixed(1)}%`} delta={-1.2} hint={t("dash.lower_better")} />
-          <Stat label={t("dash.repeat_rate")} value={`${latestRepeat.toFixed(1)}%`} delta={repeatDelta} hint={latestRepeatYear} />
-          <Stat label={t("dash.avg_ltv")} value={compactVnd(m.avg_ltv)} />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <Stat 
+            label={t("dash.revenue")} 
+            value={compactVnd(m.revenue)} 
+            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
+          />
+          <Stat 
+            label={t("dash.orders")} 
+            value={compact(m.orders)} 
+            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>}
+          />
+          <Stat 
+            label={t("dash.aov")} 
+            value={compactVnd(m.aov)} 
+            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 2v20l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2z" /></svg>}
+          />
+          <Stat 
+            label={t("dash.units")} 
+            value={compact(m.units)} 
+            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>}
+          />
+          <Stat 
+            label={t("dash.conversion")} 
+            value={`${Number(m.conversion).toFixed(1)}%`} 
+            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" /></svg>}
+          />
+          <Card className="px-5 py-4 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center">
+                <p className="text-[12px] tracking-[0.1em] text-ink-soft">LƯỢT TRUY CẬP</p>
+                <span className="text-ink-soft/50"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></span>
+              </div>
+              <p className="mt-2 font-serif text-2xl leading-none">{compact(m.clicks?.web_visits ?? 0)}</p>
+            </div>
+            <div className="mt-2">
+              <button onClick={() => setVisitsOpen(true)} className="text-[12px] text-ink-soft hover:text-ink link-underline">See more</button>
+            </div>
+          </Card>
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <Card title={t("dash.trend")}>
+          <Card title="Biểu đồ đường (Doanh thu)">
             <RevenueTrend />
           </Card>
-          <Card title={t("dash.by_collection")}>
-            {(() => {
-              const sorted = [...m.by_collection].sort((a, b) => Number(b.value) - Number(a.value));
-              const collTotal = sorted.reduce((n, c) => n + Number(c.value), 0);
-              const insights = buildCollInsights(sorted.map(c => ({ label: c.label, value: Number(c.value) })), collTotal);
-              return (
-                <>
-                  <div className="flex items-center justify-center px-5 pt-5 pb-2">
-                    <Donut
-                      segments={sorted.map((c, i) => ({ label: c.label, value: Number(c.value), color: CHART_PALETTE[i] }))}
-                      valueFmt={compactVnd}
-                      center={
-                        <div>
-                          <div className="text-[12px] text-ink-soft">{t("dash.total")}</div>
-                          <div className="text-sm font-medium tabular-nums">{compactVnd(collTotal)}</div>
-                        </div>
-                      }
-                    />
-                  </div>
-                  {insights.length > 0 && (
-                    <div className="border-t border-[var(--color-line)] px-5 pt-4 pb-5 space-y-2.5">
-                      <p className="text-[12px] tracking-[0.12em] text-ink-soft uppercase mb-3">{t("dash.coll_notes")}</p>
-                      {insights.map((ins, idx) => (
-                        <div key={idx} className="flex items-start gap-2.5">
-                          <span className="mt-0.5 shrink-0">
-                            {ins.kind === "ok" && (
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-positive)" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
-                            )}
-                            {ins.kind === "warn" && (
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            )}
-                            {ins.kind === "act" && (
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                            )}
-                          </span>
-                          <p className="text-[12px] leading-snug text-ink-soft">{t(ins.tKey, ins.vars as any) as string}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+          
+          <Card title="Dòng sản phẩm bán chạy (< 10% thuộc khác)">
+            <div className="flex items-center justify-center px-5 py-10">
+              <Donut
+                segments={(() => {
+                  const sorted = [...m.by_category].sort((a, b) => b.value - a.value);
+                  const total = sorted.reduce((sum, s) => sum + s.value, 0);
+                  let threshold = total * 0.1;
+                  let otherValue = 0;
+                  let finalSegments: { id: string; label: string; value: number }[] = sorted.filter(s => {
+                    if (s.value < threshold) {
+                      otherValue += s.value;
+                      return false;
+                    }
+                    return true;
+                  });
+                  if (otherValue > 0) {
+                    finalSegments.push({ id: "other", label: "Khác", value: otherValue });
+                  }
+                  return finalSegments.map((c, i) => ({ label: c.label, value: Number(c.value), color: CHART_PALETTE[i % CHART_PALETTE.length] }));
+                })()}
+                valueFmt={compactVnd}
+              />
+            </div>
+          </Card>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <Card title="Nguồn hàng bán ra">
+            <div className="flex items-center justify-center px-5 py-10">
+              <Donut
+                segments={m.by_source.map((c, i) => ({ label: c.label, value: Number(c.value), color: CHART_PALETTE[i % CHART_PALETTE.length] }))}
+                valueFmt={compactVnd}
+              />
+            </div>
+          </Card>
+          
+          <Card title="Wishlist">
+            <div className="flex items-center justify-center px-5 py-10">
+              <Donut
+                segments={m.wishlist_pie.map((c, i) => ({ label: c.label, value: Number(c.value), color: CHART_PALETTE[i % CHART_PALETTE.length] }))}
+                valueFmt={v => `${compact(v)}`}
+              />
+            </div>
           </Card>
         </div>
 
@@ -319,6 +362,43 @@ export default function Dashboard() {
               {!m.top_returned.length && <li className="px-6 py-8 text-center text-xs text-ink-soft">{t("common.none")}</li>}
             </ul>
           </aside>
+        </>
+      )}
+      {visitsOpen && (
+        <>
+          <div className="fixed inset-0 z-[60] bg-black/25" onClick={() => setVisitsOpen(false)} />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none p-4">
+            <div className="bg-[var(--color-bg)] rounded-lg shadow-2xl w-full max-w-sm pointer-events-auto border edge">
+              <header className="flex items-center justify-between border-b edge px-5 py-4">
+                <h2 className="font-serif text-lg">Chi tiết lượt truy cập</h2>
+                <button onClick={() => setVisitsOpen(false)} className="text-ink hover:opacity-60">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              </header>
+              <div className="p-5 space-y-3">
+                <div className="flex justify-between items-center p-3 rounded border edge bg-[var(--color-tile)]/50">
+                  <span className="text-sm font-medium">Lượt truy cập web</span>
+                  <span className="tabular-nums font-medium">{compact(m.clicks?.web_visits ?? 0)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded border edge bg-[var(--color-tile)]/50">
+                  <span className="text-sm font-medium">Lượt click sản phẩm</span>
+                  <span className="tabular-nums font-medium">{compact(m.clicks?.product_clicks ?? 0)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded border edge bg-[var(--color-tile)]/50">
+                  <span className="text-sm font-medium">Lượt click Nguồn hàng</span>
+                  <span className="tabular-nums font-medium">{compact(m.clicks?.source_clicks ?? 0)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded border edge bg-[var(--color-tile)]/50">
+                  <span className="text-sm font-medium">Lượt click Collection</span>
+                  <span className="tabular-nums font-medium">{compact(m.clicks?.collection_clicks ?? 0)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded border edge bg-[var(--color-tile)]/50">
+                  <span className="text-sm font-medium">Lượt click CT khuyến mãi</span>
+                  <span className="tabular-nums font-medium">{compact(m.clicks?.campaign_clicks ?? 0)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>

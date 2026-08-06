@@ -25,6 +25,7 @@ const EMPTY: Draft = {
 export default function Banners() {
   const { t } = useTranslation();
   const { isAdmin, ready } = useAuth();
+  const readOnly = ready && !isAdmin;
   const { data: banners, loading, reload } = useAsync(listAllBanners, [], []);
   const [editing, setEditing] = useState<Draft | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -89,7 +90,11 @@ export default function Banners() {
 
       <div className="space-y-3">
         {banners.map((b, i) => (
-          <div key={b.id} className="flex items-center gap-4 overflow-hidden rounded-lg border edge bg-white/40">
+          <div 
+            key={b.id} 
+            className={`flex items-center gap-4 overflow-hidden rounded-lg border edge transition-colors ${!readOnly ? 'cursor-pointer hover:bg-white/60' : 'bg-white/40'}`}
+            onClick={() => !readOnly && setEditing({ ...b })}
+          >
             {/* thumbnail */}
             <div className="relative h-20 w-32 shrink-0 overflow-hidden bg-[var(--color-tile)]">
               {b.image_url && (
@@ -116,8 +121,8 @@ export default function Banners() {
 
             {/* active toggle */}
             <button
-              disabled={ready && !isAdmin}
-              onClick={() => toggleActive(b)}
+              disabled={readOnly}
+              onClick={(e) => { e.stopPropagation(); toggleActive(b); }}
               title={b.active ? t("ban.active") : t("ban.inactive")}
               className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors disabled:opacity-40 ${
                 b.active ? "bg-emerald-50 text-emerald-700" : "bg-[var(--color-tile)] text-ink-soft"
@@ -129,15 +134,15 @@ export default function Banners() {
             {/* reorder */}
             <div className="flex shrink-0 flex-col gap-0.5 pr-1">
               <button
-                disabled={(ready && !isAdmin) || i === 0}
-                onClick={() => move(i, -1)}
+                disabled={readOnly || i === 0}
+                onClick={(e) => { e.stopPropagation(); move(i, -1); }}
                 className="flex h-6 w-6 items-center justify-center rounded text-ink-soft transition-colors hover:bg-[var(--color-tile)] hover:text-ink disabled:opacity-25"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 15l-6-6-6 6"/></svg>
               </button>
               <button
-                disabled={(ready && !isAdmin) || i === banners.length - 1}
-                onClick={() => move(i, 1)}
+                disabled={readOnly || i === banners.length - 1}
+                onClick={(e) => { e.stopPropagation(); move(i, 1); }}
                 className="flex h-6 w-6 items-center justify-center rounded text-ink-soft transition-colors hover:bg-[var(--color-tile)] hover:text-ink disabled:opacity-25"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
@@ -145,19 +150,21 @@ export default function Banners() {
             </div>
 
             {/* actions */}
-            <div className="flex shrink-0 gap-3 pr-5">
+            <div className="flex shrink-0 gap-4 pr-5">
               <button
-                disabled={ready && !isAdmin}
-                onClick={() => setEditing({ ...b })}
-                className="text-[12px] text-ink-soft link-underline disabled:opacity-40"
+                disabled={readOnly}
+                onClick={(e) => { e.stopPropagation(); setEditing({ ...b }); }}
+                className="inline-flex items-center gap-1.5 text-[12px] text-ink-soft hover:text-ink transition-colors disabled:opacity-40"
               >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 {t("common.edit")}
               </button>
               <button
-                disabled={ready && !isAdmin}
-                onClick={() => remove(b)}
-                className="text-[12px] text-[var(--color-accent)] link-underline disabled:opacity-40"
+                disabled={readOnly}
+                onClick={(e) => { e.stopPropagation(); remove(b); }}
+                className="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-accent)] hover:opacity-70 transition-colors disabled:opacity-40"
               >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 {t("common.delete")}
               </button>
             </div>
