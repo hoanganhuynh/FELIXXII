@@ -1,11 +1,20 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart, cartCount } from "../store/cart";
 import { useAuth } from "../store/auth";
 import { useSearch } from "../store/search";
 import { useProducts } from "../store/products";
 
-const GARMENT_TYPES = ["Top", "Jacket", "Out-wear", "Shirt", "Skirt", "Dress", "Pants", "Gown"];
+const GARMENT_TYPES = [
+  { id: "top", label: "Top" },
+  { id: "jacket", label: "Jacket" },
+  { id: "outwear", label: "Out-wear" },
+  { id: "shirt", label: "Shirt" },
+  { id: "skirt", label: "Skirt" },
+  { id: "dress", label: "Dress" },
+  { id: "pants", label: "Pants" },
+  { id: "gown", label: "Gown" },
+];
 
 function useRotatingPlaceholder(items: string[], intervalMs = 2000) {
   const [idx, setIdx] = useState(0);
@@ -28,6 +37,14 @@ export default function Header() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const searchHint = useRotatingPlaceholder(products.map((p) => p.name));
+  const garmentCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const product of products) {
+      if (!product.garmentTypeId) continue;
+      counts.set(product.garmentTypeId, (counts.get(product.garmentTypeId) ?? 0) + 1);
+    }
+    return counts;
+  }, [products]);
 
   useEffect(() => {
     setMenu(false);
@@ -49,11 +66,12 @@ export default function Header() {
               <div className="absolute left-0 top-full w-56 border edge bg-[var(--color-bg)] p-2 shadow-xl">
                 {GARMENT_TYPES.map((g) => (
                   <Link
-                    key={g}
+                    key={g.id}
                     to="/shop"
-                    className="block rounded-sm px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-tile)]"
+                    className="flex items-center justify-between gap-5 rounded-sm px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-tile)]"
                   >
-                    {g}
+                    <span>{g.label}</span>
+                    <span className="text-xs tabular-nums text-ink-soft">{garmentCounts.get(g.id) ?? 0}</span>
                   </Link>
                 ))}
               </div>
@@ -103,7 +121,10 @@ export default function Header() {
         <nav className="flex flex-col px-6 py-4">
           <p className="label mt-2 text-ink-soft">Felixxii</p>
           {GARMENT_TYPES.map((g) => (
-            <NavLink key={g} to="/shop" className="py-2 text-sm">{g}</NavLink>
+            <NavLink key={g.id} to="/shop" className="flex items-center justify-between py-2 text-sm">
+              <span>{g.label}</span>
+              <span className="text-xs tabular-nums text-ink-soft">{garmentCounts.get(g.id) ?? 0}</span>
+            </NavLink>
           ))}
           <NavLink to="/shop" className="py-2 font-serif text-lg mt-2">Collection</NavLink>
           <NavLink to="/shop?cat=dam-bridal" className="py-2 font-serif text-lg">Bridal</NavLink>
