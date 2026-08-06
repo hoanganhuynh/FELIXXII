@@ -53,7 +53,7 @@ export default function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b edge bg-[var(--color-bg)]/95 backdrop-blur-sm">
-      <div className="mx-auto grid h-[62px] max-w-[1800px] grid-cols-[1fr_auto_1fr] items-center px-5 md:px-8">
+      <div className="mx-auto flex h-[62px] max-w-[1800px] items-center justify-between px-5 md:px-8 lg:grid lg:grid-cols-[1fr_auto_1fr]">
         {/* left nav — garment types + collection + bridal */}
         <nav className="hidden items-center gap-6 lg:flex">
           {/* Felixxii (garment types) dropdown */}
@@ -82,19 +82,19 @@ export default function Header() {
         </nav>
 
         {/* mobile menu btn */}
-        <button className="flex flex-col gap-[5px] lg:hidden" aria-label="Menu" onClick={() => setMenu((m) => !m)}>
+        <button className="flex shrink-0 flex-col gap-[5px] lg:hidden" aria-label="Menu" onClick={() => setMenu((m) => !m)}>
           <span className={`h-px w-6 bg-ink transition-transform ${menu ? "translate-y-[6px] rotate-45" : ""}`} />
           <span className={`h-px w-6 bg-ink transition-opacity ${menu ? "opacity-0" : ""}`} />
           <span className={`h-px w-6 bg-ink transition-transform ${menu ? "-translate-y-[6px] -rotate-45" : ""}`} />
         </button>
 
         {/* wordmark */}
-        <Link to="/" className="flex items-center justify-center" aria-label="FELIXXII — home">
-          <img src="/logo-ngang.svg" alt="FELIXXII" className="h-6 md:h-7 w-auto" />
+        <Link to="/" className="ml-5 flex min-w-0 flex-1 items-center justify-start lg:ml-0 lg:justify-center" aria-label="FELIXXII — home">
+          <img src="/logo-ngang.svg" alt="FELIXXII" className="h-7 w-auto max-w-[44vw] md:h-8 lg:max-w-none" />
         </Link>
 
         {/* right */}
-        <div className="flex items-center justify-end gap-4 md:gap-5">
+        <div className="flex shrink-0 items-center justify-end gap-3 md:gap-5">
           <button aria-label="Search" onClick={() => openSearch(true)} className="flex items-center gap-2 text-ink transition-opacity hover:opacity-50">
             <Icon><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></Icon>
             <span key={searchHint} className="hidden animate-[fade_0.4s_ease] text-[12px] text-ink-soft md:inline">

@@ -1,17 +1,23 @@
--- ============================================================
--- style_list.color_variants — per-colour size breakdown
---
--- The storefront now shows one card per colour of a style (e.g. "sp1" with
--- variants black-S/black-L/red-S becomes two cards: "sp1 · black" with
--- sizes [S,L] and "sp1 · red" with sizes [S]). The existing `sizes` column
--- stays untouched (aggregated across ALL colours — dashboard/admin code
--- still reads it) — this just adds the per-colour breakdown alongside it.
--- `price` mirrors the admin product list rule: variant override when present,
--- otherwise the shared style price. If legacy data has size-specific prices
--- for one colour, the storefront card uses the highest price as the colour
--- price so edited values beat old defaults.
--- Additive-only: CREATE OR REPLACE VIEW appending one new trailing column.
--- ============================================================
+-- Keep storefront colour cards in sync with admin variant pricing.
+-- Price is shared by `style + colour`, not by size. For legacy rows where
+-- sizes of the same colour drifted apart, keep the highest effective price so
+-- edited product prices beat old defaults.
+
+with color_prices as (
+  select
+    v.style_id,
+    v.color_name,
+    max(coalesce(v.price_override, s.price)) as price
+  from public.variants v
+  join public.styles s on s.id = v.style_id
+  group by v.style_id, v.color_name
+)
+update public.variants v
+set price_override = cp.price
+from color_prices cp
+where v.style_id = cp.style_id
+  and v.color_name = cp.color_name
+  and v.price_override is distinct from cp.price;
 
 create or replace view public.style_list with (security_invoker = true) as
 select

@@ -2,8 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { resolveImageUrl, type Product } from "../data/catalog";
 import { useProducts } from "../store/products";
-import { vnd } from "../components/ProductCard";
-import ProductImage from "../components/ProductImage";
+import ProductCard from "../components/ProductCard";
 import { supabase } from "../lib/supabase";
 
 interface HeroBanner {
@@ -12,10 +11,6 @@ interface HeroBanner {
   collection_tag: string;
   heading: string;
   subheading: string;
-  cta1_label: string;
-  cta1_url: string;
-  cta2_label: string;
-  cta2_url: string;
 }
 
 const FALLBACK_BANNERS: HeroBanner[] = [
@@ -23,8 +18,6 @@ const FALLBACK_BANNERS: HeroBanner[] = [
     id: "f1", image_url: "/hero-banner/592347093_1190008066643058_5631399014138437439_n.jpg",
     collection_tag: "FW 2025", heading: "Lụa Đêm",
     subheading: "",
-    cta1_label: "Same collection", cta1_url: "/shop?collection=thu-dong-2025",
-    cta2_label: "View details", cta2_url: "/san-pham/lua-dem",
   },
 ];
 
@@ -36,7 +29,7 @@ function HeroCarousel() {
   useEffect(() => {
     supabase
       .from("hero_banners")
-      .select("id, image_url, collection_tag, heading, subheading, cta1_label, cta1_url, cta2_label, cta2_url")
+      .select("id, image_url, collection_tag, heading, subheading")
       .eq("active", true)
       .order("sort_order")
       .then(({ data }) => { if (data?.length) setBanners(data as HeroBanner[]); });
@@ -77,29 +70,24 @@ function HeroCarousel() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
           {/* Centered bottom text block — Figma ref */}
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center pb-12 text-center text-white">
-            <h1 className="font-serif text-4xl leading-tight md:text-5xl lg:text-6xl drop-shadow-sm">
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-5 pb-10 text-center text-white md:pb-12">
+            <h1 className="font-serif text-[2.15rem] leading-[1.08] drop-shadow-sm md:text-5xl lg:text-6xl">
               {b.heading}
             </h1>
 
-            {/* 2 CTA buttons */}
-            <div className="mt-5 flex items-center gap-3">
-              {b.cta1_label && (
-                <Link
-                  to={b.cta1_url}
-                  className="rounded-full bg-white px-6 py-2.5 text-[13px] font-medium text-black transition-opacity hover:opacity-90"
-                >
-                  {b.cta1_label}
-                </Link>
-              )}
-              {b.cta2_label && (
-                <Link
-                  to={b.cta2_url}
-                  className="rounded-full border border-white/70 px-6 py-2.5 text-[13px] text-white/90 transition-colors hover:bg-white/10"
-                >
-                  {b.cta2_label}
-                </Link>
-              )}
+            <div className="mt-5 flex items-center gap-3 md:mt-6 md:gap-4">
+              <Link
+                to="/shop"
+                className="inline-flex h-11 min-w-[132px] items-center justify-center rounded-full bg-white px-6 text-[13px] font-medium text-black transition-opacity hover:opacity-90 md:h-[52px] md:min-w-[170px] md:px-8 md:text-[16px]"
+              >
+                SHOP ALL
+              </Link>
+              <Link
+                to="/proposal"
+                className="inline-flex h-11 min-w-[124px] items-center justify-center rounded-full border border-white px-6 text-[13px] text-white transition-colors hover:bg-white/10 md:h-[52px] md:min-w-[150px] md:px-8 md:text-[16px]"
+              >
+                Proposal
+              </Link>
             </div>
 
             {/* Slide indicators (line style) */}
@@ -136,30 +124,6 @@ function HeroCarousel() {
   );
 }
 
-function ArticleCard({ product, imgIndex }: { product: Product; imgIndex: number }) {
-  return (
-    <Link to={`/san-pham/${product.id}`} className="group block">
-      <div className="aspect-[2/3] overflow-hidden bg-[var(--color-tile)]">
-        <ProductImage
-          item={product}
-          index={imgIndex}
-          className="h-full w-full object-top transition-transform duration-700 group-hover:scale-[1.03]"
-        />
-      </div>
-      <div className="mt-3 space-y-0.5">
-        <p className="text-sm">{product.name}</p>
-        <p className="text-xs text-ink-soft">{vnd(product.price)}</p>
-        <button
-          className="text-[11px] uppercase tracking-[0.1em] underline underline-offset-2 text-ink-soft hover:text-ink transition-colors"
-          onClick={(e) => e.preventDefault()}
-        >
-          Add to Wishlist
-        </button>
-      </div>
-    </Link>
-  );
-}
-
 interface Promotion {
   id: string;
   image_url: string;
@@ -168,8 +132,12 @@ interface Promotion {
 }
 
 function PromoImage({ p, className }: { p: Promotion; className: string }) {
-  const img = <img src={p.image_url} alt={p.title} className={className} />;
-  return p.link_url ? <Link to={p.link_url}>{img}</Link> : img;
+  const target = p.link_url.trim() || `/khuyen-mai/${p.id}`;
+  const img = <img src={p.image_url} alt={p.title || "Banner khuyến mãi"} className={className} />;
+  if (/^https?:\/\//i.test(target)) {
+    return <a href={target} target="_blank" rel="noreferrer">{img}</a>;
+  }
+  return <Link to={target}>{img}</Link>;
 }
 
 function PromotionCarousel({ promos }: { promos: Promotion[] }) {
@@ -225,7 +193,7 @@ function PromotionSection() {
   if (!promos.length) return null;
 
   return (
-    <section className="px-6 py-10 md:px-8 lg:px-10">
+    <section className="px-0 py-10 md:px-8 lg:px-10">
       {promos.length === 1 && <PromoImage p={promos[0]} className="h-auto w-full object-cover" />}
       {promos.length === 2 && (
         <div className="grid grid-cols-2 gap-4 md:gap-6">
@@ -239,11 +207,17 @@ function PromotionSection() {
   );
 }
 
+function newArrivalImage(product: Product, mode: "product" | "model") {
+  const fallback = product.images?.[0] ?? "";
+  if (mode === "product") return product.productImage ?? fallback;
+  return product.modelImage ?? product.images?.[1] ?? fallback;
+}
+
 export default function Home() {
   const products = useProducts((s) => s.products);
   const loaded = useProducts((s) => s.loaded);
-  const [viewMode, setViewMode] = useState<"model" | "product">("model");
-  const [thumbIdx, setThumbIdx] = useState(0);
+  const [newArrivalView, setNewArrivalView] = useState<"product" | "model">("model");
+  const [newArrivalPage, setNewArrivalPage] = useState(0);
 
   const sorted = [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99));
   const newArrivalPool = [...products].sort((a, b) => {
@@ -261,25 +235,19 @@ export default function Home() {
     if (featuredStyleIds.has(product.styleId)) continue;
     featured.push(product);
     featuredStyleIds.add(product.styleId);
-    if (featured.length === 5) break;
+    if (featured.length === 6) break;
   }
   const top20 = sorted.slice(0, 4);
+  const newArrivalPageSize = 3;
+  const newArrivalPages = Math.max(1, Math.ceil(featured.length / newArrivalPageSize));
+  const visibleNewArrivals = featured.slice(
+    newArrivalPage * newArrivalPageSize,
+    newArrivalPage * newArrivalPageSize + newArrivalPageSize
+  );
 
-  // Collect up to 5 thumbnail images from featured products
-  const thumbImgs: { src: string; productId: string }[] = [];
-  for (const p of featured) {
-    for (const img of p.images ?? []) {
-      if (thumbImgs.length >= 5) break;
-      thumbImgs.push({ src: resolveImageUrl(img), productId: p.id });
-    }
-    if (thumbImgs.length >= 5) break;
-  }
-
-  // Image index to show: model = thumbIdx, product = last image of each product
-  const getImgIndex = (p: Product) => {
-    if (viewMode === "product") return (p.images?.length ?? 1) - 1;
-    return thumbIdx;
-  };
+  useEffect(() => {
+    if (newArrivalPage >= newArrivalPages) setNewArrivalPage(Math.max(0, newArrivalPages - 1));
+  }, [newArrivalPage, newArrivalPages]);
 
   return (
     <div className="pt-[62px]">
@@ -295,7 +263,7 @@ export default function Home() {
             <p className="text-[11px] tracking-[0.18em] uppercase text-ink-soft">Best week</p>
             <h2 className="mt-0.5 font-serif text-3xl md:text-4xl">New Arrival</h2>
           </div>
-          <Link to="/shop" className="flex items-center gap-1 text-[12px] tracking-[0.1em] uppercase text-ink-soft hover:text-ink transition-colors">
+          <Link to="/shop" className="hidden items-center gap-1 text-[12px] tracking-[0.1em] uppercase text-ink-soft transition-colors hover:text-ink md:flex">
             More <span aria-hidden>→</span>
           </Link>
         </div>
@@ -303,68 +271,81 @@ export default function Home() {
         {!loaded && <p className="py-8 text-center text-xs text-ink-soft">Đang tải sản phẩm…</p>}
         {loaded && !featured.length && <p className="py-8 text-center text-xs text-ink-soft">Chưa có sản phẩm.</p>}
 
-        {/* Mobile: horizontal snap scroll 1.1 cards; Desktop: top 5 grid */}
-        <div className="-mx-6 flex snap-x snap-mandatory overflow-x-auto pl-6 scroll-pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pl-0 md:scroll-pl-0 lg:grid-cols-5">
+        <div className="no-scrollbar -mr-6 flex snap-x gap-4 overflow-x-auto pb-2 md:hidden">
           {featured.map((p) => (
-            <div key={p.id} className="w-[88vw] shrink-0 snap-start pr-4 md:w-auto md:pr-0">
-              <ArticleCard product={p} imgIndex={getImgIndex(p)} />
+            <div key={p.id} className="w-[90%] shrink-0 snap-start">
+              <ProductCard item={p} imageMode={newArrivalView} />
             </div>
           ))}
         </div>
 
-        {/* Thumbnail strip + view toggle */}
-        <div className="mt-8 flex flex-col items-center gap-4">
-          {/* Thumbnails */}
-          {thumbImgs.length > 0 && (
-            <div className="flex items-end gap-3">
-              {thumbImgs.map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setThumbIdx(i); setViewMode("model"); }}
-                  className={`overflow-hidden transition-all duration-200 ${
-                    viewMode === "model" && thumbIdx === i
-                      ? "ring-2 ring-ink ring-offset-1 opacity-100"
-                      : "opacity-45 hover:opacity-75"
-                  }`}
-                  style={{ width: 56, height: 74 }}
-                >
-                  <img src={t.src} alt="" className="h-full w-full object-cover object-top" />
-                </button>
-              ))}
+        <div className="hidden gap-6 md:grid md:grid-cols-3">
+          {visibleNewArrivals.map((p) => (
+            <div key={p.id}>
+              <ProductCard item={p} imageMode={newArrivalView} />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-7">
+          {featured.length > newArrivalPageSize && (
+            <div className="hidden items-end gap-3 md:flex">
+              {featured.map((p, i) => {
+                const page = Math.floor(i / newArrivalPageSize);
+                const active = page === newArrivalPage;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setNewArrivalPage(page)}
+                    aria-label={`Show New Arrival page ${page + 1}`}
+                    className={`overflow-hidden rounded-sm transition-opacity duration-200 ${
+                      active ? "opacity-100" : "opacity-70 hover:opacity-90"
+                    }`}
+                    style={{ width: 56, height: 74 }}
+                  >
+                    <img
+                      src={resolveImageUrl(newArrivalImage(p, newArrivalView))}
+                      alt=""
+                      className="h-full w-full object-cover object-top"
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          {/* PRODUCT VIEW ● MODEL VIEW toggle */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setViewMode("product")}
-              className={`text-[11px] tracking-[0.15em] uppercase transition-colors ${
-                viewMode === "product" ? "text-ink" : "text-ink-soft"
+              onClick={() => setNewArrivalView("product")}
+              className={`text-[11px] uppercase tracking-[0.15em] transition-colors ${
+                newArrivalView === "product" ? "text-ink" : "text-ink-soft"
               }`}
             >
               Product View
             </button>
-            {/* Radio dot */}
             <button
-              onClick={() => setViewMode(viewMode === "model" ? "product" : "model")}
+              onClick={() => setNewArrivalView((view) => view === "model" ? "product" : "model")}
               className="flex h-4 w-8 items-center rounded-full border border-ink/30 px-0.5 transition-colors"
-              aria-label="Toggle view"
+              aria-label="Toggle New Arrival image view"
             >
               <span
                 className={`h-3 w-3 rounded-full bg-ink transition-transform duration-200 ${
-                  viewMode === "model" ? "translate-x-4" : "translate-x-0"
+                  newArrivalView === "model" ? "translate-x-4" : "translate-x-0"
                 }`}
               />
             </button>
             <button
-              onClick={() => setViewMode("model")}
-              className={`text-[11px] tracking-[0.15em] uppercase transition-colors ${
-                viewMode === "model" ? "text-ink" : "text-ink-soft"
+              onClick={() => setNewArrivalView("model")}
+              className={`text-[11px] uppercase tracking-[0.15em] transition-colors ${
+                newArrivalView === "model" ? "text-ink" : "text-ink-soft"
               }`}
             >
               Model View
             </button>
           </div>
+          <Link to="/shop" className="flex items-center gap-1 text-[12px] uppercase tracking-[0.1em] text-ink-soft transition-colors hover:text-ink md:hidden">
+            More <span aria-hidden>→</span>
+          </Link>
         </div>
       </section>
 
@@ -379,33 +360,21 @@ export default function Home() {
             <p className="text-[11px] tracking-[0.18em] uppercase text-ink-soft">Best week</p>
             <h2 className="mt-0.5 font-serif text-3xl md:text-4xl">This week top 20</h2>
           </div>
-          <Link to="/shop" className="flex items-center gap-1 text-[12px] tracking-[0.1em] uppercase text-ink-soft hover:text-ink transition-colors">
+          <Link to="/shop" className="hidden items-center gap-1 text-[12px] tracking-[0.1em] uppercase text-ink-soft transition-colors hover:text-ink md:flex">
             More <span aria-hidden>→</span>
           </Link>
         </div>
 
         {/* Ranked grid */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {top20.map((p) => (
-            <Link key={p.id} to={`/san-pham/${p.id}`} className="group block">
-              <div className="relative aspect-[2/3] overflow-hidden bg-[var(--color-tile)]">
-                <ProductImage
-                  item={p}
-                  className="h-full w-full object-top transition-transform duration-700 group-hover:scale-[1.03]"
-                />
-              </div>
-              <div className="mt-3 space-y-0.5">
-                <p className="text-sm">{p.name}</p>
-                <p className="text-xs text-ink-soft">{vnd(p.price)}</p>
-                <button
-                  className="text-[11px] uppercase tracking-[0.1em] underline underline-offset-2 text-ink-soft hover:text-ink transition-colors"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Add to Wishlist
-                </button>
-              </div>
-            </Link>
+            <ProductCard key={p.id} item={p} />
           ))}
+        </div>
+        <div className="mt-8 flex justify-center md:hidden">
+          <Link to="/shop" className="flex items-center gap-1 text-[12px] uppercase tracking-[0.1em] text-ink-soft transition-colors hover:text-ink">
+            More <span aria-hidden>→</span>
+          </Link>
         </div>
       </section>
 

@@ -7,7 +7,7 @@ import {
 } from "../api/rules";
 import { useAsync } from "../lib/useAsync";
 import { useAuth } from "../../store/auth";
-import { Card, Btn, Badge } from "../components/ui";
+import { Card, Btn } from "../components/ui";
 import { compactVnd, compact } from "../lib/format";
 
 type Draft = { id: string; label: string; season: string; note: string; isNew: boolean };
@@ -107,6 +107,31 @@ export default function AdminCollections() {
                 <Cell k={t("coll.revenue")} v={compactVnd(c.revenue)} />
               </div>
 
+              {c.products.length > 0 && (
+                <div className="mt-5 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {c.products.slice(0, 6).map((p) => (
+                    <Link
+                      key={p.id}
+                      to={`/admin/products/${p.id}`}
+                      title={p.name}
+                      className="block h-24 w-16 shrink-0 overflow-hidden rounded-md border edge bg-[var(--color-tile)]"
+                    >
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} className="h-full w-full object-cover object-top" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-ink-soft">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                          </svg>
+                        </div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               <button
                 onClick={() => toggleExpanded(c.id)}
                 className="mt-4 text-[12px] link-underline text-ink-soft hover:text-ink"
@@ -169,4 +194,3 @@ function EditModal({ d, onClose, onSave }: { d: Draft; onClose: () => void; onSa
     </div>
   );
 }
-

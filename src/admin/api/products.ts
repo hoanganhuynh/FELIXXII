@@ -196,6 +196,9 @@ export async function duplicateStyle(id: string): Promise<void> {
       in_stock: false,
       barcode: null, // barcodes are unique — a copy must not reuse them
       price_override: v.price_override,
+      image_product_view: v.image_product_view,
+      image_model_view: v.image_model_view,
+      images_detail: v.images_detail,
     }));
     const { error: vErr } = await supabase.from("variants").insert(rows);
     if (vErr) throw vErr;
@@ -266,12 +269,16 @@ export interface StyleNameHit {
 
 /** typeahead for the "Loại sản phẩm" combobox — search existing styles by name */
 export async function listStyleNames(q: string, limit = 15): Promise<StyleNameHit[]> {
+  const query = q.trim();
+  if (!query) return [];
+
   let sel = supabase
     .from("styles")
     .select("id, name, style_code, source_id, garment_type_id, category_id, collection_id, silhouette, body_type, status, price, material, description, image_product_view, image_model_view, images_detail, size_template_id")
+    .not("style_code", "ilike", "FX-%")
     .order("name")
     .limit(limit);
-  if (q.trim()) sel = sel.ilike("name", `%${q.trim()}%`);
+  sel = sel.ilike("name", `%${query}%`);
   const { data, error } = await sel;
   if (error) throw error;
   return (data ?? []) as StyleNameHit[];
@@ -304,23 +311,86 @@ export async function getVariantBySku(sku: string): Promise<VariantRow> {
   return data;
 }
 
+function isMissingVariantImageColumn(error: unknown) {
+  const message = error && typeof error === "object" && "message" in error
+    ? String((error as { message?: unknown }).message ?? "")
+    : String(error);
+  return (
+    message.includes("variants.image_product_view") ||
+    message.includes("variants.image_model_view") ||
+    message.includes("variants.images_detail") ||
+    message.includes("'image_product_view' column") ||
+    message.includes("'image_model_view' column") ||
+    message.includes("'images_detail' column") ||
+    message.includes("image_product_view") ||
+    message.includes("image_model_view") ||
+    message.includes("images_detail")
+  );
+}
+
+function errorMessage(error: unknown) {
+  return error && typeof error === "object" && "message" in error
+    ? String((error as { message?: unknown }).message ?? "")
+    : String(error);
+}
+
+function isForeignKeyConflict(error: unknown) {
+  const e = error as { code?: unknown; status?: unknown } | null;
+  const message = errorMessage(error);
+  return (
+    e?.code === "23503" ||
+    e?.status === 409 ||
+    message.includes("order_items_sku_fkey") ||
+    message.includes("violates foreign key constraint")
+  );
+}
+
+function variantImageMigrationError() {
+  return new Error(
+    "DB chưa có cột ảnh theo màu/size cho variants. Hãy chạy migration 20260814000000_variant_color_images.sql rồi tạo lại sản phẩm để ảnh từng màu không bị lấy nhầm.",
+  );
+}
+
 /** insert ONE variant (a single SKU) — the new one-at-a-time flow, vs. replaceVariants' grid */
 export async function addVariant(row: VariantInsert): Promise<void> {
   const { error } = await supabase.from("variants").insert(row);
-  if (error) throw error;
+  if (!error) return;
+  if (isMissingVariantImageColumn(error)) throw variantImageMigrationError();
+  throw error;
 }
 
 export type VariantUpdate = Database["public"]["Tables"]["variants"]["Update"];
 
 export async function updateVariant(sku: string, patch: VariantUpdate): Promise<void> {
   const { data, error } = await supabase.from("variants").update(patch).eq("sku", sku).select("sku");
-  if (error) throw error;
+  if (error) {
+    if (isMissingVariantImageColumn(error)) throw variantImageMigrationError();
+    throw error;
+  }
   if (!data?.length) throw new Error("Not permitted — admin role required.");
 }
 
-export async function deleteVariant(sku: string): Promise<void> {
-  const { data, error } = await supabase.from("variants").delete().eq("sku", sku).select("sku");
+export async function updateColorVariantPrice(styleId: string, colorName: string, price: number): Promise<number> {
+  const { data, error } = await supabase
+    .from("variants")
+    .update({ price_override: price })
+    .eq("style_id", styleId)
+    .eq("color_name", colorName)
+    .select("sku");
   if (error) throw error;
+  return data?.length ?? 0;
+}
+
+export async function deleteVariant(sku: string): Promise<void> {
+  const { data, error } = await supabase.from("variants").delete().eq("sku", sku).select("sku, style_id");
+  if (error) {
+    if (isForeignKeyConflict(error)) {
+      const archived = await archiveVariant(sku);
+      if (!archived) throw new Error("Not Found / Permission Denied");
+      return;
+    }
+    throw error;
+  }
   if (!data?.length) throw new Error("Not Found / Permission Denied");
 }
 
@@ -332,12 +402,52 @@ export async function bulkUpdateVariants(skus: string[], in_stock: boolean): Pro
 
 export async function bulkDeleteVariants(skus: string[]): Promise<number> {
   const { data, error } = await supabase.from("variants").delete().in("sku", skus).select("sku");
-  if (error) throw error;
+  if (error) {
+    if (isForeignKeyConflict(error)) return bulkArchiveVariants(skus);
+    throw error;
+  }
   return data?.length ?? 0;
 }
 
+async function archiveVariant(sku: string): Promise<number> {
+  const { data, error } = await supabase
+    .from("variants")
+    .update({ in_stock: false, stock: 0 })
+    .eq("sku", sku)
+    .select("sku, style_id");
+  if (error) throw error;
+  const row = data?.[0];
+  if (row?.style_id) await archiveStyleIfNoSellableVariants(row.style_id);
+  return data?.length ?? 0;
+}
+
+async function bulkArchiveVariants(skus: string[]): Promise<number> {
+  const { data, error } = await supabase
+    .from("variants")
+    .update({ in_stock: false, stock: 0 })
+    .in("sku", skus)
+    .select("sku, style_id");
+  if (error) throw error;
+
+  const styleIds = [...new Set((data ?? []).map((row) => row.style_id).filter(Boolean))];
+  await Promise.all(styleIds.map((styleId) => archiveStyleIfNoSellableVariants(styleId)));
+  return data?.length ?? 0;
+}
+
+async function archiveStyleIfNoSellableVariants(styleId: string) {
+  const { count, error } = await supabase
+    .from("variants")
+    .select("sku", { count: "exact", head: true })
+    .eq("style_id", styleId)
+    .eq("in_stock", true);
+  if (error) throw error;
+  if ((count ?? 0) > 0) return;
+  await updateStyle(styleId, { status: "archived" });
+}
+
 export async function bulkUpdateStyleProperties(styleIds: string[], field: "collection_id" | "source_id" | "garment_type_id", value: string | null): Promise<number> {
-  const { data, error } = await supabase.from("styles").update({ [field]: value }).in("id", styleIds).select("id");
+  const patch: Pick<Database["public"]["Tables"]["styles"]["Update"], typeof field> = { [field]: value };
+  const { data, error } = await supabase.from("styles").update(patch).in("id", styleIds).select("id");
   if (error) throw error;
   return data?.length ?? 0;
 }
@@ -380,11 +490,19 @@ export async function listProductRows(p: ProductListParams): Promise<{ rows: Pro
     // reuse the existing trigram-ranked SKU search, then enrich + filter client-side
     const hits = await searchSkus(p.q.trim(), 300);
     const styleIds = [...new Set(hits.map((h) => h.style_id))];
-    const { data: styles } = await supabase
-      .from("styles")
-      .select("id, source_id, garment_type_id, status, images, image_product_view")
-      .in("id", styleIds.length ? styleIds : ["00000000-0000-0000-0000-000000000000"]);
+    const skus = hits.map((h) => h.sku);
+    const [{ data: styles }, { data: variants }] = await Promise.all([
+      supabase
+        .from("styles")
+        .select("id, source_id, garment_type_id, status, images, image_product_view")
+        .in("id", styleIds.length ? styleIds : ["00000000-0000-0000-0000-000000000000"]),
+      supabase
+        .from("variants")
+        .select("sku, image_product_view")
+        .in("sku", skus.length ? skus : [""]),
+    ]);
     const byId = new Map((styles ?? []).map((s) => [s.id, s]));
+    const variantImageBySku = new Map((variants ?? []).map((v) => [v.sku, v.image_product_view]));
 
     let rows: ProductRow[] = hits.map((h) => {
       const s = byId.get(h.style_id);
@@ -394,7 +512,7 @@ export async function listProductRows(p: ProductListParams): Promise<{ rows: Pro
         in_stock: h.stock > 0,
         source_id: s?.source_id ?? null, garment_type_id: s?.garment_type_id ?? null,
         status: (s?.status as StyleStatus) ?? "draft",
-        image: s?.image_product_view ?? (Array.isArray(s?.images) ? (s?.images[0] as string) : null) ?? null,
+        image: variantImageBySku.get(h.sku) ?? s?.image_product_view ?? (Array.isArray(s?.images) ? (s?.images[0] as string) : null) ?? null,
       };
     });
     if (p.source) rows = rows.filter((r) => r.source_id === p.source);
@@ -408,27 +526,45 @@ export async function listProductRows(p: ProductListParams): Promise<{ rows: Pro
     return { rows, total };
   }
 
-  let sel = supabase
-    .from("variants")
-    .select(
-      "sku, style_id, color_name, color_hex, size, price_override, in_stock, styles!inner(name, style_code, source_id, garment_type_id, category_id, collection_id, status, price, image_product_view, images, created_at)",
-      { count: "exact" }
-    );
+  const runVariantQuery = async (includeVariantImage: boolean) => {
+    const columns = includeVariantImage
+      ? "image_product_view, sku, style_id, color_name, color_hex, size, price_override, in_stock, styles!inner(name, style_code, source_id, garment_type_id, category_id, collection_id, status, price, image_product_view, images, created_at)"
+      : "sku, style_id, color_name, color_hex, size, price_override, in_stock, styles!inner(name, style_code, source_id, garment_type_id, category_id, collection_id, status, price, image_product_view, images, created_at)";
+    let sel = supabase
+      .from("variants")
+      .select(columns, { count: "exact" });
 
-  if (p.source)      sel = sel.eq("styles.source_id", p.source);
-  if (p.garmentType) sel = sel.eq("styles.garment_type_id", p.garmentType);
-  if (p.category)    sel = sel.eq("styles.category_id", p.category);
-  if (p.collection)  sel = sel.eq("styles.collection_id", p.collection);
-  if (p.status)      sel = sel.eq("styles.status", p.status as StyleStatus);
-  if (p.stock === "in")  sel = sel.eq("in_stock", true);
-  if (p.stock === "out") sel = sel.eq("in_stock", false);
+    if (p.source)      sel = sel.eq("styles.source_id", p.source);
+    if (p.garmentType) sel = sel.eq("styles.garment_type_id", p.garmentType);
+    if (p.category)    sel = sel.eq("styles.category_id", p.category);
+    if (p.collection)  sel = sel.eq("styles.collection_id", p.collection);
+    if (p.status)      sel = sel.eq("styles.status", p.status as StyleStatus);
+    if (p.stock === "in")  sel = sel.eq("in_stock", true);
+    if (p.stock === "out") sel = sel.eq("in_stock", false);
 
-  sel = sel.order("created_at", { referencedTable: "styles", ascending: false }).order("sku");
+    return sel
+      .order("created_at", { referencedTable: "styles", ascending: false })
+      .order("sku")
+      .range(page * pageSize, page * pageSize + pageSize - 1);
+  };
 
-  const { data, error, count } = await sel.range(page * pageSize, page * pageSize + pageSize - 1);
+  let result = await runVariantQuery(true);
+  let hasVariantImages = true;
+  if (result.error && isMissingVariantImageColumn(result.error)) {
+    result = await runVariantQuery(false);
+    hasVariantImages = false;
+  }
+  const { data, error, count } = result;
   if (error) throw error;
 
-  const rows: ProductRow[] = (data ?? []).map((v) => {
+  const rows: ProductRow[] = ((data ?? []) as unknown as Array<VariantRow & {
+    image_product_view?: string | null;
+    styles: {
+      name: string; style_code: string; source_id: string | null; garment_type_id: string | null;
+      status: StyleStatus; price: number; image_product_view: string | null; images: string[] | null;
+    };
+  }>).map((v) => {
+    const row = v as typeof v & { image_product_view?: string | null };
     const s = v.styles as unknown as {
       name: string; style_code: string; source_id: string | null; garment_type_id: string | null;
       status: StyleStatus; price: number; image_product_view: string | null; images: string[] | null;
@@ -438,7 +574,7 @@ export async function listProductRows(p: ProductListParams): Promise<{ rows: Pro
       color_name: v.color_name, color_hex: v.color_hex, size: v.size,
       price: v.price_override ?? s.price, in_stock: v.in_stock,
       source_id: s.source_id, garment_type_id: s.garment_type_id, status: s.status,
-      image: s.image_product_view ?? (Array.isArray(s.images) ? s.images[0] : null) ?? null,
+      image: (hasVariantImages ? row.image_product_view : null) ?? s.image_product_view ?? (Array.isArray(s.images) ? s.images[0] : null) ?? null,
     };
   });
   return { rows, total: count ?? 0 };

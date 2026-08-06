@@ -5,7 +5,7 @@ interface CampaignsState {
   campaigns: CampaignRow[];
   loading: boolean;
   loaded: boolean;
-  fetch: () => Promise<void>;
+  fetch: (force?: boolean) => Promise<void>;
 }
 
 /** Active, in-date-range campaigns (RLS-filtered) — fetched once and cached
@@ -14,8 +14,8 @@ export const useCampaigns = create<CampaignsState>((set, get) => ({
   campaigns: [],
   loading: false,
   loaded: false,
-  fetch: async () => {
-    if (get().loaded || get().loading) return;
+  fetch: async (force = false) => {
+    if (!force && (get().loaded || get().loading)) return;
     set({ loading: true });
     try {
       const campaigns = await listActiveCampaigns();

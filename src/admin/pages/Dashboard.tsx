@@ -168,7 +168,7 @@ import { compactVnd, compact } from "../lib/format";
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Card title="Biểu đồ đường (Doanh thu)">
-            <RevenueTrend />
+            <RevenueTrend timeFilter={timeFilter} />
           </Card>
           
           <Card title="Dòng sản phẩm bán chạy (< 10% thuộc khác)">
@@ -404,4 +404,3 @@ import { compactVnd, compact } from "../lib/format";
     </div>
   );
 }
-

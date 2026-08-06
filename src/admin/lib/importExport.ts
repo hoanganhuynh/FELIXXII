@@ -1,6 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { read, utils, writeFile } from "xlsx";
-import { bulkUpdateVariants, nextStyleCode } from "../api/products";
+import { nextStyleCode } from "../api/products";
 import { newSkuCode } from "./slug";
 
 export async function exportProductsToXlsx(format: "xlsx" | "csv" = "xlsx") {

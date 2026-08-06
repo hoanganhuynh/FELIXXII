@@ -66,7 +66,15 @@ export async function getDashboardStats(timeFilter = 'all', sourceFilter = 'all'
   const { data, error } = await supabase.rpc("dashboard_stats_v2", {
     time_filter: timeFilter, source_filter: sourceFilter
   });
-  if (error) throw error;
+  if (error) {
+    const message = error.message ?? "";
+    if (message.includes("dashboard_stats_v2") || message.includes("schema cache")) {
+      const fallback = await supabase.rpc("dashboard_stats");
+      if (fallback.error) throw fallback.error;
+      return { ...EMPTY_STATS, ...(fallback.data as any) } as DashboardStats;
+    }
+    throw error;
+  }
   return { ...EMPTY_STATS, ...(data as any) } as DashboardStats;
 }
 

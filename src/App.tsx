@@ -12,6 +12,9 @@ import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
 import About from "./pages/About";
+import Proposal from "./pages/Proposal";
+import PromotionProducts from "./pages/PromotionProducts";
+import Checkout from "./pages/Checkout";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 
@@ -72,6 +75,10 @@ function Storefront() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/san-pham/:id" element={<Product />} />
           <Route path="/about" element={<About />} />
+          <Route path="/proposal" element={<Proposal />} />
+          <Route path="/khuyen-mai" element={<PromotionProducts />} />
+          <Route path="/khuyen-mai/:promotionId" element={<PromotionProducts />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/account" element={<Account />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

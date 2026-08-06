@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { listSizeTemplates, saveSizeTemplate, deleteSizeTemplate, type SizeTemplateRow, type SizeTemplateData } from "../api/sizeTemplates";
+import { listSizeTemplates, saveSizeTemplate, deleteSizeTemplate, type SizeTemplateData } from "../api/sizeTemplates";
 import { useAsync } from "../lib/useAsync";
 import { useAuth } from "../../store/auth";
 import { Card, Btn } from "../components/ui";
@@ -8,7 +7,6 @@ import { Card, Btn } from "../components/ui";
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "Freesize"];
 
 export default function SizeTemplates() {
-  const { t } = useTranslation();
   const { isAdmin, ready } = useAuth();
   const templates = useAsync(() => listSizeTemplates(), [], []);
   

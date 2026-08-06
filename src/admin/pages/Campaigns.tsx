@@ -5,6 +5,7 @@ import { useAsync } from "../lib/useAsync";
 import { Card, Btn } from "../components/ui";
 import { listCategories, listStyleNames, type StyleNameHit } from "../api/products";
 import { listGarmentTypes, listSources } from "../api/taxonomy";
+import { useCampaigns } from "../../store/campaigns";
 import {
   listAllCampaigns, createCampaign, updateCampaign, deleteCampaign,
   type CampaignRow, type CampaignType, type CampaignScope, type DiscountKind,
@@ -35,23 +36,26 @@ export default function Campaigns() {
   const save = async (d: Draft) => {
     setErr(null);
     try {
-      if (d.id) await updateCampaign(d.id, d);
-      else await createCampaign(d);
+      const { id, created_at: _createdAt, ...payload } = d as Draft & { created_at?: string };
+      if (id) await updateCampaign(id, payload);
+      else await createCampaign(payload);
+      await useCampaigns.getState().fetch(true);
       setEditing(null);
-      reload();
+      await reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
+      throw e;
     }
   };
 
   const remove = async (c: CampaignRow) => {
     if (!confirm(t("campaign.confirm_delete"))) return;
-    try { await deleteCampaign(c.id); reload(); }
+    try { await deleteCampaign(c.id); await useCampaigns.getState().fetch(true); reload(); }
     catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
   };
 
   const toggleActive = async (c: CampaignRow) => {
-    try { await updateCampaign(c.id, { active: !c.active }); reload(); }
+    try { await updateCampaign(c.id, { active: !c.active }); await useCampaigns.getState().fetch(true); reload(); }
     catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
   };
 
@@ -126,9 +130,10 @@ export default function Campaigns() {
   );
 }
 
-function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => void; onSave: (d: Draft) => void }) {
+function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => void; onSave: (d: Draft) => Promise<void> }) {
   const { t } = useTranslation();
   const [f, setF] = useState(draft);
+  const [saving, setSaving] = useState(false);
   const isNew = !f.id;
 
   const cats = useAsync(() => listCategories(), [], []);
@@ -158,6 +163,16 @@ function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => vo
   const canSave = f.name.trim().length > 0
     && (f.type !== "buy_x_get_y" || ((f.buy_qty ?? 0) > 0 && (f.get_qty ?? 0) > 0))
     && (f.type !== "free_gift" || !!f.gift_style_id);
+
+  const submit = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    try {
+      await onSave(f);
+    } catch {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
@@ -434,7 +449,9 @@ function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => vo
 
         <div className="flex justify-end gap-2 border-t edge p-4">
           <Btn variant="ghost" onClick={onClose}>{t("common.cancel")}</Btn>
-          <Btn onClick={() => onSave(f)} disabled={!canSave}>{isNew ? t("campaign.create") : t("common.save")}</Btn>
+          <Btn onClick={submit} disabled={!canSave || saving}>
+            {saving ? t("common.saving") : isNew ? t("campaign.create") : t("common.save")}
+          </Btn>
         </div>
       </div>
     </div>

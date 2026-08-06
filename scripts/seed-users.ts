@@ -21,6 +21,7 @@ const sb = createClient(url, serviceKey, { auth: { autoRefreshToken: false, pers
 const USERS = [
   { email: "admin@felixxii.local", password: "123456", name: "Admin", role: "admin" },
   { email: "user@gmail.com", password: "123456", name: "Demo User", role: null },
+  { email: "user1@gmail.com", password: "user1", name: "User 1", role: null },
 ];
 
 const { data: existing } = await sb.auth.admin.listUsers();
@@ -30,7 +31,11 @@ for (const u of USERS) {
   const app_metadata = u.role ? { role: u.role } : {};
 
   if (found) {
-    await sb.auth.admin.updateUserById(found.id, { password: u.password, app_metadata });
+    const { error } = await sb.auth.admin.updateUserById(found.id, { password: u.password, app_metadata });
+    if (error) {
+      console.error(`failed ${u.email}:`, error.message);
+      process.exit(1);
+    }
     console.log(`updated  ${u.email} / ${u.password}${u.role ? `  (${u.role})` : ""}`);
   } else {
     const { error } = await sb.auth.admin.createUser({

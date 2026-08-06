@@ -450,6 +450,42 @@ export type Database = {
         }
         Relationships: []
       }
+      promotion_products: {
+        Row: {
+          created_at: string
+          promotion_id: string
+          sort_order: number
+          style_id: string
+        }
+        Insert: {
+          created_at?: string
+          promotion_id: string
+          sort_order?: number
+          style_id: string
+        }
+        Update: {
+          created_at?: string
+          promotion_id?: string
+          sort_order?: number
+          style_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_products_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_products_style_id_fkey"
+            columns: ["style_id"]
+            isOneToOne: false
+            referencedRelation: "styles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       size_chart: {
         Row: {
           bust_max: number
@@ -716,6 +752,9 @@ export type Database = {
           barcode: string | null
           color_hex: string
           color_name: string
+          image_model_view: string | null
+          image_product_view: string | null
+          images_detail: string[]
           in_stock: boolean
           price_override: number | null
           reserved: number
@@ -728,6 +767,9 @@ export type Database = {
           barcode?: string | null
           color_hex: string
           color_name: string
+          image_model_view?: string | null
+          image_product_view?: string | null
+          images_detail?: string[]
           in_stock?: boolean
           price_override?: number | null
           reserved?: number
@@ -740,6 +782,9 @@ export type Database = {
           barcode?: string | null
           color_hex?: string
           color_name?: string
+          image_model_view?: string | null
+          image_product_view?: string | null
+          images_detail?: string[]
           in_stock?: boolean
           price_override?: number | null
           reserved?: number

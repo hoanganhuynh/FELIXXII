@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const company = "CÔNG TY TNHH ANTNEST";
+  const taxCode = "0319164820";
 
   const links = [
     { label: "Contact Us", href: "/about" },
@@ -15,50 +17,36 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-[var(--color-line)]">
-      {/* Email signup */}
-      <div id="subscribe" className="flex flex-col items-center px-6 py-12 text-center">
-        <p className="font-serif text-2xl md:text-3xl">Join our atelier</p>
-        <form
-          onSubmit={(e) => e.preventDefault()}
-          className="mt-6 flex w-full max-w-lg items-center border-b border-[var(--color-line)] pb-2"
-        >
-          <input
-            type="email"
-            required
-            placeholder="Your email"
-            className="w-full bg-transparent text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="shrink-0 text-[11px] tracking-[0.15em] uppercase text-ink-soft hover:text-ink transition-colors"
-          >
-            Subscribe →
-          </button>
-        </form>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="border-t border-[var(--color-line)] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 md:px-8">
-        <div className="flex flex-col gap-2">
-          <p className="text-[12px] text-ink-soft">© {year} FELIXXII ATELIER</p>
-          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+      <div className="flex flex-col gap-5 px-6 py-5 md:px-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <nav className="flex flex-wrap gap-x-7 gap-y-2">
             {links.map((l) => (
               <Link
                 key={l.label}
                 to={l.href}
-                className="text-[12px] text-ink-soft hover:text-ink transition-colors"
+                className="text-[13px] text-ink-soft transition-colors hover:text-ink"
               >
                 {l.label}
               </Link>
             ))}
           </nav>
+          <div className="mt-4 border-t border-[var(--color-line)]" />
+          <p className="mt-4 font-serif text-[13px] font-semibold tracking-[0.02em] text-ink">
+            © {year} FELIXXII ATELIER • POWERED BY WILLIENS CREATIVE SPACE
+          </p>
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="flex flex-wrap items-center gap-5 lg:justify-end">
+          <div className="text-left text-[13px] leading-6 text-ink-soft lg:text-right">
+            <p>MST: {taxCode}</p>
+            <p>{company}</p>
+          </div>
+          <span className="hidden h-10 w-px bg-[var(--color-line)] md:block" />
           <a href="http://online.gov.vn/" target="_blank" rel="noopener noreferrer">
             <img
               src="/thongbao-bocongthuong.png"
               alt="Registered with Vietnam Ministry of Industry and Trade"
-              className="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
+              className="h-12 w-auto opacity-90 transition-opacity hover:opacity-100 md:h-14"
             />
           </a>
           <button

@@ -2,9 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "../store/products";
 import { useSearch } from "../store/search";
+import { useCampaigns } from "../store/campaigns";
+import { computeProductPricing } from "../lib/discount";
 import { normalizeVi } from "../lib/text";
 import { vnd } from "./ProductCard";
 import ProductImage from "./ProductImage";
+import type { Product } from "../data/catalog";
 
 const BESTSELLER_LIMIT = 5;
 const RESULT_LIMIT = 8;
@@ -26,6 +29,8 @@ function highlightMatch(text: string, query: string) {
 
 export default function SearchOverlay() {
   const products = useProducts((s) => s.products);
+  const campaigns = useCampaigns((s) => s.campaigns);
+  const fetchCampaigns = useCampaigns((s) => s.fetch);
   const { open, setOpen } = useSearch();
   const [query, setQuery] = useState("");
 
@@ -45,6 +50,10 @@ export default function SearchOverlay() {
   useEffect(() => {
     if (!open) setQuery("");
   }, [open]);
+
+  useEffect(() => {
+    if (open) fetchCampaigns();
+  }, [fetchCampaigns, open]);
 
   const bestsellers = useMemo(
     () => [...products].sort((a, b) => (a.bestseller ?? 99) - (b.bestseller ?? 99)).slice(0, BESTSELLER_LIMIT),
@@ -93,7 +102,7 @@ export default function SearchOverlay() {
                       <ProductImage item={p} className="h-full w-full object-cover" />
                     </span>
                     <span className="min-w-0 flex-1 font-serif text-lg">{p.name}</span>
-                    <span className="shrink-0 text-sm tabular-nums text-ink-soft">{vnd(p.price)}</span>
+                    <SearchPrice product={p} campaigns={campaigns} />
                   </Link>
                 </li>
               ))}
@@ -116,7 +125,7 @@ export default function SearchOverlay() {
                       <ProductImage item={p} className="h-full w-full object-cover" />
                     </span>
                     <span className="min-w-0 flex-1 font-serif text-lg">{highlightMatch(p.name, query.trim())}</span>
-                    <span className="shrink-0 text-sm tabular-nums text-ink-soft">{vnd(p.price)}</span>
+                    <SearchPrice product={p} campaigns={campaigns} />
                   </Link>
                 </li>
               ))}
@@ -125,5 +134,15 @@ export default function SearchOverlay() {
         )}
       </div>
     </div>
+  );
+}
+
+function SearchPrice({ product, campaigns }: { product: Product; campaigns: ReturnType<typeof useCampaigns.getState>["campaigns"] }) {
+  const pricing = computeProductPricing(product, campaigns);
+  return (
+    <span className="shrink-0 text-right text-sm tabular-nums">
+      <span className={pricing.onSale ? "text-[var(--color-accent)]" : "text-ink-soft"}>{vnd(pricing.price)}</span>
+      {pricing.onSale && <span className="ml-2 text-xs text-ink-soft line-through">{vnd(pricing.originalPrice)}</span>}
+    </span>
   );
 }

@@ -1,12 +1,24 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../lib/database.types";
-import type { Product, ColorSwatch, Silhouette, Occasion } from "../data/catalog";
+import { sortSizes, type Product, type ColorSwatch, type Silhouette, type Occasion } from "../data/catalog";
 
 type StyleListRow = Database["public"]["Views"]["style_list"]["Row"];
 type NewArrivalRow = Database["public"]["Functions"]["storefront_new_arrivals"]["Returns"][number];
+type VariantPriceRow = Pick<
+  Database["public"]["Tables"]["variants"]["Row"],
+  "style_id" | "color_name" | "price_override"
+>;
 
-interface ColorVariant { name: string; hex: string; sizes: string[] }
+interface ColorVariant {
+  name: string;
+  hex: string;
+  sizes: string[];
+  price?: number;
+  image_product_view?: string | null;
+  image_model_view?: string | null;
+  images_detail?: string[] | null;
+}
 
 function productNameWithColor(styleName: string, colorName: string): string {
   const cleanStyleName = styleName.trim();
@@ -17,6 +29,10 @@ function productNameWithColor(styleName: string, colorName: string): string {
     : `${cleanStyleName} ${cleanColorName}`;
 }
 
+function firstImage(...candidates: Array<string | null | undefined>): string | null {
+  return candidates.find((candidate): candidate is string => Boolean(candidate)) ?? null;
+}
+
 /** One style → one Product per colour it comes in (e.g. a style with
  *  black-S/black-L/red-S variants becomes 2 Products: "· black" with sizes
  *  [S,L] and "· red" with sizes [S]) — matches the storefront card grid,
@@ -24,10 +40,13 @@ function productNameWithColor(styleName: string, colorName: string): string {
 function mapStyleToProducts(
   s: StyleListRow,
   bestseller: number | undefined,
-  newArrival: { rank: number; weeklyUnits: number } | undefined
+  newArrival: { rank: number; weeklyUnits: number } | undefined,
+  priceByColor: Map<string, number>
 ): Product[] {
   const slotted = [s.image_product_view, s.image_model_view, ...(s.images_detail ?? [])].filter(Boolean) as string[];
   const images = slotted.length ? slotted : ((s.images ?? []) as string[]);
+  const productImage = firstImage(s.image_product_view, images[0]);
+  const modelImage = firstImage(s.image_model_view, images[1], productImage);
   const allColors = Array.isArray(s.colors) ? (s.colors as unknown as ColorSwatch[]) : [];
   const colorVariants = Array.isArray(s.color_variants) ? (s.color_variants as unknown as ColorVariant[]) : [];
 
@@ -52,19 +71,41 @@ function mapStyleToProducts(
     createdAt: s.created_at ? new Date(s.created_at).getTime() : 0,
     blurb: s.description ?? "",
     images: images.length ? images : undefined,
+    modelImage,
+    productImage,
   };
 
   if (!colorVariants.length) {
-    return [{ ...base, id: s.id!, sizes: Array.isArray(s.sizes) ? (s.sizes as string[]) : [] }];
+    return [{ ...base, id: s.id!, sizes: sortSizes(Array.isArray(s.sizes) ? (s.sizes as string[]) : []) }];
   }
 
-  return colorVariants.map((cv) => ({
-    ...base,
-    id: `${s.id}::${cv.hex.replace("#", "")}`,
-    name: productNameWithColor(base.name, cv.name),
-    color: { name: cv.name, hex: cv.hex },
-    sizes: cv.sizes ?? [],
-  }));
+  return colorVariants.map((cv) => {
+    const colorImages = [
+      cv.image_product_view,
+      cv.image_model_view,
+      ...(cv.images_detail ?? []),
+    ].filter(Boolean) as string[];
+    const hasVariantImages = colorImages.length > 0;
+
+    const variantProductImage = firstImage(cv.image_product_view, hasVariantImages ? colorImages[0] : productImage);
+    const variantModelImage = firstImage(
+      cv.image_model_view,
+      hasVariantImages ? colorImages[1] ?? variantProductImage : modelImage,
+      variantProductImage
+    );
+
+    return {
+      ...base,
+      id: `${s.id}::${cv.hex.replace("#", "")}`,
+      name: productNameWithColor(base.name, cv.name),
+      price: priceByColor.get(`${s.id}::${cv.name}`) ?? cv.price ?? base.price,
+      color: { name: cv.name, hex: cv.hex },
+      sizes: sortSizes(cv.sizes ?? []),
+      images: colorImages.length ? colorImages : base.images,
+      modelImage: variantModelImage,
+      productImage: variantProductImage,
+    };
+  });
 }
 
 interface ProductsState {
@@ -104,6 +145,21 @@ export const useProducts = create<ProductsState>((set, get) => ({
       return;
     }
     const rows = stylesResult.data ?? [];
+    const styleIds = rows.map((r) => r.id).filter(Boolean) as string[];
+    const variantPricesResult = styleIds.length
+      ? await supabase
+        .from("variants")
+        .select("style_id, color_name, price_override")
+        .in("style_id", styleIds)
+      : { data: [] as VariantPriceRow[], error: null };
+    const priceByColor = new Map<string, number>();
+    if (!variantPricesResult.error) {
+      ((variantPricesResult.data ?? []) as VariantPriceRow[]).forEach((v) => {
+        if (v.price_override == null) return;
+        const key = `${v.style_id}::${v.color_name}`;
+        priceByColor.set(key, Math.max(priceByColor.get(key) ?? 0, v.price_override));
+      });
+    }
     // rank by units_sold (most sold = rank 1), matching the old static
     // catalog's "bestseller: smaller = better" convention
     const rankById = new Map(
@@ -118,7 +174,7 @@ export const useProducts = create<ProductsState>((set, get) => ({
       });
     }
     set({
-      products: rows.flatMap((r) => mapStyleToProducts(r, rankById.get(r.id!), arrivalRankById.get(r.id!))),
+      products: rows.flatMap((r) => mapStyleToProducts(r, rankById.get(r.id!), arrivalRankById.get(r.id!), priceByColor)),
       loading: false,
       loaded: true,
       error: null,

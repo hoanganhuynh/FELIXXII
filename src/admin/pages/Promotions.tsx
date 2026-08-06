@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../store/auth";
@@ -8,10 +8,13 @@ import {
   listAllPromotions, createPromotion, updatePromotion, deletePromotion, swapPromotionOrder,
   type Promotion,
 } from "../api/promotions";
+import { vnd } from "../lib/format";
+import { useProducts } from "../../store/products";
+import { productStyleId, resolveImageUrl, type Product } from "../../data/catalog";
 
 type Draft = Omit<Promotion, "id" | "created_at" | "sort_order"> & { id?: string };
 
-const EMPTY: Draft = { active: true, image_url: "", link_url: "", title: "" };
+const EMPTY: Draft = { active: true, image_url: "", link_url: "", title: "", product_style_ids: [] };
 
 export default function Promotions() {
   const { t } = useTranslation();
@@ -89,7 +92,10 @@ export default function Promotions() {
 
             <div className="min-w-0 flex-1 py-4">
               <p className="truncate font-serif text-[15px]">{p.title || <span className="text-ink-soft italic">{t("promo.no_title")}</span>}</p>
-              {p.link_url && <p className="mt-0.5 truncate text-[12px] text-ink-soft">{p.link_url}</p>}
+              <p className="mt-0.5 truncate text-[12px] text-ink-soft">
+                {p.link_url || `/khuyen-mai/${p.id}`}
+                {p.product_style_ids.length > 0 && ` · ${p.product_style_ids.length} ${t("promo.products_count")}`}
+              </p>
             </div>
 
             <button
@@ -143,10 +149,43 @@ export default function Promotions() {
 function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => void; onSave: (d: Draft) => void }) {
   const { t } = useTranslation();
   const [f, setF] = useState(draft);
+  const [productQuery, setProductQuery] = useState("");
   const [uploading, setUploading] = useState(false);
+  const products = useProducts((s) => s.products);
+  const productsLoaded = useProducts((s) => s.loaded);
+  const fetchProducts = useProducts((s) => s.fetch);
   const fileRef = useRef<HTMLInputElement>(null);
   const isNew = !f.id;
   const set = (k: keyof Draft, v: string | boolean) => setF((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const filteredProducts = useMemo(() => {
+    const q = productQuery.trim().toLowerCase();
+    const currentProducts = products.filter((product) => product.images?.length || product.productImage || product.modelImage);
+    if (!q) return currentProducts;
+    return currentProducts.filter((product) => {
+      const haystack = [product.name, product.styleId, product.category, product.collection, product.color?.name]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [productQuery, products]);
+
+  const toggleProduct = (styleId: string) => {
+    setF((prev) => {
+      const current = prev.product_style_ids ?? [];
+      return {
+        ...prev,
+        product_style_ids: current.includes(styleId)
+          ? current.filter((id) => id !== styleId)
+          : [...current, styleId],
+      };
+    });
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -170,7 +209,7 @@ function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => vo
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative z-10 flex w-full max-w-xl flex-col gap-0 overflow-hidden rounded-lg bg-[var(--color-bg)] shadow-2xl">
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-[var(--color-bg)] shadow-2xl">
         <div className="relative h-36 w-full bg-neutral-900 overflow-hidden">
           {f.image_url ? (
             <img src={f.image_url} alt="" className="h-full w-full object-cover object-top opacity-80" />
@@ -179,42 +218,111 @@ function EditModal({ draft, onClose, onSave }: { draft: Draft; onClose: () => vo
           )}
         </div>
 
-        <div className="p-6">
-          <h2 className="mb-5 font-serif text-xl">{isNew ? t("promo.new_title") : t("promo.edit_title")}</h2>
+        <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_460px]">
+          <div className="min-h-0 overflow-y-auto p-6">
+            <h2 className="mb-5 font-serif text-xl">{isNew ? t("promo.new_title") : t("promo.edit_title")}</h2>
 
-          <div className="space-y-4">
-            <Field label={t("promo.f_image")}>
-              <div className="mt-1 flex gap-2">
-                <input value={f.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://…" className="input flex-1" />
-                <input type="file" accept="image/*" className="hidden" ref={fileRef} onChange={handleUpload} />
-                <Btn variant="ghost" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                  {uploading ? t("common.loading") : t("promo.upload")}
-                </Btn>
+            <div className="space-y-4">
+              <Field label={t("promo.f_image")}>
+                <div className="mt-1 flex gap-2">
+                  <input value={f.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://…" className="input flex-1" />
+                  <input type="file" accept="image/*" className="hidden" ref={fileRef} onChange={handleUpload} />
+                  <Btn variant="ghost" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                    {uploading ? t("common.loading") : t("promo.upload")}
+                  </Btn>
+                </div>
+              </Field>
+
+              <Field label={t("promo.f_title")}>
+                <input value={f.title} onChange={(e) => set("title", e.target.value)} placeholder={t("promo.optional")} className="input mt-1" />
+              </Field>
+
+              <Field label={t("promo.f_link")}>
+                <input value={f.link_url} onChange={(e) => set("link_url", e.target.value)} placeholder="/shop?collection=…" className="input mt-1" />
+                <p className="mt-1 text-[11px] text-ink-soft">{t("promo.link_hint")}</p>
+              </Field>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" checked={f.active} onChange={(e) => set("active", e.target.checked)} className="h-4 w-4 rounded border edge accent-ink" />
+                <span className="text-[12px]">{t("promo.f_active")}</span>
+              </label>
+            </div>
+          </div>
+
+          <aside className="min-h-0 border-t edge p-6 lg:border-l lg:border-t-0">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[12px] tracking-[0.1em] text-ink-soft">{t("promo.f_products")}</p>
+                <p className="mt-1 text-[11px] text-ink-soft">{t("promo.products_hint")}</p>
               </div>
-            </Field>
+              <span className="shrink-0 rounded-full bg-[var(--color-tile)] px-2.5 py-1 text-[11px] text-ink-soft">
+                {(f.product_style_ids ?? []).length} selected
+              </span>
+            </div>
 
-            <Field label={t("promo.f_title")}>
-              <input value={f.title} onChange={(e) => set("title", e.target.value)} placeholder={t("promo.optional")} className="input mt-1" />
-            </Field>
+            <input
+              value={productQuery}
+              onChange={(e) => setProductQuery(e.target.value)}
+              placeholder={t("promo.product_search")}
+              className="input mt-4"
+            />
 
-            <Field label={t("promo.f_link")}>
-              <input value={f.link_url} onChange={(e) => set("link_url", e.target.value)} placeholder="/shop?collection=…" className="input mt-1" />
-            </Field>
-
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" checked={f.active} onChange={(e) => set("active", e.target.checked)} className="h-4 w-4 rounded border edge accent-ink" />
-              <span className="text-[12px]">{t("promo.f_active")}</span>
-            </label>
-          </div>
-
-          <div className="mt-6 flex justify-end gap-2">
-            <Btn variant="ghost" onClick={onClose}>{t("common.cancel")}</Btn>
-            <Btn onClick={() => onSave(f)} disabled={!f.image_url}>{isNew ? t("promo.create") : t("common.save")}</Btn>
-          </div>
+            <div className="mt-3 max-h-[48vh] overflow-y-auto rounded-md border edge">
+              {filteredProducts.map((product) => {
+                const styleId = productStyleId(product.id);
+                const selected = (f.product_style_ids ?? []).includes(styleId);
+                const image = productImageOf(product);
+                return (
+                  <label
+                    key={product.id}
+                    className={`flex cursor-pointer items-center gap-3 border-b edge px-3 py-2.5 last:border-b-0 ${
+                      selected ? "bg-[var(--color-tile)]" : "hover:bg-white/60"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleProduct(styleId)}
+                      className="h-4 w-4 rounded border edge accent-ink"
+                    />
+                    <div className="h-14 w-11 shrink-0 overflow-hidden rounded border edge bg-[var(--color-tile)]">
+                      {image ? (
+                        <img src={image} alt="" className="h-full w-full object-cover object-top" />
+                      ) : (
+                        <div className="h-full w-full" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-serif text-sm">{product.name}</p>
+                      <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.08em] text-ink-soft">
+                        {product.color?.name ? `${product.color.name} · ` : ""}{product.sizes.join(", ")}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-right text-[12px] tabular-nums text-ink-soft">{vnd(product.price)}</span>
+                  </label>
+                );
+              })}
+              {!filteredProducts.length && (
+                <p className="px-3 py-8 text-center text-xs text-ink-soft">
+                  {productsLoaded ? t("promo.product_no_match") : t("common.loading")}
+                </p>
+              )}
+            </div>
+          </aside>
         </div>
-      </div>
+
+        <div className="flex justify-end gap-2 border-t edge p-4">
+          <Btn variant="ghost" onClick={onClose}>{t("common.cancel")}</Btn>
+          <Btn onClick={() => onSave(f)} disabled={!f.image_url}>{isNew ? t("promo.create") : t("common.save")}</Btn>
+        </div>
+          </div>
     </div>
   );
+}
+
+function productImageOf(product: Product): string | null {
+  const image = product.modelImage ?? product.productImage ?? product.images?.[0];
+  return image ? resolveImageUrl(image) : null;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

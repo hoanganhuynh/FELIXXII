@@ -30,32 +30,7 @@ interface Order {
   total: number;
 }
 
-const DUMMY_ORDERS: Order[] = [
-  {
-    id: "FX-2026-0041",
-    date: "18 Jun 2026",
-    status: "Delivered",
-    items: [{ productId: "nguyet", name: "Nguyệt", size: "M", color: "Navy", price: 3_950_000 }],
-    total: 3_950_000,
-  },
-  {
-    id: "FX-2026-0019",
-    date: "04 Apr 2026",
-    status: "Delivered",
-    items: [
-      { productId: "lua-dem", name: "Lụa Đêm", size: "S", color: "Bordeaux", price: 4_500_000 },
-      { productId: "ha-vu", name: "Hạ Vũ", size: "M", color: "Blush", price: 3_200_000 },
-    ],
-    total: 7_700_000,
-  },
-  {
-    id: "FX-2025-0087",
-    date: "12 Dec 2025",
-    status: "Delivered",
-    items: [{ productId: "suong-mai", name: "Sương Mai", size: "S", color: "Ivory", price: 6_800_000 }],
-    total: 6_800_000,
-  },
-];
+const DUMMY_ORDERS: Order[] = [];
 
 
 const STATUS_STYLE: Record<Order["status"], string> = {
@@ -121,6 +96,14 @@ function OrderRow({ order }: { order: Order }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function EmptyPurchases() {
+  return (
+    <div className="border-b edge py-8">
+      <p className="text-sm text-ink-soft">No purchases yet.</p>
     </div>
   );
 }
@@ -201,13 +184,13 @@ export default function Account() {
     <div className="min-h-screen pt-[62px]">
       {/* sub-nav */}
       <div className="sticky top-[62px] z-40 border-b edge bg-[var(--color-bg)]/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-[1800px] items-center justify-between px-5 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-5 md:px-8">
           <div className="no-scrollbar flex overflow-x-auto">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-4 py-4 text-[11px] tracking-[0.1em] transition-colors ${
+                className={`shrink-0 whitespace-nowrap px-4 py-4 text-[11px] tracking-[0.1em] transition-colors ${
                   tab === t.id ? "border-b border-ink text-ink" : "text-ink-soft hover:text-ink"
                 }`}
               >
@@ -216,13 +199,13 @@ export default function Account() {
                   : t.label.toUpperCase()}
               </button>
             ))}
+            <button
+              onClick={handleLogout}
+              className="shrink-0 whitespace-nowrap px-4 py-4 text-[11px] tracking-[0.1em] text-ink-soft transition-opacity hover:opacity-60"
+            >
+              LOGOUT
+            </button>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-[11px] tracking-[0.1em] text-ink-soft transition-opacity hover:opacity-60"
-          >
-            LOGOUT
-          </button>
         </div>
       </div>
 
@@ -240,7 +223,11 @@ export default function Account() {
                   MORE
                 </button>
               </div>
-              <OrderRow order={recentOrder} />
+              {recentOrder ? (
+                <OrderRow order={recentOrder} />
+              ) : (
+                <EmptyPurchases />
+              )}
             </section>
 
             <section className="mt-8 border-b edge pb-8">
@@ -252,8 +239,12 @@ export default function Account() {
                   MORE
                 </button>
               </div>
-              <div className="mt-5 grid grid-cols-3 gap-4">
-                {wishlistIds.map((id) => <WishlistCard key={id} productId={id} />)}
+              <div className="no-scrollbar -mx-5 mt-5 flex snap-x gap-4 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
+                {wishlistIds.map((id) => (
+                  <div key={id} className="w-[calc(100vw-40px)] max-w-[420px] shrink-0 snap-start md:w-auto md:max-w-none">
+                    <WishlistCard productId={id} />
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -284,7 +275,11 @@ export default function Account() {
           <div>
             <p className="font-serif text-2xl tracking-tight">PURCHASES</p>
             <div className="mt-8">
-              {DUMMY_ORDERS.map((o) => <OrderRow key={o.id} order={o} />)}
+              {DUMMY_ORDERS.length > 0 ? (
+                DUMMY_ORDERS.map((o) => <OrderRow key={o.id} order={o} />)
+              ) : (
+                <EmptyPurchases />
+              )}
             </div>
           </div>
         )}
@@ -295,8 +290,12 @@ export default function Account() {
             <p className="font-serif text-2xl tracking-tight">
               SAVED LIST<sup className="ml-1 text-base">{wishlistCount}</sup>
             </p>
-            <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3">
-              {wishlistIds.map((id) => <WishlistCard key={id} productId={id} />)}
+            <div className="no-scrollbar -mx-5 mt-8 flex snap-x gap-4 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0">
+              {wishlistIds.map((id) => (
+                <div key={id} className="w-[calc(100vw-40px)] max-w-[420px] shrink-0 snap-start md:w-auto md:max-w-none">
+                  <WishlistCard productId={id} />
+                </div>
+              ))}
             </div>
           </div>
         )}

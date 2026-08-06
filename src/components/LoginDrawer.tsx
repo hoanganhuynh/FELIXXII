@@ -25,9 +25,11 @@ export default function LoginDrawer() {
   const { pathname } = useLocation();
 
   /** Signing in from inside the admin should keep you there — bouncing to the
-   *  storefront account page loses the admin's place. */
+   *  storefront account page loses the admin's place. Checkout should also
+   *  stay put so the user can continue the payment flow right after login. */
   const afterLogin = () => {
-    if (!pathname.startsWith("/admin")) navigate("/account");
+    if (pathname.startsWith("/admin") || pathname === "/checkout") return;
+    navigate("/account");
   };
 
   useEffect(() => {

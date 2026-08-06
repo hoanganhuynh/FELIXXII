@@ -54,6 +54,7 @@ export type CollectionRow = Database["public"]["Tables"]["collections"]["Row"];
 export interface CollectionProduct {
   id: string;
   name: string;
+  image: string | null;
 }
 
 export interface CollectionStats extends CollectionRow {
@@ -71,7 +72,7 @@ export async function collectionStats(): Promise<CollectionStats[]> {
   // style_list already carries the per-style aggregates; roll them up per collection
   const { data: styles } = await supabase
     .from("style_list")
-    .select("id, name, collection_id, sku_count, revenue, units_sold")
+    .select("id, name, collection_id, sku_count, revenue, units_sold, image_product_view, images")
     .order("name");
 
   return (cols ?? []).map((c) => {
@@ -82,7 +83,11 @@ export async function collectionStats(): Promise<CollectionStats[]> {
       skus: mine.reduce((n, s) => n + (s.sku_count ?? 0), 0),
       revenue: mine.reduce((n, s) => n + (s.revenue ?? 0), 0),
       units: mine.reduce((n, s) => n + (s.units_sold ?? 0), 0),
-      products: mine.map((s) => ({ id: s.id!, name: s.name ?? "" })),
+      products: mine.map((s) => ({
+        id: s.id!,
+        name: s.name ?? "",
+        image: s.image_product_view ?? (Array.isArray(s.images) ? (s.images[0] as string) : null) ?? null,
+      })),
     };
   });
 }

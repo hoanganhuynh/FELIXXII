@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabase";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   getStyleRaw, getVariants, getVariantBySku, updateStyle, createStyle,
-  addVariant, updateVariant, listStyleNames, nextStyleCode,
+  addVariant, updateVariant, updateColorVariantPrice, listStyleNames, nextStyleCode,
   listCategories, listCollections, type StyleNameHit,
 } from "../api/products";
 import { listSources, listGarmentTypes, listColors, upsertColor } from "../api/taxonomy";
@@ -27,6 +27,45 @@ const emptyStyle = (): StyleNameHit => ({
   description: "", image_product_view: null, image_model_view: null, images_detail: [],
   size_template_id: null,
 });
+
+const withoutImages = (style: StyleNameHit): StyleNameHit => ({
+  ...style,
+  image_product_view: null,
+  image_model_view: null,
+  images_detail: [],
+});
+
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
+const IMAGE_HELP_TEXT = "Hỗ trợ JPG, PNG, WebP, AVIF · tối đa 2MB";
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(IMAGE_ACCEPT.split(","));
+const describeError = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+  return String(error);
+};
+const STATUS_RADIO_STYLES: Record<StyleStatus, { accent: string; selected: string }> = {
+  active: {
+    accent: "accent-emerald-600",
+    selected: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  },
+  draft: {
+    accent: "accent-ink",
+    selected: "border-ink bg-[var(--color-tile)] text-ink",
+  },
+  archived: {
+    accent: "accent-orange-500",
+    selected: "border-orange-200 bg-orange-50 text-orange-700",
+  },
+};
 
 export default function ProductEditor() {
   const { t } = useTranslation();
@@ -74,8 +113,8 @@ export default function ProductEditor() {
   const [err, setErr] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // create mode: one product can ship as several colour/size rows, each becomes its own SKU
-  const [variantRows, setVariantRows] = useState<{ colorName: string; size: string }[]>([{ colorName: "Black", size: "M" }]);
+  // create mode: one product colour can ship in several sizes; each size becomes its own SKU
+  const [variantRows, setVariantRows] = useState<{ size: string }[]>([{ size: "M" }]);
   const [addingColor, setAddingColor] = useState(false);
   const [newColorName, setNewColorName] = useState("");
   const [newColorHex, setNewColorHex] = useState("#000000");
@@ -94,7 +133,12 @@ export default function ProductEditor() {
     const v = loadedVariant.data;
     const s = loadedStyleForVariant.data;
     if (!v || !s) return;
-    setStyle(s);
+    setStyle({
+      ...s,
+      image_product_view: v.image_product_view ?? s.image_product_view,
+      image_model_view: v.image_model_view ?? s.image_model_view,
+      images_detail: v.images_detail?.length ? v.images_detail : s.images_detail,
+    });
     setColorName(v.color_name);
     setSize(v.size);
     setPrice(v.price_override ?? s.price);
@@ -116,7 +160,7 @@ export default function ProductEditor() {
   useEffect(() => {
     if (mode !== "create" || pickedStyleId || !preselected.data) return;
     const s = preselected.data;
-    setStyle(s);
+    setStyle(withoutImages(s));
     setStyleQuery(s.name);
     setPickedStyleId(s.id);
     setPrice(s.price);
@@ -131,7 +175,7 @@ export default function ProductEditor() {
   }, [sizeTemplates.data, style.size_template_id]);
 
   const pickStyle = (hit: StyleNameHit) => {
-    setStyle(hit);
+    setStyle(withoutImages(hit));
     setStyleQuery(hit.name);
     setPickedStyleId(hit.id);
     setPrice(hit.price);
@@ -143,20 +187,14 @@ export default function ProductEditor() {
     setStyle(emptyStyle());
   };
 
-  // multi-row colour/size builder (create mode) — one row = one SKU
+  // multi-size builder (create mode) — one row = one SKU under the selected colour
   const addVariantRow = () => {
-    const used = new Set(variantRows.map((r) => `${r.colorName}::${r.size}`));
-    const colorNames = colorsList.data.length ? colorsList.data.map((c) => c.name) : ["Black"];
-    let next = { colorName: colorNames[0], size: SIZES[0] };
-    outer: for (const cn of colorNames) {
-      for (const sz of SIZES) {
-        if (!used.has(`${cn}::${sz}`)) { next = { colorName: cn, size: sz }; break outer; }
-      }
-    }
+    const used = new Set(variantRows.map((r) => r.size));
+    const next = { size: SIZES.find((sz) => !used.has(sz)) ?? SIZES[0] };
     setVariantRows((rows) => [...rows, next]);
   };
   const removeVariantRow = (i: number) => setVariantRows((rows) => rows.filter((_, j) => j !== i));
-  const updateVariantRow = (i: number, patch: Partial<{ colorName: string; size: string }>) =>
+  const updateVariantRow = (i: number, patch: Partial<{ size: string }>) =>
     setVariantRows((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const handleAddColor = async () => {
@@ -167,12 +205,20 @@ export default function ProductEditor() {
     try {
       await upsertColor({ id, name, hex: newColorHex, sort: colorsList.data.length });
       await colorsList.reload();
+      setColorName(name);
       setNewColorName("");
       setNewColorHex("#000000");
       setAddingColor(false);
     } catch (e) {
       setAddColorErr(e instanceof Error ? e.message : String(e));
     }
+  };
+
+  const openAddColor = () => {
+    setAddColorErr(null);
+    setNewColorName("");
+    setNewColorHex("#000000");
+    setAddingColor(true);
   };
 
   // live style_code preview when creating a brand-new style
@@ -191,6 +237,12 @@ export default function ProductEditor() {
   const [uploading, setUploading] = useState<"" | "product" | "model" | "detail">("");
 
   const uploadFile = async (rawFile: File): Promise<string> => {
+    if (!ALLOWED_IMAGE_TYPES.has(rawFile.type)) {
+      throw new Error("Chỉ hỗ trợ ảnh JPG, PNG, WebP hoặc AVIF.");
+    }
+    if (rawFile.size > MAX_IMAGE_BYTES) {
+      throw new Error("Ảnh tải lên tối đa 2MB.");
+    }
     const file = await compressImage(rawFile, 1200, 0.85); // Compress to webp, max width 1200
     const ext = file.name.split(".").pop();
     const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
@@ -229,24 +281,29 @@ export default function ProductEditor() {
     }
   };
 
-  const sharedFieldsPatch = (statusOverride?: StyleStatus) => ({
-    name: displayName,
-    source_id: style.source_id,
-    garment_type_id: style.garment_type_id,
-    category_id: style.category_id,
-    collection_id: style.collection_id,
-    silhouette: style.silhouette,
-    body_type: style.body_type,
-    size_template_id: style.size_template_id,
-    status: statusOverride ?? style.status,
-    material: style.material,
-    description: style.description,
-    price: style.price,
-    image_product_view: style.image_product_view,
-    image_model_view: style.image_model_view,
-    images_detail: style.images_detail,
-    images: [style.image_product_view, style.image_model_view, ...style.images_detail].filter(Boolean) as string[],
-  });
+  const sharedFieldsPatch = (statusOverride?: StyleStatus, opts: { includeImages?: boolean } = {}) => {
+    const includeImages = opts.includeImages ?? true;
+    return {
+      name: displayName,
+      source_id: style.source_id,
+      garment_type_id: style.garment_type_id,
+      category_id: style.category_id,
+      collection_id: style.collection_id,
+      silhouette: style.silhouette,
+      body_type: style.body_type,
+      size_template_id: style.size_template_id,
+      status: statusOverride ?? style.status,
+      material: style.material,
+      description: style.description,
+      price: mode === "create" && !pickedStyleId ? price : style.price,
+      ...(includeImages ? {
+        image_product_view: style.image_product_view,
+        image_model_view: style.image_model_view,
+        images_detail: style.images_detail,
+        images: [style.image_product_view, style.image_model_view, ...style.images_detail].filter(Boolean) as string[],
+      } : {}),
+    };
+  };
 
   /** Returns whether the save actually went through (and navigated). The
    *  unsaved-changes guard relies on this: a validation failure must NOT be
@@ -267,7 +324,7 @@ export default function ProductEditor() {
 
       if (mode === "editVariant" && sku) {
         const styleId = loadedVariant.data!.style_id;
-        await updateStyle(styleId, sharedFieldsPatch(opts?.statusOverride));
+        await updateStyle(styleId, sharedFieldsPatch(opts?.statusOverride, { includeImages: false }));
 
         const colorChanged = colorName !== loadedVariant.data!.color_name;
         const sizeChanged = size !== loadedVariant.data!.size;
@@ -275,6 +332,9 @@ export default function ProductEditor() {
           price_override: price,
           in_stock: inStock,
           stock: inStock ? Math.max(loadedVariant.data!.stock, 1) : 0,
+          image_product_view: style.image_product_view,
+          image_model_view: style.image_model_view,
+          images_detail: style.images_detail,
         };
         if (colorChanged || sizeChanged) {
           const nextSku = newSkuCode(style.style_code, colorName, size);
@@ -291,6 +351,7 @@ export default function ProductEditor() {
           patch.size = size;
         }
         await updateVariant(sku, patch);
+        await updateColorVariantPrice(styleId, colorName, price);
         navigate(redirectTo);
         return true;
       }
@@ -298,16 +359,15 @@ export default function ProductEditor() {
       // create mode — one style, one or more colour/size rows (each its own SKU)
       const seen = new Set<string>();
       for (const row of variantRows) {
-        const key = `${row.colorName}::${row.size}`;
-        if (seen.has(key)) { setErr(`Trùng lặp: ${row.colorName} – ${row.size}`); setBusy(false); return false; }
-        seen.add(key);
+        if (seen.has(row.size)) { setErr(`Trùng lặp size: ${row.size}`); setBusy(false); return false; }
+        seen.add(row.size);
       }
       let code0 = styleCode;
       if (!pickedStyleId) code0 = await nextStyleCode(displayName);
       for (const row of variantRows) {
-        const candidateSku = newSkuCode(code0, row.colorName, row.size);
+        const candidateSku = newSkuCode(code0, colorName, row.size);
         if (existingVariants.data.some((v) => v.sku === candidateSku)) {
-          setErr(`Đã tồn tại: ${row.colorName} – ${row.size}`);
+          setErr(`Đã tồn tại: ${colorName} – ${row.size}`);
           setBusy(false);
           return false;
         }
@@ -324,27 +384,28 @@ export default function ProductEditor() {
           style_code: code, serial, occasion: style.category_id === "dam-bridal" ? "bridal" : "event",
           ...sharedFieldsPatch(opts?.statusOverride),
         });
-      } else {
-        await updateStyle(styleId, sharedFieldsPatch(opts?.statusOverride));
       }
 
       const { data: maxRow2 } = await supabase.from("styles").select("serial").eq("id", styleId).single();
+      const hex = colorsList.data.find((p) => p.name === colorName)?.hex ?? "#000";
+      const colorIdx = colorsList.data.findIndex((p) => p.name === colorName);
       for (const row of variantRows) {
-        const finalSku = newSkuCode(code, row.colorName, row.size);
-        const hex = colorsList.data.find((p) => p.name === row.colorName)?.hex ?? "#000";
-        const colorIdx = colorsList.data.findIndex((p) => p.name === row.colorName);
+        const finalSku = newSkuCode(code, colorName, row.size);
         const sizeIdx = SIZES.indexOf(row.size);
         await addVariant({
-          sku: finalSku, style_id: styleId, color_name: row.colorName, color_hex: hex, size: row.size,
+          sku: finalSku, style_id: styleId, color_name: colorName, color_hex: hex, size: row.size,
           stock: inStock ? 1 : 0, reserved: 0, in_stock: inStock,
           barcode: barcode(style.category_id as CategoryId, maxRow2?.serial ?? 0, colorIdx, sizeIdx),
           price_override: price,
+          image_product_view: style.image_product_view,
+          image_model_view: style.image_model_view,
+          images_detail: style.images_detail,
         });
       }
       navigate(redirectTo);
       return true;
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      setErr(describeError(e));
       return false;
     } finally {
       setBusy(false);
@@ -421,24 +482,6 @@ export default function ProductEditor() {
 
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-4">
-          {/* Status — radio, kept at the top so publish state is the first decision */}
-          <Card title={t("editor.status")}>
-            <div className="flex flex-wrap gap-4 p-5">
-              {(["active", "draft", "archived"] as StyleStatus[]).map((s) => (
-                <label key={s} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="status"
-                    checked={style.status === s}
-                    onChange={() => setStyle((st) => ({ ...st, status: s }))}
-                    className="h-4 w-4 accent-ink"
-                  />
-                  {t(`status.${s}`)}
-                </label>
-              ))}
-            </div>
-          </Card>
-
           {/* Product: source, type, classification */}
           <Card title={t("editor.product_type")}>
             <div className="p-5">
@@ -504,18 +547,7 @@ export default function ProductEditor() {
           </Card>
 
           {mode !== "editStyle" && (
-            <Card
-              title={t("editor.name")}
-              action={
-                <button
-                  type="button"
-                  onClick={() => { setAddColorErr(null); setNewColorName(""); setNewColorHex("#000000"); setAddingColor(true); }}
-                  className="text-[12px] text-ink-soft link-underline hover:text-ink"
-                >
-                  + {t("editor.add_color")}
-                </button>
-              }
-            >
+            <Card title={t("editor.name")}>
               <div className="border-b edge p-5">
                 <SizeTemplateRadioGroup
                   label="Chọn Bảng Size mẫu"
@@ -567,18 +599,32 @@ export default function ProductEditor() {
 
               {mode === "create" ? (
                 <div className="space-y-2 p-5">
-                  <div className="grid grid-cols-[minmax(0,1fr)_6rem_10rem_1.5rem] items-center gap-2 px-0 text-[11px] uppercase tracking-[0.12em] text-ink-soft">
-                    <span>Màu</span>
+                  <ColorRadioGroup
+                    label="Màu"
+                    name="create-color"
+                    value={colorName}
+                    colors={colorsList.data}
+                    onChange={setColorName}
+                    action={
+                      <button
+                        type="button"
+                        onClick={openAddColor}
+                        className="text-[12px] text-ink-soft link-underline hover:text-ink"
+                      >
+                        + {t("editor.add_color")}
+                      </button>
+                    }
+                  />
+                  <div className="grid grid-cols-[6rem_10rem_1.5rem] items-center gap-2 px-0 pt-3 text-[11px] uppercase tracking-[0.12em] text-ink-soft">
                     <span>Size</span>
                     <span>SKU</span>
                     <span className="text-right">Xóa</span>
                   </div>
                   {variantRows.map((row, i) => {
-                    const rowSku = styleCode ? newSkuCode(styleCode, row.colorName, row.size) : "";
-                    const dup = variantRows.some((r, j) => j !== i && r.colorName === row.colorName && r.size === row.size);
+                    const rowSku = styleCode ? newSkuCode(styleCode, colorName, row.size) : "";
+                    const dup = variantRows.some((r, j) => j !== i && r.size === row.size);
                     return (
-                      <div key={i} className="grid grid-cols-[minmax(0,1fr)_6rem_10rem_1.5rem] items-center gap-2">
-                        <ColorPicker value={row.colorName} colors={colorsList.data} onChange={(name) => updateVariantRow(i, { colorName: name })} />
+                      <div key={i} className="grid grid-cols-[6rem_10rem_1.5rem] items-center gap-2">
                         <select value={row.size} onChange={(e) => updateVariantRow(i, { size: e.target.value })} className="input shrink-0">
                           {SIZES.map((sz) => <option key={sz} value={sz}>{sz}</option>)}
                         </select>
@@ -605,6 +651,13 @@ export default function ProductEditor() {
                 <div className="space-y-2 p-5">
                   <div className="flex items-center gap-2">
                     <ColorPicker value={colorName} colors={colorsList.data} onChange={setColorName} />
+                    <button
+                      type="button"
+                      onClick={openAddColor}
+                      className="shrink-0 text-[12px] text-ink-soft link-underline hover:text-ink"
+                    >
+                      + {t("editor.add_color")}
+                    </button>
                     <select value={size} onChange={(e) => setSize(e.target.value)} className="input w-24 shrink-0">
                       {SIZES.map((sz) => <option key={sz} value={sz}>{sz}</option>)}
                     </select>
@@ -628,7 +681,7 @@ export default function ProductEditor() {
                     : setPrice(nextPrice)}
                 />
               </Field>
-              {mode !== "editStyle" && (
+              {mode === "editVariant" && (
                 <Field label={t("editor.status_stock")}>
                   <button
                     onClick={() => setInStock((v) => !v)}
@@ -732,6 +785,32 @@ export default function ProductEditor() {
         </div>
 
         <div className="space-y-4">
+          <Card title={t("editor.status")}>
+            <div className="flex flex-wrap gap-4 p-5">
+              {(["active", "draft", "archived"] as StyleStatus[]).map((s) => {
+                const selected = style.status === s;
+                const statusStyle = STATUS_RADIO_STYLES[s];
+                return (
+                  <label
+                    key={s}
+                    className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors ${
+                      selected ? statusStyle.selected : "edge text-ink hover:border-ink"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="status"
+                      checked={selected}
+                      onChange={() => setStyle((st) => ({ ...st, status: s }))}
+                      className={`h-4 w-4 ${statusStyle.accent}`}
+                    />
+                    {t(`status.${s}`)}
+                  </label>
+                );
+              })}
+            </div>
+          </Card>
+
           <Card title={t("editor.images")}>
             <div className="grid gap-5 p-5">
               <ImageSlot label={t("editor.image_product_view")} url={style.image_product_view}
@@ -758,7 +837,8 @@ export default function ProductEditor() {
                   ))}
                 </div>
               )}
-              <input type="file" accept="image/*" className="hidden" ref={fileInputRefDetail} onChange={handleDetailUpload} />
+              <p className="mt-1 text-[11px] leading-relaxed text-ink-soft">{IMAGE_HELP_TEXT}</p>
+              <input type="file" accept={IMAGE_ACCEPT} className="hidden" ref={fileInputRefDetail} onChange={handleDetailUpload} />
               <Btn variant="ghost" onClick={() => fileInputRefDetail.current?.click()} disabled={uploading === "detail"} className="mt-2">
                 {uploading === "detail" ? t("common.loading") : t("editor.add")}
               </Btn>
@@ -811,11 +891,12 @@ function ImageSlot({ label, url, busy, inputRef, onUpload, onClear }: {
   return (
     <div>
       <p className="text-[12px] tracking-[0.1em] text-ink-soft">{label}</p>
+      <p className="mt-1 text-[11px] leading-relaxed text-ink-soft">{IMAGE_HELP_TEXT}</p>
       <div className="mt-2 flex items-center gap-3">
         <div className="relative h-32 w-24 shrink-0 overflow-hidden rounded-md border edge bg-[var(--color-tile)]">
           {url && <img src={url} alt="" className="h-full w-full object-cover object-top" />}
         </div>
-        <input type="file" accept="image/*" className="hidden" ref={inputRef} onChange={onUpload} />
+        <input type="file" accept={IMAGE_ACCEPT} className="hidden" ref={inputRef} onChange={onUpload} />
         <div className="flex gap-2">
           <Btn variant="ghost" onClick={() => inputRef.current?.click()} disabled={busy}>
             {busy ? "…" : url ? "Thay đổi" : "Tải lên"}
@@ -895,6 +976,50 @@ function SizeTemplateRadioGroup({ label, name, value, templates, onChange }: {
             <span>{template.name}</span>
           </label>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ColorRadioGroup({ label, name, value, colors, onChange, action }: {
+  label: string;
+  name: string;
+  value: string;
+  colors: { id: string; name: string; hex: string }[];
+  onChange: (name: string) => void;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[12px] tracking-[0.1em] text-ink-soft">{label.toUpperCase()}</p>
+        {action}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label={label}>
+        {colors.map((color) => {
+          const active = value === color.name;
+          return (
+            <label
+              key={color.id}
+              className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border px-3.5 text-sm transition-colors ${
+                active ? "border-ink bg-white/50 text-ink" : "edge text-ink hover:border-ink"
+              }`}
+            >
+              <input
+                type="radio"
+                name={name}
+                checked={active}
+                onChange={() => onChange(color.name)}
+                className="sr-only"
+              />
+              <span
+                className="h-6 w-6 rounded-full ring-1 ring-black/10"
+                style={{ background: color.hex }}
+              />
+              <span>{color.name}</span>
+            </label>
+          );
+        })}
       </div>
     </div>
   );

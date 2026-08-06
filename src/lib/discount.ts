@@ -19,7 +19,31 @@ function matchesScope(campaign: CampaignRow, product: Product | undefined, lineI
   }
 }
 
-function applyDiscount(base: number, kind: CampaignRow["discount_kind"], value: number | null, qty: number = 1): number {
+export function isCampaignActiveNow(campaign: CampaignRow, now = new Date()): boolean {
+  if (!campaign.active) return false;
+
+  const today = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+  if (campaign.start_date && today < campaign.start_date) return false;
+  if (campaign.end_date && today > campaign.end_date) return false;
+
+  const validDays = campaign.valid_days ?? [];
+  if (validDays.length) {
+    const currentDay = now.getDay() + 1; // 1=Sun, 2=Mon... 7=Sat
+    if (!validDays.includes(currentDay)) return false;
+  }
+
+  const currentTime = now.toTimeString().slice(0, 5);
+  if (campaign.start_time && currentTime < campaign.start_time.slice(0, 5)) return false;
+  if (campaign.end_time && currentTime > campaign.end_time.slice(0, 5)) return false;
+
+  return true;
+}
+
+export function applyDiscount(base: number, kind: CampaignRow["discount_kind"], value: number | null, qty: number = 1): number {
   if (!value || value <= 0) return 0;
   let raw = 0;
   if (kind === "percent") {
@@ -31,6 +55,44 @@ function applyDiscount(base: number, kind: CampaignRow["discount_kind"], value: 
     raw = value;
   }
   return Math.min(raw, base);
+}
+
+export interface ProductPricing {
+  price: number;
+  originalPrice: number;
+  discountAmount: number;
+  onSale: boolean;
+  campaignNames: string[];
+}
+
+export function computeProductPricing(
+  product: Product,
+  campaigns: CampaignRow[],
+  now = new Date()
+): ProductPricing {
+  let discountAmount = 0;
+  const campaignNames: string[] = [];
+
+  campaigns
+    .filter((c) => c.type === "item_discount" && isCampaignActiveNow(c, now))
+    .forEach((c) => {
+      if (!matchesScope(c, product, product.id)) return;
+      const discount = applyDiscount(product.price, c.discount_kind, c.discount_value, 1);
+      if (discount <= 0) return;
+      discountAmount += discount;
+      campaignNames.push(c.name);
+    });
+
+  const cappedDiscount = Math.min(discountAmount, product.price);
+  const price = Math.max(0, Math.round(product.price - cappedDiscount));
+
+  return {
+    price,
+    originalPrice: product.price,
+    discountAmount: product.price - price,
+    onSale: price < product.price,
+    campaignNames,
+  };
 }
 
 /** Computes the total discount + informational notes for the current cart,
@@ -46,19 +108,8 @@ export function computeCartDiscount(
   const notes: string[] = [];
   const discountedStyles = new Set<string>();
 
-  // Filter campaigns by advanced rules (time, days of week)
   const now = new Date();
-  const currentDay = now.getDay() + 1; // 1=Sun, 2=Mon... 7=Sat
-  const currentTime = now.toTimeString().slice(0, 8); // "HH:MM:SS"
-
-  const validCampaigns = campaigns.filter((c) => {
-    if (c.valid_days && c.valid_days.length > 0) {
-      if (!c.valid_days.includes(currentDay)) return false;
-    }
-    if (c.start_time && currentTime < c.start_time) return false;
-    if (c.end_time && currentTime > c.end_time) return false;
-    return true;
-  });
+  const validCampaigns = campaigns.filter((c) => isCampaignActiveNow(c, now));
 
   // Split campaigns to process item-level first
   const itemCampaigns = validCampaigns.filter((c) => c.type !== "invoice_discount");

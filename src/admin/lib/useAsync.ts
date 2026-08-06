@@ -1,5 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+function errorMessage(e: unknown) {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object") {
+    const maybeMessage = (e as { message?: unknown }).message;
+    if (typeof maybeMessage === "string") return maybeMessage;
+    try {
+      return JSON.stringify(e);
+    } catch {
+      return String(e);
+    }
+  }
+  return String(e);
+}
+
 /** Minimal data-fetch hook: loading/error/reload, with out-of-order protection.
  *  (A real app would reach for TanStack Query; this keeps the dep list at zero.) */
 export function useAsync<T>(fn: () => Promise<T>, deps: unknown[], initial: T) {
@@ -25,7 +39,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[], initial: T) {
       })
       .catch((e: unknown) => {
         if (mySeq !== seq.current) return;
-        setError(e instanceof Error ? e.message : String(e));
+        setError(errorMessage(e));
       })
       .finally(() => {
         if (mySeq === seq.current) setLoading(false);

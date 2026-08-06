@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { categoryLabel, collectionLabel } from "../data/catalog";
 import { useProducts, productById } from "../store/products";
 import { SIZE_CHART } from "../data/sizing";
 import { useCart } from "../store/cart";
 import { useWishlist } from "../store/wishlist";
 import { useAuth } from "../store/auth";
+import { useCampaigns } from "../store/campaigns";
+import { computeProductPricing } from "../lib/discount";
 import ProductImage from "../components/ProductImage";
 import ProductCard, { vnd } from "../components/ProductCard";
 import NotFound from "./NotFound";
@@ -100,7 +102,6 @@ function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void 
 
 export default function Product() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const allProducts = useProducts((s) => s.products);
   const loaded = useProducts((s) => s.loaded);
   const product = id ? productById(id) : undefined;
@@ -108,6 +109,8 @@ export default function Product() {
   const add = useCart((s) => s.add);
   const { toggle: toggleWishlist, has: inWishlist } = useWishlist();
   const { user, setLoginOpen } = useAuth();
+  const campaigns = useCampaigns((s) => s.campaigns);
+  const fetchCampaigns = useCampaigns((s) => s.fetch);
   const chart = useSizeChart();
 
   const [size, setSize] = useState<string | null>(null);
@@ -120,10 +123,22 @@ export default function Product() {
     setSize(null);
   }, [product?.id]);
 
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
+
   if (!loaded) return <p className="py-32 text-center text-xs text-ink-soft">Đang tải…</p>;
   if (!product) return <NotFound />;
 
+  const pricing = computeProductPricing(product, campaigns);
+  const discountPercent = pricing.onSale ? Math.round((pricing.discountAmount / pricing.originalPrice) * 100) : 0;
   const selectedMeasurements = size ? chart.find((r) => r.size === size) : null;
+  const otherColorProducts = allProducts.filter((p) => p.styleId === product.styleId && p.id !== product.id);
+  const categoryProducts = allProducts.filter((p) => p.styleId !== product.styleId && p.category === product.category);
+  const fallbackProducts = allProducts.filter((p) => p.id !== product.id && p.styleId !== product.styleId && p.category !== product.category);
+  const recommendations = [...otherColorProducts, ...categoryProducts, ...fallbackProducts]
+    .filter((p, index, arr) => arr.findIndex((candidate) => candidate.id === p.id) === index)
+    .slice(0, 4);
 
   const handleAdd = () => {
     if (!size) setSize(product.sizes[0]);
@@ -206,32 +221,12 @@ export default function Product() {
                 </svg>
               </button>
             </div>
-            <p className="mt-2 font-serif text-lg">{vnd(product.price)}</p>
+            <p className="mt-2 flex flex-wrap items-baseline gap-3 font-serif text-lg tabular-nums">
+              <span className={pricing.onSale ? "text-[var(--color-accent)]" : ""}>{vnd(pricing.price)}</span>
+              {discountPercent > 0 && <span className="rounded-lg bg-ink px-3 py-1 font-sans text-xs font-medium leading-none text-white">-{discountPercent}%</span>}
+              {pricing.onSale && <span className="text-sm text-ink-soft line-through">{vnd(pricing.originalPrice)}</span>}
+            </p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
-
-            {/* color switcher — other colours of the same style */}
-            {product.colors.length > 1 && (
-              <div className="mt-6">
-                <p className="text-xs text-ink-soft">Màu: {product.color?.name ?? ""}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {product.colors.map((c) => {
-                    const active = c.hex === product.color?.hex;
-                    return (
-                      <button
-                        key={c.hex}
-                        onClick={() => navigate(`/san-pham/${product.styleId}::${c.hex.replace("#", "")}`)}
-                        aria-label={c.name}
-                        title={c.name}
-                        className={`h-8 w-8 rounded-full ring-1 ring-offset-2 ring-offset-[var(--color-bg)] transition-all ${
-                          active ? "ring-ink" : "ring-[var(--color-line)] hover:ring-ink"
-                        }`}
-                        style={{ background: c.hex }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* size */}
             {product && (
@@ -300,14 +295,18 @@ export default function Product() {
       </div>
 
       {/* similar */}
-      <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
-        <h2 className="mb-8 font-serif text-2xl">You might also like</h2>
-        <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-4 md:gap-x-6">
-          {allProducts.filter((p) => p.styleId !== product.styleId).slice(0, 4).map((p, i) => (
-            <ProductCard key={p.id} item={p} index={i} />
-          ))}
-        </div>
-      </section>
+      {recommendations.length > 0 && (
+        <section className="mx-auto max-w-[1800px] px-5 py-16 md:px-8">
+          <h2 className="mb-8 font-serif text-2xl">You might also like</h2>
+          <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:gap-x-6 md:gap-y-10 md:overflow-visible md:pb-0">
+            {recommendations.map((p, i) => (
+              <div key={p.id} className="w-[86vw] max-w-[420px] shrink-0 snap-start md:w-auto md:max-w-none">
+                <ProductCard item={p} index={i} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

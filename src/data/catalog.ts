@@ -25,6 +25,17 @@ export const CATEGORIES: { id: CategoryId; label: string; icon: string }[] = [
 
 export const SHOP_CATEGORIES = [...CATEGORIES];
 
+const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "FREESIZE"];
+
+export function sortSizes(sizes: string[]) {
+  return [...sizes].sort((a, b) => {
+    const ai = SIZE_ORDER.indexOf(a.toUpperCase());
+    const bi = SIZE_ORDER.indexOf(b.toUpperCase());
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? Number.MAX_SAFE_INTEGER : ai) - (bi === -1 ? Number.MAX_SAFE_INTEGER : bi);
+    return a.localeCompare(b, "vi", { numeric: true });
+  });
+}
+
 export const COLLECTIONS: { id: CollectionId; label: string; season: string; note: string; image: string }[] = [
   { id: "thu-dong-2025", label: "Fall — Winter 2025", season: "FW25", note: "Velvet, draped silk, warm dark tones.", image: "model-1.jpg" },
   { id: "xuan-he-2026", label: "Spring — Summer 2026", season: "SS26", note: "Lightweight chiffon, pastel, flowy fit.", image: "model-2.jpg" },
@@ -105,6 +116,10 @@ export interface Product {
   blurb: string;
   /** real product photos in /public/product-image-demo (fallback = generated art) */
   images?: string[];
+  /** model-worn image shown first on storefront product cards */
+  modelImage?: string | null;
+  /** flat/product-only image shown when hovering a storefront product card */
+  productImage?: string | null;
   /** best-fit-with: styling poll options per accessory type, with a director's-choice pick */
   look?: Partial<Record<AccessoryType, LookGroup>>;
 }

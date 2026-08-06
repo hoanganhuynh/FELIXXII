@@ -1,17 +1,15 @@
 -- ============================================================
--- style_list.color_variants — per-colour size breakdown
+-- Per-colour product images
 --
--- The storefront now shows one card per colour of a style (e.g. "sp1" with
--- variants black-S/black-L/red-S becomes two cards: "sp1 · black" with
--- sizes [S,L] and "sp1 · red" with sizes [S]). The existing `sizes` column
--- stays untouched (aggregated across ALL colours — dashboard/admin code
--- still reads it) — this just adds the per-colour breakdown alongside it.
--- `price` mirrors the admin product list rule: variant override when present,
--- otherwise the shared style price. If legacy data has size-specific prices
--- for one colour, the storefront card uses the highest price as the colour
--- price so edited values beat old defaults.
--- Additive-only: CREATE OR REPLACE VIEW appending one new trailing column.
+-- A style such as "Rose" can have several colours, and each colour needs its
+-- own product/model/detail images. Keep legacy style-level images as fallback,
+-- but allow every variant row to carry the image set for its colour.
 -- ============================================================
+
+alter table public.variants
+  add column if not exists image_product_view text,
+  add column if not exists image_model_view text,
+  add column if not exists images_detail text[] not null default '{}';
 
 create or replace view public.style_list with (security_invoker = true) as
 select
@@ -40,14 +38,33 @@ left join lateral (
     'name', by_color.color_name,
     'hex', by_color.color_hex,
     'sizes', by_color.sizes,
-    'price', by_color.price
+    'price', by_color.price,
+    'image_product_view', coalesce(by_color.image_product_view, s.image_product_view),
+    'image_model_view', coalesce(by_color.image_model_view, s.image_model_view),
+    'images_detail', case
+      when by_color.images_detail is not null and cardinality(by_color.images_detail) > 0
+        then by_color.images_detail
+      else s.images_detail
+    end
   )), '[]'::jsonb) as color_variants
   from (
     select
       v.color_name,
       v.color_hex,
       array_agg(distinct v.size order by v.size) as sizes,
-      max(coalesce(v.price_override, s.price)) as price
+      max(coalesce(v.price_override, s.price)) as price,
+      max(v.image_product_view) filter (where v.image_product_view is not null) as image_product_view,
+      max(v.image_model_view) filter (where v.image_model_view is not null) as image_model_view,
+      (
+        select v2.images_detail
+        from public.variants v2
+        where v2.style_id = s.id
+          and v2.color_name = v.color_name
+          and v2.color_hex = v.color_hex
+          and cardinality(v2.images_detail) > 0
+        order by v2.sku
+        limit 1
+      ) as images_detail
     from public.variants v
     where v.style_id = s.id
     group by v.color_name, v.color_hex

@@ -23,16 +23,19 @@ export async function listActiveCampaigns(): Promise<CampaignRow[]> {
 }
 
 export async function createCampaign(c: Omit<CampaignInsert, "id" | "created_at">): Promise<void> {
-  const { error } = await supabase.from(TABLE).insert(c);
+  const { data, error } = await supabase.from(TABLE).insert(c).select("id").single();
   if (error) throw error;
+  if (!data?.id) throw new Error("Campaign was not created. Please check admin permissions.");
 }
 
 export async function updateCampaign(id: string, patch: Partial<Omit<CampaignRow, "id" | "created_at">>): Promise<void> {
-  const { error } = await supabase.from(TABLE).update(patch).eq("id", id);
+  const { data, error } = await supabase.from(TABLE).update(patch).eq("id", id).select("id");
   if (error) throw error;
+  if (!data?.length) throw new Error("Campaign was not updated. Please check admin permissions.");
 }
 
 export async function deleteCampaign(id: string): Promise<void> {
-  const { error } = await supabase.from(TABLE).delete().eq("id", id);
+  const { data, error } = await supabase.from(TABLE).delete().eq("id", id).select("id");
   if (error) throw error;
+  if (!data?.length) throw new Error("Campaign was not deleted. Please check admin permissions.");
 }

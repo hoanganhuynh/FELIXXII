@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart, cartTotal, cartCount } from "../store/cart";
 import { useWishlist } from "../store/wishlist";
 import { useAuth } from "../store/auth";
@@ -75,7 +75,7 @@ export default function CartDrawer() {
   const fetchCampaigns = useCampaigns((s) => s.fetch);
   const { lines, open, setOpen, remove, setQty, setSize } = useCart();
   const { ids: wishlistIds, remove: removeWishlist } = useWishlist();
-  const { user, setLoginOpen } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"cart" | "wishlist">("cart");
   const total = cartTotal(lines);
   const count = cartCount(lines);
@@ -242,7 +242,10 @@ export default function CartDrawer() {
                 {/* CTAs */}
                 <div className="mt-8 space-y-3">
                   <button
-                    onClick={() => { if (!user) { setLoginOpen(true); } }}
+                    onClick={() => {
+                      setOpen(false);
+                      navigate("/checkout");
+                    }}
                     className="flex h-[52px] w-full items-center justify-center gap-3 rounded bg-ink text-white transition-opacity hover:opacity-85"
                   >
                     <span className="text-[15px] tracking-[0.03em]">CHECKOUT</span>

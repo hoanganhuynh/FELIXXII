@@ -2,27 +2,24 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../store/auth";
 import { useAsync } from "../lib/useAsync";
-import { defaultTrendRange } from "../lib/dateRanges";
+import { dashboardTrendRange } from "../lib/dateRanges";
 import { detectAnomaly } from "../lib/anomaly";
-import { getDashboardTrend, getDashboardTrendDetail, type Granularity, type TrendPoint, type TrendDetailPoint } from "../api/dashboard";
+import { getDashboardTrend, getDashboardTrendDetail, type TrendPoint, type TrendDetailPoint } from "../api/dashboard";
 import { AreaChart } from "./charts";
 import { compactVnd, compact } from "../lib/format";
 
-const GRANULARITIES: Granularity[] = ["day", "month", "quarter", "year"];
-
-export function RevenueTrend() {
+export function RevenueTrend({ timeFilter }: { timeFilter: string }) {
   const { t } = useTranslation();
   const { isAdmin } = useAuth();
-  const [granularity, setGranularity] = useState<Granularity>("month");
+  const { granularity, start, end } = dashboardTrendRange(timeFilter);
   const [drill, setDrill] = useState<{ index: number; bucket: TrendPoint } | null>(null);
 
   const { data: series, loading } = useAsync(
     () => {
       if (!isAdmin) return Promise.resolve([]);
-      const { start, end } = defaultTrendRange(granularity);
       return getDashboardTrend(granularity, start, end);
     },
-    [isAdmin, granularity],
+    [isAdmin, granularity, start, end],
     [] as TrendPoint[]
   );
 
@@ -37,7 +34,7 @@ export function RevenueTrend() {
 
       {loading ? (
         <p className="py-16 text-center text-xs text-ink-soft">{t("dash.trend_loading")}</p>
-      ) : series.length > 1 ? (
+      ) : series.length > 0 ? (
         <AreaChart
           data={series.map((p) => Number(p.revenue))}
           labels={series.map((p) => p.bucket_label)}

@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 import {
   listProductRows, updateVariant, deleteVariant, type ProductRow,
   bulkUpdateVariants, bulkDeleteVariants, bulkUpdateStyleProperties,
-  listCategories, listCollections
+  listCollections
 } from "../api/products";
 import { listSources, listGarmentTypes } from "../api/taxonomy";
 import { exportProductsToXlsx, importProductsFromXlsx, downloadSampleFile } from "../lib/importExport";
 import { useAsync, useDebounced } from "../lib/useAsync";
-import { Dot, Btn } from "../components/ui";
+import { Badge, Dot, Btn } from "../components/ui";
 import { vnd } from "../lib/format";
 
 const PAGE = 25;
@@ -31,7 +31,6 @@ export default function AdminProducts() {
   const sources = useAsync(() => listSources(), [], []);
   const garmentTypes = useAsync(() => listGarmentTypes(), [], []);
   const cols = useAsync(() => listCollections(), [], []);
-  const cats = useAsync(() => listCategories(), [], []);
 
   const [bulkAction, setBulkAction] = useState<"delete" | "stock_in" | "stock_out" | "collection" | "source" | "garment_type" | null>(null);
   const [bulkValue, setBulkValue] = useState<string>("");
@@ -238,6 +237,7 @@ export default function AdminProducts() {
               <th className="px-2 py-2.5">{t("prod.col_sku")}</th>
               <th className="px-2 py-2.5">{t("editor.source")}</th>
               <th className="px-2 py-2.5">{t("editor.garment_type")}</th>
+              <th className="px-2 py-2.5">{t("prod.col_status")}</th>
               <th className="px-2 py-2.5 text-right">{t("prod.col_price")}</th>
               <th className="px-2 py-2.5">{t("editor.status_stock")}</th>
               <th className="px-2 py-2.5" />
@@ -267,6 +267,9 @@ export default function AdminProducts() {
                 <td className="px-2 py-2.5 font-mono text-[12px] text-ink-soft">{r.sku}</td>
                 <td className="px-2 py-2.5 text-xs text-ink-soft">{sources.data.find((s) => s.id === r.source_id)?.label ?? "—"}</td>
                 <td className="px-2 py-2.5 text-xs text-ink-soft">{garmentTypes.data.find((g) => g.id === r.garment_type_id)?.label ?? "—"}</td>
+                <td className="px-2 py-2.5">
+                  <Badge label={t(`status.${r.status}`)}>{r.status}</Badge>
+                </td>
                 <td className="px-2 py-2.5 text-right text-xs tabular-nums">{vnd(r.price)}</td>
                 <td className="px-2 py-2.5">
                   <button
@@ -294,7 +297,7 @@ export default function AdminProducts() {
                 </td>
               </tr>
             ))}
-            {!list.loading && !rows.length && <tr><td colSpan={8} className="py-10 text-center text-xs text-ink-soft">{t("prod.no_match")}</td></tr>}
+            {!list.loading && !rows.length && <tr><td colSpan={9} className="py-10 text-center text-xs text-ink-soft">{t("prod.no_match")}</td></tr>}
           </tbody>
         </table>
       </div>
@@ -349,7 +352,7 @@ export default function AdminProducts() {
             )}
             <div className="mt-6 flex justify-end gap-3">
               <Btn variant="ghost" onClick={() => { setBulkAction(null); setBulkValue(""); }}>{t("common.cancel")}</Btn>
-              <Btn variant={bulkAction === "delete" ? "danger" : "primary"} onClick={handleBulkSubmit} disabled={busy === "bulk"}>
+              <Btn variant={bulkAction === "delete" ? "danger" : "solid"} onClick={handleBulkSubmit} disabled={busy === "bulk"}>
                 {busy === "bulk" ? "..." : t("common.confirm")}
               </Btn>
             </div>
