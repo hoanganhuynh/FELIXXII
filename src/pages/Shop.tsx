@@ -98,8 +98,8 @@ export default function Shop() {
 
   return (
     <div ref={reveal} className="pt-[62px]">
-      <header className="border-b edge px-5 pb-6 pt-10 md:px-8">
-        <div className="mx-auto max-w-[1800px] lg:pl-8">
+      <header className="border-b edge">
+        <div className="mx-auto max-w-[1800px] px-5 pb-6 pt-10 md:px-8">
           <p className="label text-ink-soft">{kicker}</p>
           <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
             <h1 className="font-serif text-3xl md:text-4xl">
